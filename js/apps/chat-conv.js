@@ -42,7 +42,7 @@
 
   data.openConv = cid => {
     const c = data.contact(cid);
-    const p = XS.nav.page({ title: c.name, backText: '', cls: 'conv',
+    const p = XS.nav.page({ title: c.name, back: true, cls: 'conv',
       right: `<button class="nav-btn tap" data-a="more" aria-label="更多">${XS.icon('more')}</button>` });
     const v = p.view;
     v.insertAdjacentHTML('beforeend', `<div class="pblur" aria-hidden="true"><i></i><i></i><i></i></div>

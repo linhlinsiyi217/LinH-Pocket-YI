@@ -3,7 +3,7 @@
   const { group, seg, bindSeg, bindSwitch } = XS.sui;
   const esc = XS.esc;
   const page = (title, html) => {
-    const p = XS.nav.page({ title, grouped: true, backText: '设置', cls: 'set-page' });
+    const p = XS.nav.page({ title, grouped: true, back: true, cls: 'set-page' });
     p.body.innerHTML = html;
     return p;
   };

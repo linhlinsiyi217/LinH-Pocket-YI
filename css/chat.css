@@ -2,8 +2,11 @@
    聊天：会话列表、联系人、对话页、气泡、输入框
    气泡：对方白底细边框，自己很浅的灰，黑色文字
    ============================================================ */
-.avatar{flex:none;width:var(--av,48px);height:var(--av,48px);border-radius:50%;background:#E5E5EA;color:#636366;display:flex;align-items:center;justify-content:center;
-  font-size:calc(var(--av,48px) * .4);font-weight:500;user-select:none}
+/* 头像：和桌面 / Dock 图标同一套圆角比例；字、图标都在容器正中并随容器缩放 */
+.avatar{flex:none;width:var(--av,48px);height:var(--av,48px);border-radius:calc(var(--av,48px) * var(--app-radius-k));background:#E5E5EA;color:#636366;
+  display:flex;align-items:center;justify-content:center;overflow:hidden;line-height:1;text-align:center;
+  font-size:calc(var(--av,48px) * .42);font-weight:500;user-select:none}
+.avatar svg{width:calc(var(--av,48px) * .5);height:calc(var(--av,48px) * .5)}
 [data-theme="dark"] .avatar{background:#3A3A3C;color:#D1D1D6}
 
 /* 列表 */

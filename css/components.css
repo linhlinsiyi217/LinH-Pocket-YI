@@ -18,7 +18,9 @@
 .nav-back{padding-left:2px}
 .nav-back svg{width:26px;height:26px}
 
-.large-title{font-size:var(--fs-large-title);font-weight:700;letter-spacing:.2px;line-height:1.2;padding:2px 20px 10px}
+.large-title{font-size:var(--fs-large-title);font-weight:700;letter-spacing:.2px;line-height:1.2;padding:2px 20px 10px;
+  cursor:pointer;-webkit-user-select:none;user-select:none}
+.large-title:active{opacity:.6}
 
 /* —— 搜索框：普通为浅灰实心；.glass 用于悬浮场景 —— */
 .search{margin:0 16px 18px;height:36px;border-radius:var(--r-sm);background:var(--c-fill);display:flex;align-items:center;gap:6px;padding:0 10px;color:var(--c-text-secondary)}

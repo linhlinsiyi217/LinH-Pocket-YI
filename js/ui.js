@@ -155,12 +155,16 @@
   /* 状态栏时间 */
   ui.startStatusbar = () => {
     const sb = $('.statusbar');
-    const render = () => {
+    let last = '';
+    // 每秒检查一次，分钟或飞行模式变了才重画，和桌面时钟保持同一分钟
+    const render = force => {
       const d = new Date(), t = d.getHours() + ':' + String(d.getMinutes()).padStart(2, '0');
       const s = XS.statusIcons, fm = XS.settings.get('flightMode');
+      if (force !== true && last === t + fm) return;
+      last = t + fm;
       sb.innerHTML = `<span>${t}</span><div class="island"></div><div class="sb-right">${fm ? s.plane : s.signal + s.wifi}${s.battery}</div>`;
     };
-    render(); setInterval(render, 15000);
-    XS.on('settings', render);
+    render(true); setInterval(render, 1000);
+    XS.on('settings', () => render(true));
   };
 })();

@@ -20,13 +20,19 @@ svg{display:block;flex:none}
 [data-frame="full"] .device{position:fixed;inset:0;left:0;top:0;width:auto;height:auto;padding:0;border-radius:0;box-shadow:none;background:var(--wallpaper);transform:none}
 [data-frame="full"] .screen{border-radius:0}
 
-/* —— 状态栏：左时间、中间灵动岛位置、右信号电量（只在电脑外框里画；真手机用系统自己的） —— */
-.statusbar{position:absolute;top:0;left:0;right:0;height:54px;padding:17px 30px 0 34px;display:flex;justify-content:space-between;align-items:flex-start;
+/* —— 状态栏：左时间、中间灵动岛位置、右信号电量
+   整个屏幕只有这一条，桌面和所有应用共用；层级高于应用层和弹层，不接收点击 —— */
+.statusbar{position:absolute;top:0;left:0;right:0;height:var(--status-h);padding:17px 30px 0 34px;display:flex;justify-content:space-between;align-items:flex-start;
   z-index:90;pointer-events:none;color:var(--c-text);font-size:16px;font-weight:600;letter-spacing:-.2px;font-variant-numeric:tabular-nums}
 .statusbar .island{position:absolute;top:11px;left:50%;width:122px;height:34px;margin-left:-61px;border-radius:20px;background:#000}
 .statusbar .sb-right{display:flex;gap:6px;align-items:center;padding-top:2px}
 .statusbar svg{fill:currentColor}
-[data-frame="full"] .statusbar{display:none}
+/* 全屏（手机）：刘海 / 挖孔的安全区整块留空，状态栏画在安全区下面 36px 高的一条里；不画假灵动岛 */
+[data-frame="full"]{--status-h:calc(env(safe-area-inset-top,0px) + 36px)}
+[data-frame="full"] .statusbar{padding:env(safe-area-inset-top,0px) max(22px,env(safe-area-inset-right,0px)) 0 max(26px,env(safe-area-inset-left,0px));
+  align-items:center;font-size:15px}
+[data-frame="full"] .statusbar .sb-right{padding-top:0}
+[data-frame="full"] .statusbar .island{display:none}
 
 /* —— 层级 —— */
 .layer{position:absolute;inset:0}

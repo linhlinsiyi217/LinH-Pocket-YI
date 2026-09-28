@@ -76,7 +76,10 @@
   /* —— 尺寸 —— */
   --icon-size:22px;               /* 列表系统图标 */
   --icon-stroke:1.6;              /* 所有线条图标统一线宽 */
-  --app-icon:60px;                /* 桌面应用图标 */
+  --app-icon:60px;                /* 应用图标：桌面、Dock、聊天头像共用 */
+  --app-radius-k:.27;             /* 图标圆角比例（圆角 = 边长 × 比例） */
+  --app-radius:calc(var(--app-icon) * var(--app-radius-k));
+  --app-cell:74px;                /* 一个图标（含名字）占的宽度 */
   --nav-h:44px;
   --tab-h:64px;
   --status-h:env(safe-area-inset-top,0px);

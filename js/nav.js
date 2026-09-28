@@ -90,16 +90,19 @@
   nav.depth = () => stack.length;
 
   /* 标准页面：导航栏 + 可滚动内容（可选大标题） */
-  nav.page = ({ title='', large=false, grouped=false, back=true, backText='', right='', cls='' }) => {
+  nav.page = ({ title='', large=false, grouped=false, back=true, right='', cls='' }) => {
     const v = XS.ui.h(`<section class="view${grouped ? ' grouped' : ''} ${cls}" aria-label="${XS.esc(title)}">
       <header class="navbar${large ? '' : ' always'}"><div class="navbar-inner">
-        <div class="nav-left">${back ? `<button class="nav-btn nav-back tap" aria-label="返回">${XS.icon('back')}${backText ? `<span>${XS.esc(backText)}</span>` : ''}</button>` : ''}</div>
+        <div class="nav-left">${back ? `<button class="nav-btn nav-back tap" aria-label="返回">${XS.icon('back')}</button>` : ''}</div>
         <div class="nav-title">${XS.esc(title)}</div><div class="nav-right">${right}</div></div></header>
-      <div class="scroll">${large ? `<h1 class="large-title">${XS.esc(title)}</h1>` : ''}<div class="page-body"></div></div></section>`);
+      <div class="scroll">${large ? `<h1 class="large-title tap">${XS.esc(title)}</h1>` : ''}<div class="page-body"></div></div></section>`);
     const navbar = v.querySelector('.navbar'), scroll = v.querySelector('.scroll');
     const limit = large ? 38 : 2;
     scroll.addEventListener('scroll', () => navbar.classList.toggle('scrolled', scroll.scrollTop > limit), { passive: true });
-    const b = v.querySelector('.nav-back'); if (b) b.onclick = nav.back;
+    const navBack = v.querySelector('.nav-back');
+    if (navBack) navBack.onclick = nav.back;
+    const largeTitle = v.querySelector('.large-title');
+    if (largeTitle) largeTitle.onclick = back ? nav.back : nav.home;
     return { view: v, navbar, scroll, body: v.querySelector('.page-body'), setTitle(t){ v.querySelectorAll('.nav-title,.large-title').forEach(n => n.textContent = t); } };
   };
 
