@@ -1,0 +1,113 @@
+/* ============================================================
+   全局视觉变量（设计令牌）
+   所有页面只读这里的变量，不直接写死颜色。
+   「设置」修改外观时，只是改 <html> 上的 data-* 属性或变量值。
+   ============================================================ */
+:root{
+  /* —— 颜色：纯白为主，黑灰做文字与主要按钮 —— */
+  --c-bg:#FFFFFF;                 /* 页面主背景 */
+  --c-bg-grouped:#F2F2F7;         /* 分组列表页底色（设置页） */
+  --c-surface:#FFFFFF;            /* 卡片、列表组 */
+  --c-surface-2:#F2F2F4;          /* 次级面：输入框、我方气泡 */
+  --c-fill:rgba(120,120,128,.12); /* 搜索框、次按钮、按下高亮 */
+  --c-fill-strong:rgba(120,120,128,.2);
+  --c-text:#000000;
+  --c-text-2:#3C3C43;             /* 系统图标、次级正文 */
+  --c-text-secondary:#8A8A8E;
+  --c-text-tertiary:#C7C7CC;
+  --c-separator:rgba(60,60,67,.12);
+  --c-border:rgba(0,0,0,.09);     /* 细边框：对方气泡、输入框 */
+  --c-primary:#1C1C1E;            /* 主要按钮：近黑 */
+  --c-on-primary:#FFFFFF;
+  --c-switch-off:#E5E5EA;
+  --c-overlay:rgba(0,0,0,.22);    /* 弹层遮罩 */
+  /* 状态色：只在有意义时少量使用 */
+  --c-blue:#007AFF;               /* 文字链接 */
+  --c-green:#34C759;              /* 开关打开、完成 */
+  --c-red:#FF3B30;                /* 删除、失败 */
+
+  /* 聊天气泡 */
+  --c-bubble-other:#FFFFFF;
+  --c-bubble-other-border:rgba(0,0,0,.1);
+  --c-bubble-self:#F0F0F2;
+  --c-bubble-text:#000000;
+
+  /* —— 壁纸（以后可自定义成图片） —— */
+  --wallpaper:#FFFFFF;
+
+  /* —— 字体 —— */
+  --font:-apple-system,BlinkMacSystemFont,"SF Pro Text","PingFang SC","HarmonyOS Sans SC","MiSans","Microsoft YaHei",sans-serif;
+  --font-scale:1;                 /* 文字大小，设置里可调 */
+  --fs-large-title:2.125rem;      /* 34px */
+  --fs-title:1.0625rem;           /* 17px 导航标题 */
+  --fs-body:1.0625rem;            /* 17px 列表正文 */
+  --fs-callout:1rem;              /* 16px 聊天正文 */
+  --fs-sub:.8125rem;              /* 13px 副标题 */
+  --fs-caption:.6875rem;          /* 11px 最小字号，安卓上仍清楚 */
+
+  /* —— 圆角 —— */
+  --r-xs:6px; --r-sm:10px; --r-md:12px; --r-lg:16px; --r-xl:22px; --r-pill:999px;
+
+  /* —— 阴影：轻微凸起的拟态 —— */
+  --sh-raise-1:0 1px 2px rgba(0,0,0,.04),0 2px 8px rgba(0,0,0,.06);   /* 选中块、小凸起 */
+  --sh-raise-2:0 10px 30px rgba(0,0,0,.08),0 2px 6px rgba(0,0,0,.05); /* 悬浮条 */
+  --sh-raise-3:0 18px 50px rgba(0,0,0,.14),0 4px 12px rgba(0,0,0,.06);/* 弹出菜单 */
+  --sh-icon:0 1px 1px rgba(0,0,0,.04),0 4px 10px rgba(0,0,0,.07);     /* 桌面图标 */
+  --sh-knob:0 3px 8px rgba(0,0,0,.15),0 3px 1px rgba(0,0,0,.06);      /* 开关圆钮 */
+  --sh-inset:inset 0 1px 2px rgba(0,0,0,.06);                          /* 按下凹陷 */
+
+  /* —— 玻璃：只用于悬浮 Tab、Dock、浮动搜索、弹出菜单 —— */
+  --glass-rgb:255,255,255;
+  --glass-alpha:.72;
+  --glass-blur:20px;
+  --glass-sat:160%;
+  --glass-edge:rgba(0,0,0,.06);
+  --glass-highlight:rgba(255,255,255,.9);
+  --glass-tint:rgba(var(--glass-rgb),var(--glass-alpha));
+  --menu-tint:rgba(var(--glass-rgb),.9);
+
+  /* —— 动效 —— */
+  --ease-spring:cubic-bezier(.32,1.25,.5,1);   /* 选中块：带一点回弹 */
+  --ease-out:cubic-bezier(.2,.8,.2,1);
+  --ease-page:cubic-bezier(.32,.72,0,1);       /* 页面推入 */
+  --dur-press:.12s; --dur-fast:.2s; --dur-mid:.32s; --dur-slide:.42s;
+  --press-scale:.96;
+
+  /* —— 尺寸 —— */
+  --icon-size:22px;               /* 列表系统图标 */
+  --icon-stroke:1.6;              /* 所有线条图标统一线宽 */
+  --app-icon:60px;                /* 桌面应用图标 */
+  --nav-h:44px;
+  --tab-h:64px;
+  --status-h:env(safe-area-inset-top,0px);
+  --safe-bottom:env(safe-area-inset-bottom,0px);
+}
+
+/* 玻璃强度：设置 › 显示与亮度 */
+[data-glass="soft"]  {--glass-alpha:.86;--glass-blur:14px;--glass-sat:130%}
+[data-glass="clear"] {--glass-alpha:.56;--glass-blur:24px;--glass-sat:180%}
+[data-glass="off"]   {--glass-alpha:1;--glass-blur:0px;--glass-sat:100%}
+
+/* 深色外观 */
+[data-theme="dark"]{
+  --c-bg:#000000; --c-bg-grouped:#000000; --c-surface:#1C1C1E; --c-surface-2:#2C2C2E;
+  --c-fill:rgba(118,118,128,.24); --c-fill-strong:rgba(118,118,128,.36);
+  --c-text:#FFFFFF; --c-text-2:rgba(235,235,245,.82); --c-text-secondary:#8D8D93; --c-text-tertiary:#48484A;
+  --c-separator:rgba(84,84,88,.55); --c-border:rgba(255,255,255,.12);
+  --c-primary:#F2F2F7; --c-on-primary:#000000; --c-switch-off:#39393D; --c-overlay:rgba(0,0,0,.5);
+  --c-blue:#0A84FF; --c-green:#30D158; --c-red:#FF453A;
+  --c-bubble-other:#1C1C1E; --c-bubble-other-border:rgba(255,255,255,.12); --c-bubble-self:#2C2C2E; --c-bubble-text:#FFFFFF;
+  --wallpaper:#000000;
+  --sh-raise-1:0 1px 2px rgba(0,0,0,.4),0 2px 8px rgba(0,0,0,.35);
+  --sh-raise-2:0 10px 30px rgba(0,0,0,.5),0 2px 6px rgba(0,0,0,.4);
+  --sh-raise-3:0 18px 50px rgba(0,0,0,.6);
+  --sh-icon:0 4px 10px rgba(0,0,0,.5);
+  --glass-rgb:30,30,32; --glass-edge:rgba(255,255,255,.08); --glass-highlight:rgba(255,255,255,.1);
+}
+
+/* 减少动态效果：动画几乎瞬间完成，去掉回弹和缩放 */
+[data-motion="reduce"]{
+  --ease-spring:linear; --ease-page:linear;
+  --dur-press:.01s; --dur-fast:.01s; --dur-mid:.01s; --dur-slide:.01s;
+  --press-scale:1;
+}

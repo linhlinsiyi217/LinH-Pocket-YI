@@ -1,0 +1,1391 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>小手机 - 设计情绪板</title>
+  <style>
+    /* ========== 全局主题变量 ========== */
+    :root {
+      /* 用户可自定义区域 - 未来开放给用户修改 */
+      --user-wallpaper: linear-gradient(165deg, #E8EAED 0%, #F5F6F8 50%, #E0E2E6 100%);
+      --user-accent: #007AFF;
+      --user-accent-hover: #0056CC;
+
+      /* 冷白珍珠银灰色系 */
+      --bg-primary: #F5F6F8;
+      --bg-secondary: #EBEDF0;
+      --bg-tertiary: #E0E2E6;
+
+      /* 玻璃效果 */
+      --glass-bg: rgba(255, 255, 255, 0.72);
+      --glass-border: rgba(255, 255, 255, 0.5);
+      --glass-shadow: 0 2px 16px rgba(0, 0, 0, 0.06);
+      --glass-blur: 20px;
+
+      /* 拟态效果 */
+      --neumorphic-shadow: 4px 4px 10px rgba(0, 0, 0, 0.08), -4px -4px 10px rgba(255, 255, 255, 0.9);
+      --neumorphic-inset: inset 2px 2px 5px rgba(0, 0, 0, 0.05), inset -2px -2px 5px rgba(255, 255, 255, 0.8);
+
+      /* 文字颜色 */
+      --text-primary: #1D1D1F;
+      --text-secondary: #6E6E73;
+      --text-tertiary: #98989D;
+
+      /* 分隔线和边框 */
+      --divider: rgba(0, 0, 0, 0.08);
+      --border-light: rgba(0, 0, 0, 0.06);
+
+      /* 功能色 - 仅用于特定场景 */
+      --color-success: #34C759;
+      --color-danger: #FF3B30;
+      --color-warning: #FF9500;
+
+      /* 圆角 */
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+      --radius-xl: 20px;
+
+      /* 字体 */
+      --font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif;
+      --font-size-xs: 12px;
+      --font-size-sm: 14px;
+      --font-size-base: 16px;
+      --font-size-lg: 20px;
+      --font-size-xl: 28px;
+    }
+
+    /* 暗色模式 */
+    [data-theme="dark"] {
+      --bg-primary: #1C1C1E;
+      --bg-secondary: #2C2C2E;
+      --bg-tertiary: #3A3A3C;
+      --user-wallpaper: linear-gradient(165deg, #1C1C1E 0%, #2C2C2E 50%, #1C1C1E 100%);
+
+      --glass-bg: rgba(44, 44, 46, 0.75);
+      --glass-border: rgba(255, 255, 255, 0.1);
+      --glass-shadow: 0 2px 16px rgba(0, 0, 0, 0.3);
+
+      --neumorphic-shadow: 4px 4px 10px rgba(0, 0, 0, 0.4), -4px -4px 10px rgba(60, 60, 60, 0.2);
+      --neumorphic-inset: inset 2px 2px 5px rgba(0, 0, 0, 0.3), inset -2px -2px 5px rgba(60, 60, 60, 0.1);
+
+      --text-primary: #F5F5F7;
+      --text-secondary: #98989D;
+      --text-tertiary: #6E6E73;
+
+      --divider: rgba(255, 255, 255, 0.1);
+      --border-light: rgba(255, 255, 255, 0.08);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: var(--font-family);
+      background: #1a1a1a;
+      min-height: 100vh;
+      padding: 40px 20px;
+      color: var(--text-primary);
+    }
+
+    /* ========== 情绪板布局 ========== */
+    .moodboard {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    .moodboard-title {
+      text-align: center;
+      color: #fff;
+      margin-bottom: 40px;
+    }
+
+    .moodboard-title h1 {
+      font-size: 32px;
+      font-weight: 600;
+      margin-bottom: 12px;
+    }
+
+    .moodboard-title p {
+      color: #888;
+      font-size: 16px;
+    }
+
+    /* 主题切换 */
+    .theme-toggle {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      margin-bottom: 40px;
+    }
+
+    .theme-btn {
+      padding: 10px 24px;
+      border: none;
+      border-radius: 20px;
+      cursor: pointer;
+      font-size: 14px;
+      transition: all 0.2s;
+    }
+
+    .theme-btn.light {
+      background: #fff;
+      color: #333;
+    }
+
+    .theme-btn.dark {
+      background: #333;
+      color: #fff;
+    }
+
+    .theme-btn:hover {
+      transform: scale(1.05);
+    }
+
+    /* 屏幕展示网格 */
+    .screens-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 40px;
+      margin-bottom: 60px;
+    }
+
+    .screen-wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .screen-label {
+      color: #fff;
+      font-size: 18px;
+      font-weight: 500;
+      margin-bottom: 16px;
+    }
+
+    /* ========== 手机框架 ========== */
+    .phone-frame {
+      width: 320px;
+      height: 692px;
+      background: #1a1a1a;
+      border-radius: 44px;
+      padding: 12px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+      position: relative;
+    }
+
+    .phone-screen {
+      width: 100%;
+      height: 100%;
+      border-radius: 36px;
+      overflow: hidden;
+      position: relative;
+      background: var(--user-wallpaper);
+    }
+
+    /* ========== 状态栏 ========== */
+    .status-bar {
+      height: 54px;
+      padding: 14px 24px 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      position: relative;
+      z-index: 100;
+    }
+
+    .status-time {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .dynamic-island {
+      width: 100px;
+      height: 32px;
+      background: #000;
+      border-radius: 20px;
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      top: 12px;
+    }
+
+    .status-icons {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 13px;
+      color: var(--text-primary);
+    }
+
+    .status-icons svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    /* ========== 桌面页面 ========== */
+    .home-content {
+      flex: 1;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .app-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 20px;
+      padding: 30px 10px;
+      flex: 1;
+    }
+
+    .app-icon {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      transition: transform 0.15s;
+    }
+
+    .app-icon:active {
+      transform: scale(0.92);
+    }
+
+    .app-icon-img {
+      width: 56px;
+      height: 56px;
+      border-radius: var(--radius-lg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      box-shadow: var(--neumorphic-shadow);
+      background: var(--glass-bg);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid var(--glass-border);
+    }
+
+    .app-icon-label {
+      font-size: 11px;
+      color: var(--text-primary);
+      text-align: center;
+    }
+
+    /* Dock */
+    .dock {
+      background: var(--glass-bg);
+      backdrop-filter: blur(var(--glass-blur));
+      -webkit-backdrop-filter: blur(var(--glass-blur));
+      border-radius: 28px;
+      padding: 12px 20px;
+      margin: 0 10px 8px;
+      display: flex;
+      justify-content: space-around;
+      border: 1px solid var(--glass-border);
+      box-shadow: var(--glass-shadow);
+    }
+
+    .dock .app-icon-img {
+      width: 52px;
+      height: 52px;
+      box-shadow: none;
+      background: var(--bg-secondary);
+    }
+
+    /* 底部指示条 */
+    .home-indicator {
+      width: 120px;
+      height: 5px;
+      background: var(--text-tertiary);
+      border-radius: 3px;
+      margin: 8px auto;
+      opacity: 0.5;
+    }
+
+    /* ========== 设置页面 ========== */
+    .settings-page {
+      background: var(--bg-primary);
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .nav-bar {
+      background: var(--glass-bg);
+      backdrop-filter: blur(var(--glass-blur));
+      -webkit-backdrop-filter: blur(var(--glass-blur));
+      padding: 0 16px;
+      height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      border-bottom: 1px solid var(--divider);
+    }
+
+    .nav-back {
+      position: absolute;
+      left: 16px;
+      color: var(--user-accent);
+      font-size: 14px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .nav-title {
+      font-size: 17px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .settings-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px 16px;
+    }
+
+    .settings-group {
+      background: var(--glass-bg);
+      border-radius: var(--radius-lg);
+      margin-bottom: 24px;
+      overflow: hidden;
+      border: 1px solid var(--border-light);
+      box-shadow: var(--neumorphic-shadow);
+    }
+
+    .settings-group-title {
+      font-size: var(--font-size-xs);
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      padding: 8px 16px 6px;
+      letter-spacing: 0.5px;
+    }
+
+    .settings-item {
+      display: flex;
+      align-items: center;
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--divider);
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .settings-item:last-child {
+      border-bottom: none;
+    }
+
+    .settings-item:active {
+      background: var(--bg-tertiary);
+    }
+
+    .settings-item-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 12px;
+      font-size: 16px;
+    }
+
+    .settings-item-content {
+      flex: 1;
+    }
+
+    .settings-item-title {
+      font-size: var(--font-size-base);
+      color: var(--text-primary);
+    }
+
+    .settings-item-subtitle {
+      font-size: var(--font-size-xs);
+      color: var(--text-secondary);
+      margin-top: 2px;
+    }
+
+    .settings-item-arrow {
+      color: var(--text-tertiary);
+      font-size: 14px;
+    }
+
+    /* 开关 */
+    .toggle-switch {
+      width: 48px;
+      height: 28px;
+      background: var(--bg-tertiary);
+      border-radius: 14px;
+      position: relative;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .toggle-switch.active {
+      background: var(--color-success);
+    }
+
+    .toggle-switch::after {
+      content: '';
+      position: absolute;
+      width: 24px;
+      height: 24px;
+      background: #fff;
+      border-radius: 12px;
+      top: 2px;
+      left: 2px;
+      transition: transform 0.2s;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+    }
+
+    .toggle-switch.active::after {
+      transform: translateX(20px);
+    }
+
+    /* ========== 聊天页面 ========== */
+    .chat-page {
+      background: var(--bg-primary);
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .chat-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 8px 0;
+    }
+
+    .chat-item {
+      display: flex;
+      align-items: center;
+      padding: 12px 16px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .chat-item:active {
+      background: var(--bg-secondary);
+    }
+
+    .chat-avatar {
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      margin-right: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      color: #fff;
+      flex-shrink: 0;
+    }
+
+    .chat-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .chat-name {
+      font-size: 16px;
+      font-weight: 500;
+      color: var(--text-primary);
+      margin-bottom: 4px;
+    }
+
+    .chat-preview {
+      font-size: 14px;
+      color: var(--text-secondary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .chat-meta {
+      text-align: right;
+      flex-shrink: 0;
+    }
+
+    .chat-time {
+      font-size: 12px;
+      color: var(--text-tertiary);
+      margin-bottom: 4px;
+    }
+
+    .chat-badge {
+      background: var(--user-accent);
+      color: #fff;
+      font-size: 11px;
+      padding: 2px 6px;
+      border-radius: 10px;
+      display: inline-block;
+    }
+
+    /* 聊天详情页 */
+    .chat-detail {
+      background: var(--bg-primary);
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .messages-area {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .message {
+      max-width: 75%;
+      padding: 10px 14px;
+      border-radius: 18px;
+      font-size: 15px;
+      line-height: 1.4;
+    }
+
+    .message.received {
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+      align-self: flex-start;
+      border-bottom-left-radius: 6px;
+    }
+
+    .message.sent {
+      background: var(--text-primary);
+      color: var(--bg-primary);
+      align-self: flex-end;
+      border-bottom-right-radius: 6px;
+    }
+
+    [data-theme="dark"] .message.sent {
+      background: var(--user-accent);
+      color: #fff;
+    }
+
+    .chat-input-bar {
+      background: var(--glass-bg);
+      backdrop-filter: blur(var(--glass-blur));
+      -webkit-backdrop-filter: blur(var(--glass-blur));
+      padding: 8px 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border-top: 1px solid var(--divider);
+    }
+
+    .chat-input {
+      flex: 1;
+      background: var(--bg-secondary);
+      border: none;
+      border-radius: 20px;
+      padding: 10px 16px;
+      font-size: 15px;
+      color: var(--text-primary);
+      outline: none;
+    }
+
+    .chat-input::placeholder {
+      color: var(--text-tertiary);
+    }
+
+    .send-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: var(--user-accent);
+      border: none;
+      color: #fff;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.1s, background 0.15s;
+    }
+
+    .send-btn:active {
+      transform: scale(0.92);
+      background: var(--user-accent-hover);
+    }
+
+    /* ========== Char 馆页面 ========== */
+    .char-page {
+      background: var(--bg-primary);
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .char-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px 16px;
+    }
+
+    .folders-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+    }
+
+    /* 真实文件夹样式 */
+    .world-folder {
+      aspect-ratio: 1;
+      position: relative;
+      cursor: pointer;
+      transition: transform 0.2s;
+    }
+
+    .world-folder:active {
+      transform: scale(0.96);
+    }
+
+    /* 文件夹背板 */
+    .folder-back {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, var(--bg-tertiary) 0%, var(--bg-secondary) 100%);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--neumorphic-shadow);
+    }
+
+    /* 文件夹标签 */
+    .folder-tab {
+      position: absolute;
+      top: -8px;
+      left: 12px;
+      width: 50%;
+      height: 20px;
+      background: var(--bg-tertiary);
+      border-radius: 6px 6px 0 0;
+      box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.05);
+    }
+
+    /* 角色照片堆叠效果 */
+    .folder-photos {
+      position: absolute;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 80%;
+      height: 55%;
+      display: flex;
+      justify-content: center;
+    }
+
+    .folder-photo {
+      width: 40px;
+      height: 50px;
+      border-radius: 6px;
+      position: absolute;
+      background: linear-gradient(135deg, #f5f5f5, #e0e0e0);
+      border: 2px solid #fff;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+    }
+
+    .folder-photo:nth-child(1) {
+      transform: rotate(-8deg) translateX(-20px);
+      z-index: 1;
+      background: linear-gradient(135deg, #FFB6C1, #FFC0CB);
+    }
+
+    .folder-photo:nth-child(2) {
+      transform: rotate(0deg);
+      z-index: 2;
+      background: linear-gradient(135deg, #87CEEB, #ADD8E6);
+    }
+
+    .folder-photo:nth-child(3) {
+      transform: rotate(8deg) translateX(20px);
+      z-index: 1;
+      background: linear-gradient(135deg, #98FB98, #90EE90);
+    }
+
+    /* 文件夹前盖 */
+    .folder-front {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 45%;
+      background: linear-gradient(180deg, var(--bg-secondary) 0%, var(--bg-tertiary) 100%);
+      border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+      border-top: 1px solid var(--glass-border);
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+    }
+
+    .folder-name {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 4px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .folder-count {
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+
+    /* 空位占位 */
+    .world-folder.empty {
+      opacity: 0.5;
+    }
+
+    .world-folder.empty .folder-photos {
+      display: none;
+    }
+
+    .world-folder.empty .folder-front {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100%;
+      border-radius: var(--radius-lg);
+    }
+
+    .add-icon {
+      font-size: 32px;
+      color: var(--text-tertiary);
+    }
+
+    /* ========== 色彩系统展示 ========== */
+    .section-title {
+      color: #fff;
+      font-size: 24px;
+      font-weight: 600;
+      margin-bottom: 24px;
+      text-align: center;
+    }
+
+    .colors-showcase {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 30px;
+      margin-bottom: 60px;
+    }
+
+    .color-palette {
+      background: #2a2a2a;
+      border-radius: 16px;
+      padding: 24px;
+    }
+
+    .color-palette h3 {
+      color: #fff;
+      font-size: 16px;
+      margin-bottom: 16px;
+    }
+
+    .color-row {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+
+    .color-chip {
+      width: 60px;
+      height: 60px;
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      gap: 4px;
+    }
+
+    .color-chip span {
+      opacity: 0.8;
+    }
+
+    /* ========== 组件展示 ========== */
+    .components-showcase {
+      background: #2a2a2a;
+      border-radius: 16px;
+      padding: 30px;
+      margin-bottom: 60px;
+    }
+
+    .component-row {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+      margin-bottom: 24px;
+    }
+
+    .component-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .component-label {
+      color: #888;
+      font-size: 12px;
+    }
+
+    /* 示例按钮 */
+    .demo-btn {
+      padding: 12px 24px;
+      border-radius: var(--radius-md);
+      border: none;
+      cursor: pointer;
+      font-size: 15px;
+      font-weight: 500;
+      transition: all 0.15s;
+    }
+
+    .demo-btn.primary {
+      background: var(--user-accent);
+      color: #fff;
+    }
+
+    .demo-btn.primary:active {
+      transform: scale(0.96);
+      background: var(--user-accent-hover);
+    }
+
+    .demo-btn.secondary {
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+      box-shadow: var(--neumorphic-shadow);
+    }
+
+    .demo-btn.glass {
+      background: var(--glass-bg);
+      backdrop-filter: blur(10px);
+      color: var(--text-primary);
+      border: 1px solid var(--glass-border);
+    }
+
+    /* 说明文字 */
+    .design-notes {
+      background: #2a2a2a;
+      border-radius: 16px;
+      padding: 30px;
+      color: #ccc;
+      line-height: 1.8;
+    }
+
+    .design-notes h3 {
+      color: #fff;
+      margin-bottom: 16px;
+    }
+
+    .design-notes ul {
+      padding-left: 20px;
+    }
+
+    .design-notes li {
+      margin-bottom: 8px;
+    }
+
+    /* MORE_CONTENT_PLACEHOLDER */
+  </style>
+</head>
+<body>
+  <div class="moodboard">
+    <div class="moodboard-title">
+      <h1>小手机 · 设计情绪板</h1>
+      <p>韩系简约 · 细腻拟态 · 珍珠玻璃 · iOS 26 气质</p>
+    </div>
+
+    <!-- 主题切换 -->
+    <div class="theme-toggle">
+      <button class="theme-btn light" onclick="setTheme('light')">☀️ 亮色模式</button>
+      <button class="theme-btn dark" onclick="setTheme('dark')">🌙 暗色模式</button>
+    </div>
+
+    <!-- 四个页面展示 -->
+    <div class="screens-grid">
+
+      <!-- 桌面 -->
+      <div class="screen-wrapper">
+        <div class="screen-label">桌面 Home</div>
+        <div class="phone-frame">
+          <div class="phone-screen" id="screen-home">
+            <div class="status-bar">
+              <span class="status-time">9:41</span>
+              <div class="dynamic-island"></div>
+              <div class="status-icons">
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M1 9l2 2c4.97-4.97 13.03-4.97 18 0l2-2C16.93 2.93 7.08 2.93 1 9zm8 8l3 3 3-3c-1.65-1.66-4.34-1.66-6 0zm-4-4l2 2c2.76-2.76 7.24-2.76 10 0l2-2C15.14 9.14 8.87 9.14 5 13z"/></svg>
+                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M15.67 4H14V2h-4v2H8.33C7.6 4 7 4.6 7 5.33v15.33C7 21.4 7.6 22 8.33 22h7.33c.74 0 1.34-.6 1.34-1.33V5.33C17 4.6 16.4 4 15.67 4z"/></svg>
+              </div>
+            </div>
+            <div class="home-content">
+              <div class="app-grid">
+                <div class="app-icon">
+                  <div class="app-icon-img">⚙️</div>
+                  <span class="app-icon-label">设置</span>
+                </div>
+                <div class="app-icon">
+                  <div class="app-icon-img">💬</div>
+                  <span class="app-icon-label">聊天</span>
+                </div>
+                <div class="app-icon">
+                  <div class="app-icon-img">📁</div>
+                  <span class="app-icon-label">Char馆</span>
+                </div>
+                <div class="app-icon">
+                  <div class="app-icon-img">📷</div>
+                  <span class="app-icon-label">相册</span>
+                </div>
+                <div class="app-icon">
+                  <div class="app-icon-img">🎵</div>
+                  <span class="app-icon-label">音乐</span>
+                </div>
+                <div class="app-icon">
+                  <div class="app-icon-img">📝</div>
+                  <span class="app-icon-label">备忘录</span>
+                </div>
+                <div class="app-icon">
+                  <div class="app-icon-img">📅</div>
+                  <span class="app-icon-label">日历</span>
+                </div>
+                <div class="app-icon">
+                  <div class="app-icon-img">🗺️</div>
+                  <span class="app-icon-label">地图</span>
+                </div>
+              </div>
+            </div>
+            <div class="dock">
+              <div class="app-icon">
+                <div class="app-icon-img">📞</div>
+              </div>
+              <div class="app-icon">
+                <div class="app-icon-img">💬</div>
+              </div>
+              <div class="app-icon">
+                <div class="app-icon-img">🌐</div>
+              </div>
+            </div>
+            <div class="home-indicator"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 设置 -->
+      <div class="screen-wrapper">
+        <div class="screen-label">设置 Settings</div>
+        <div class="phone-frame">
+          <div class="phone-screen">
+            <div class="settings-page">
+              <div class="status-bar">
+                <span class="status-time">9:41</span>
+                <div class="dynamic-island"></div>
+                <div class="status-icons">
+                  <svg viewBox="0 0 24 24" fill="currentColor"><path d="M1 9l2 2c4.97-4.97 13.03-4.97 18 0l2-2C16.93 2.93 7.08 2.93 1 9zm8 8l3 3 3-3c-1.65-1.66-4.34-1.66-6 0zm-4-4l2 2c2.76-2.76 7.24-2.76 10 0l2-2C15.14 9.14 8.87 9.14 5 13z"/></svg>
+                  <svg viewBox="0 0 24 24" fill="currentColor"><path d="M15.67 4H14V2h-4v2H8.33C7.6 4 7 4.6 7 5.33v15.33C7 21.4 7.6 22 8.33 22h7.33c.74 0 1.34-.6 1.34-1.33V5.33C17 4.6 16.4 4 15.67 4z"/></svg>
+                </div>
+              </div>
+              <div class="nav-bar">
+                <span class="nav-back">‹ 返回</span>
+                <span class="nav-title">设置</span>
+              </div>
+              <div class="settings-content">
+                <div class="settings-group">
+                  <div class="settings-group-title">外观</div>
+                  <div class="settings-item">
+                    <div class="settings-item-icon" style="background: linear-gradient(135deg, #FFD60A, #FF9500);">🌓</div>
+                    <div class="settings-item-content">
+                      <div class="settings-item-title">深色模式</div>
+                      <div class="settings-item-subtitle">跟随系统</div>
+                    </div>
+                    <div class="toggle-switch active"></div>
+                  </div>
+                  <div class="settings-item">
+                    <div class="settings-item-icon" style="background: linear-gradient(135deg, #5AC8FA, #007AFF);">🖼️</div>
+                    <div class="settings-item-content">
+                      <div class="settings-item-title">壁纸</div>
+                    </div>
+                    <span class="settings-item-arrow">›</span>
+                  </div>
+                  <div class="settings-item">
+                    <div class="settings-item-icon" style="background: linear-gradient(135deg, #BF5AF2, #AF52DE);">🎨</div>
+                    <div class="settings-item-content">
+                      <div class="settings-item-title">主题色</div>
+                    </div>
+                    <span class="settings-item-arrow">›</span>
+                  </div>
+                </div>
+
+                <div class="settings-group">
+                  <div class="settings-group-title">通用</div>
+                  <div class="settings-item">
+                    <div class="settings-item-icon" style="background: linear-gradient(135deg, #64D2FF, #5AC8FA);">🔌</div>
+                    <div class="settings-item-content">
+                      <div class="settings-item-title">AI 接口</div>
+                      <div class="settings-item-subtitle">已配置</div>
+                    </div>
+                    <span class="settings-item-arrow">›</span>
+                  </div>
+                  <div class="settings-item">
+                    <div class="settings-item-icon" style="background: linear-gradient(135deg, #30D158, #34C759);">🔐</div>
+                    <div class="settings-item-content">
+                      <div class="settings-item-title">权限管理</div>
+                    </div>
+                    <span class="settings-item-arrow">›</span>
+                  </div>
+                </div>
+
+                <div class="settings-group">
+                  <div class="settings-group-title">账号</div>
+                  <div class="settings-item">
+                    <div class="settings-item-icon" style="background: linear-gradient(135deg, #FF6B6B, #FF3B30);">👤</div>
+                    <div class="settings-item-content">
+                      <div class="settings-item-title">账号信息</div>
+                      <div class="settings-item-subtitle">本机用户</div>
+                    </div>
+                    <span class="settings-item-arrow">›</span>
+                  </div>
+                </div>
+              </div>
+              <div class="home-indicator"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 聊天列表 -->
+      <div class="screen-wrapper">
+        <div class="screen-label">聊天 Chat</div>
+        <div class="phone-frame">
+          <div class="phone-screen">
+            <div class="chat-page">
+              <div class="status-bar">
+                <span class="status-time">9:41</span>
+                <div class="dynamic-island"></div>
+                <div class="status-icons">
+                  <svg viewBox="0 0 24 24" fill="currentColor"><path d="M1 9l2 2c4.97-4.97 13.03-4.97 18 0l2-2C16.93 2.93 7.08 2.93 1 9zm8 8l3 3 3-3c-1.65-1.66-4.34-1.66-6 0zm-4-4l2 2c2.76-2.76 7.24-2.76 10 0l2-2C15.14 9.14 8.87 9.14 5 13z"/></svg>
+                  <svg viewBox="0 0 24 24" fill="currentColor"><path d="M15.67 4H14V2h-4v2H8.33C7.6 4 7 4.6 7 5.33v15.33C7 21.4 7.6 22 8.33 22h7.33c.74 0 1.34-.6 1.34-1.33V5.33C17 4.6 16.4 4 15.67 4z"/></svg>
+                </div>
+              </div>
+              <div class="nav-bar">
+                <span class="nav-back">‹ 返回</span>
+                <span class="nav-title">聊天</span>
+              </div>
+              <div class="chat-list">
+                <div class="chat-item">
+                  <div class="chat-avatar" style="background: linear-gradient(135deg, #667eea, #764ba2);">夏</div>
+                  <div class="chat-info">
+                    <div class="chat-name">夏目凛</div>
+                    <div class="chat-preview">今天的天气真不错呢～</div>
+                  </div>
+                  <div class="chat-meta">
+                    <div class="chat-time">10:24</div>
+                    <span class="chat-badge">2</span>
+                  </div>
+                </div>
+                <div class="chat-item">
+                  <div class="chat-avatar" style="background: linear-gradient(135deg, #f093fb, #f5576c);">樱</div>
+                  <div class="chat-info">
+                    <div class="chat-name">樱井美月</div>
+                    <div class="chat-preview">我在咖啡店等你</div>
+                  </div>
+                  <div class="chat-meta">
+                    <div class="chat-time">昨天</div>
+                  </div>
+                </div>
+                <div class="chat-item">
+                  <div class="chat-avatar" style="background: linear-gradient(135deg, #4facfe, #00f2fe);">苍</div>
+                  <div class="chat-info">
+                    <div class="chat-name">苍崎青</div>
+                    <div class="chat-preview">那本书找到了吗？</div>
+                  </div>
+                  <div class="chat-meta">
+                    <div class="chat-time">周一</div>
+                  </div>
+                </div>
+                <div class="chat-item">
+                  <div class="chat-avatar" style="background: linear-gradient(135deg, #43e97b, #38f9d7);">枫</div>
+                  <div class="chat-info">
+                    <div class="chat-name">枫原万叶</div>
+                    <div class="chat-preview">风起时，我们再相见</div>
+                  </div>
+                  <div class="chat-meta">
+                    <div class="chat-time">9/20</div>
+                  </div>
+                </div>
+                <div class="chat-item">
+                  <div class="chat-avatar" style="background: linear-gradient(135deg, #fa709a, #fee140);">雪</div>
+                  <div class="chat-info">
+                    <div class="chat-name">雪之下雪乃</div>
+                    <div class="chat-preview">委托的事情我考虑一下</div>
+                  </div>
+                  <div class="chat-meta">
+                    <div class="chat-time">9/18</div>
+                  </div>
+                </div>
+              </div>
+              <div class="home-indicator"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Char 馆 -->
+      <div class="screen-wrapper">
+        <div class="screen-label">Char 馆</div>
+        <div class="phone-frame">
+          <div class="phone-screen">
+            <div class="char-page">
+              <div class="status-bar">
+                <span class="status-time">9:41</span>
+                <div class="dynamic-island"></div>
+                <div class="status-icons">
+                  <svg viewBox="0 0 24 24" fill="currentColor"><path d="M1 9l2 2c4.97-4.97 13.03-4.97 18 0l2-2C16.93 2.93 7.08 2.93 1 9zm8 8l3 3 3-3c-1.65-1.66-4.34-1.66-6 0zm-4-4l2 2c2.76-2.76 7.24-2.76 10 0l2-2C15.14 9.14 8.87 9.14 5 13z"/></svg>
+                  <svg viewBox="0 0 24 24" fill="currentColor"><path d="M15.67 4H14V2h-4v2H8.33C7.6 4 7 4.6 7 5.33v15.33C7 21.4 7.6 22 8.33 22h7.33c.74 0 1.34-.6 1.34-1.33V5.33C17 4.6 16.4 4 15.67 4z"/></svg>
+                </div>
+              </div>
+              <div class="nav-bar">
+                <span class="nav-back">‹ 返回</span>
+                <span class="nav-title">Char 馆</span>
+              </div>
+              <div class="char-content">
+                <div class="folders-grid">
+                  <!-- 世界文件夹 1 -->
+                  <div class="world-folder">
+                    <div class="folder-back"></div>
+                    <div class="folder-tab"></div>
+                    <div class="folder-photos">
+                      <div class="folder-photo">夏</div>
+                      <div class="folder-photo">樱</div>
+                      <div class="folder-photo">苍</div>
+                    </div>
+                    <div class="folder-front">
+                      <div class="folder-name">现代都市</div>
+                      <div class="folder-count">5 位角色</div>
+                    </div>
+                  </div>
+
+                  <!-- 世界文件夹 2 -->
+                  <div class="world-folder">
+                    <div class="folder-back"></div>
+                    <div class="folder-tab"></div>
+                    <div class="folder-photos">
+                      <div class="folder-photo" style="background: linear-gradient(135deg, #a8edea, #fed6e3);">枫</div>
+                      <div class="folder-photo" style="background: linear-gradient(135deg, #d299c2, #fef9d7);">雪</div>
+                      <div class="folder-photo" style="background: linear-gradient(135deg, #89f7fe, #66a6ff);">海</div>
+                    </div>
+                    <div class="folder-front">
+                      <div class="folder-name">幻想大陆</div>
+                      <div class="folder-count">8 位角色</div>
+                    </div>
+                  </div>
+
+                  <!-- 世界文件夹 3 -->
+                  <div class="world-folder">
+                    <div class="folder-back"></div>
+                    <div class="folder-tab"></div>
+                    <div class="folder-photos">
+                      <div class="folder-photo" style="background: linear-gradient(135deg, #c1c161, #d4d4b1);">博</div>
+                      <div class="folder-photo" style="background: linear-gradient(135deg, #96c93d, #00b09b);">士</div>
+                    </div>
+                    <div class="folder-front">
+                      <div class="folder-name">科幻纪元</div>
+                      <div class="folder-count">3 位角色</div>
+                    </div>
+                  </div>
+
+                  <!-- 世界文件夹 4 -->
+                  <div class="world-folder">
+                    <div class="folder-back"></div>
+                    <div class="folder-tab"></div>
+                    <div class="folder-photos">
+                      <div class="folder-photo" style="background: linear-gradient(135deg, #ffecd2, #fcb69f);">月</div>
+                    </div>
+                    <div class="folder-front">
+                      <div class="folder-name">古风江湖</div>
+                      <div class="folder-count">1 位角色</div>
+                    </div>
+                  </div>
+
+                  <!-- 空位置 5 -->
+                  <div class="world-folder empty">
+                    <div class="folder-back"></div>
+                    <div class="folder-front">
+                      <span class="add-icon">+</span>
+                    </div>
+                  </div>
+
+                  <!-- 空位置 6 -->
+                  <div class="world-folder empty">
+                    <div class="folder-back"></div>
+                    <div class="folder-front">
+                      <span class="add-icon">+</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="home-indicator"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- 聊天详情额外展示 -->
+    <h2 class="section-title">聊天详情页</h2>
+    <div class="screens-grid" style="justify-items: center;">
+      <div class="screen-wrapper">
+        <div class="screen-label">对话界面</div>
+        <div class="phone-frame">
+          <div class="phone-screen">
+            <div class="chat-detail">
+              <div class="status-bar">
+                <span class="status-time">9:41</span>
+                <div class="dynamic-island"></div>
+                <div class="status-icons">
+                  <svg viewBox="0 0 24 24" fill="currentColor"><path d="M1 9l2 2c4.97-4.97 13.03-4.97 18 0l2-2C16.93 2.93 7.08 2.93 1 9zm8 8l3 3 3-3c-1.65-1.66-4.34-1.66-6 0zm-4-4l2 2c2.76-2.76 7.24-2.76 10 0l2-2C15.14 9.14 8.87 9.14 5 13z"/></svg>
+                  <svg viewBox="0 0 24 24" fill="currentColor"><path d="M15.67 4H14V2h-4v2H8.33C7.6 4 7 4.6 7 5.33v15.33C7 21.4 7.6 22 8.33 22h7.33c.74 0 1.34-.6 1.34-1.33V5.33C17 4.6 16.4 4 15.67 4z"/></svg>
+                </div>
+              </div>
+              <div class="nav-bar">
+                <span class="nav-back">‹ 返回</span>
+                <span class="nav-title">夏目凛</span>
+              </div>
+              <div class="messages-area">
+                <div class="message received">早上好！今天有什么计划吗？</div>
+                <div class="message sent">早上好～想去图书馆看看</div>
+                <div class="message received">听起来不错呢，我也想去～我们可以一起吗？</div>
+                <div class="message sent">当然可以，下午两点见？</div>
+                <div class="message received">好的，那我们图书馆门口见！</div>
+              </div>
+              <div class="chat-input-bar">
+                <input type="text" class="chat-input" placeholder="输入消息...">
+                <button class="send-btn">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+                  </svg>
+                </button>
+              </div>
+              <div class="home-indicator"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 色彩系统 -->
+    <h2 class="section-title">色彩系统</h2>
+    <div class="colors-showcase">
+      <div class="color-palette">
+        <h3>亮色模式</h3>
+        <div class="color-row">
+          <div class="color-chip" style="background: #F5F6F8; color: #1D1D1F;"><span>主背景</span>#F5F6F8</div>
+          <div class="color-chip" style="background: #EBEDF0; color: #1D1D1F;"><span>次背景</span>#EBEDF0</div>
+          <div class="color-chip" style="background: #E0E2E6; color: #1D1D1F;"><span>三级背景</span>#E0E2E6</div>
+        </div>
+        <div class="color-row">
+          <div class="color-chip" style="background: #1D1D1F; color: #fff;"><span>主文字</span>#1D1D1F</div>
+          <div class="color-chip" style="background: #6E6E73; color: #fff;"><span>次文字</span>#6E6E73</div>
+          <div class="color-chip" style="background: #98989D; color: #fff;"><span>辅助文字</span>#98989D</div>
+        </div>
+        <div class="color-row">
+          <div class="color-chip" style="background: #007AFF; color: #fff;"><span>强调蓝</span>#007AFF</div>
+          <div class="color-chip" style="background: #34C759; color: #fff;"><span>成功绿</span>#34C759</div>
+          <div class="color-chip" style="background: #FF3B30; color: #fff;"><span>危险红</span>#FF3B30</div>
+        </div>
+      </div>
+      <div class="color-palette">
+        <h3>暗色模式</h3>
+        <div class="color-row">
+          <div class="color-chip" style="background: #1C1C1E; color: #F5F5F7;"><span>主背景</span>#1C1C1E</div>
+          <div class="color-chip" style="background: #2C2C2E; color: #F5F5F7;"><span>次背景</span>#2C2C2E</div>
+          <div class="color-chip" style="background: #3A3A3C; color: #F5F5F7;"><span>三级背景</span>#3A3A3C</div>
+        </div>
+        <div class="color-row">
+          <div class="color-chip" style="background: #F5F5F7; color: #1C1C1E;"><span>主文字</span>#F5F5F7</div>
+          <div class="color-chip" style="background: #98989D; color: #1C1C1E;"><span>次文字</span>#98989D</div>
+          <div class="color-chip" style="background: #6E6E73; color: #fff;"><span>辅助文字</span>#6E6E73</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 组件展示 -->
+    <h2 class="section-title">组件样式</h2>
+    <div class="components-showcase" id="components-demo">
+      <div class="component-row">
+        <div class="component-item">
+          <button class="demo-btn primary">主要按钮</button>
+          <span class="component-label">Primary Button</span>
+        </div>
+        <div class="component-item">
+          <button class="demo-btn secondary">次要按钮</button>
+          <span class="component-label">Secondary Button</span>
+        </div>
+        <div class="component-item">
+          <button class="demo-btn glass">玻璃按钮</button>
+          <span class="component-label">Glass Button</span>
+        </div>
+      </div>
+      <div class="component-row">
+        <div class="component-item">
+          <div class="toggle-switch" onclick="this.classList.toggle('active')"></div>
+          <span class="component-label">开关 Toggle</span>
+        </div>
+        <div class="component-item">
+          <div class="toggle-switch active" onclick="this.classList.toggle('active')"></div>
+          <span class="component-label">开关 (开)</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 设计说明 -->
+    <div class="design-notes">
+      <h3>设计原则说明</h3>
+      <ul>
+        <li><strong>色彩：</strong>冷白珍珠银灰为主色调，蓝色仅用于重要操作按钮，绿色用于成功状态，红色仅用于删除和风险操作</li>
+        <li><strong>玻璃效果：</strong>仅用于 Dock、导航栏、浮层和部分按钮，内容区域保持清晰背景以确保文字可读</li>
+        <li><strong>拟态效果：</strong>通过细腻的阴影和高光营造触感，不做夸张浮雕</li>
+        <li><strong>状态栏：</strong>时间在左侧，中间预留灵动岛位置，右侧放信号和电量图标</li>
+        <li><strong>文件夹：</strong>Char 馆使用真实文件夹造型，有背板、标签和夹在其中的角色照片，而非普通卡片</li>
+        <li><strong>主题系统：</strong>所有颜色、圆角、模糊度通过 CSS 变量定义，为用户自定义预留接口</li>
+        <li><strong>交互：</strong>点击立即反馈，动画短而顺滑，支持减少动态效果设置</li>
+      </ul>
+      <p style="margin-top: 16px; color: #888;">注：这是设计情绪板，用于确认视觉方向。页面上的内容是示意，不是已实现的功能。</p>
+    </div>
+
+  </div>
+
+  <script>
+    function setTheme(theme) {
+      document.querySelectorAll('.phone-screen').forEach(screen => {
+        screen.closest('.phone-frame').querySelector('.phone-screen').setAttribute('data-theme', theme);
+      });
+      document.querySelectorAll('.phone-screen, .phone-screen *').forEach(el => {
+        el.setAttribute('data-theme', theme);
+      });
+      // 同时更新组件展示区
+      document.getElementById('components-demo').setAttribute('data-theme', theme);
+    }
+
+    // 默认亮色
+    setTheme('light');
+  </script>
+</body>
+</html>

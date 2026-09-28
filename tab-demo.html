@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#FFFFFF">
+<title>悬浮底部 Tab 视觉小样</title>
+<style>
+/* 说明：这是视觉小样，不是正式功能。颜色、玻璃强度都做成变量，方便以后给用户自定义。 */
+:root{
+  --white:#FFFFFF;
+  --bg-page:#F2F2F7;
+  --text-black:#000;
+  --text-dark:#1C1C1E;
+  --text-gray:#3C3C43;
+  --text-secondary:#8A8A8E;
+  --text-tertiary:#C7C7CC;
+  --separator:rgba(60,60,67,0.1);
+  --accent-green:#34C759;
+  --font:-apple-system,BlinkMacSystemFont,"SF Pro Text","PingFang SC","Microsoft YaHei",sans-serif;
+
+  /* 玻璃（只用在 Tab 上） */
+  --glass-tint:rgba(255,255,255,0.72);
+  --glass-blur:20px;
+  --glass-saturate:160%;
+  --glass-edge:rgba(0,0,0,0.06);
+  --glass-shadow:0 10px 30px rgba(0,0,0,0.08),0 2px 6px rgba(0,0,0,0.05);
+
+  /* 选中块：纯白 + 极轻拟态阴影 */
+  --pill-bg:#FFFFFF;
+  --pill-shadow:0 2px 8px rgba(0,0,0,0.08),0 0 0 0.5px rgba(0,0,0,0.04);
+
+  --tab-h:64px;
+  --tab-gap:16px;
+  --tab-bottom:26px;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{background:#E9E9EE;font-family:var(--font);color:var(--text-black);-webkit-font-smoothing:antialiased}
+.stage{min-height:100vh;display:flex;gap:40px;align-items:center;justify-content:center;padding:40px 20px;flex-wrap:wrap}
+
+/* 手机外框（与设置页同尺寸） */
+.phone{width:375px;height:812px;background:#000;border-radius:54px;padding:8px;box-shadow:0 30px 60px rgba(0,0,0,.18)}
+.screen{position:relative;width:100%;height:100%;border-radius:47px;background:var(--white);overflow:hidden}
+.status-bar{position:absolute;top:0;left:0;right:0;height:54px;padding:14px 28px 0;display:flex;justify-content:space-between;align-items:flex-start;font-size:16px;font-weight:600;z-index:30;background:linear-gradient(#fff 60%,rgba(255,255,255,0))}
+.notch{position:absolute;top:12px;left:50%;transform:translateX(-50%);width:90px;height:28px;border-radius:14px;background:#000}
+.status-right{display:flex;gap:6px;align-items:center}
+.status-right svg{display:block}
+/* 背后可滚动的内容：用来检验玻璃和渐进模糊 */
+.scroller{position:absolute;inset:0;overflow-y:auto;padding:54px 0 calc(var(--tab-h) + var(--tab-bottom) + 40px);-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+.scroller::-webkit-scrollbar{display:none}
+.large-title{font-size:34px;font-weight:700;padding:6px 20px 12px;letter-spacing:.2px}
+.row{display:flex;gap:12px;align-items:center;padding:10px 20px;position:relative}
+.row::after{content:"";position:absolute;left:76px;right:0;bottom:0;height:.5px;background:var(--separator)}
+.avatar{width:44px;height:44px;border-radius:50%;flex:none}
+.a1{background:#1C1C1E}.a2{background:#D1D1D6}.a3{background:#8E8E93}.a4{background:#E5E5EA}.a5{background:#3A3A3C}.a6{background:#AEAEB2}
+.row-main{flex:1;min-width:0}
+.row-top{display:flex;justify-content:space-between;align-items:baseline}
+.name{font-size:16px;font-weight:600;color:var(--text-dark)}
+.time{font-size:13px;color:var(--text-secondary)}
+.msg{font-size:14px;color:var(--text-secondary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px}
+.block{margin:14px 20px;height:120px;border-radius:16px;background:#1C1C1E;display:flex;align-items:flex-end;padding:14px;color:#fff;font-size:14px;font-weight:600}
+.block.light{background:#F2F2F7;color:var(--text-dark)}
+
+/* 渐进模糊：3 层叠加，每层模糊更强、遮罩更靠下。层数少，照顾安卓性能 */
+.pblur{position:absolute;left:0;right:0;bottom:0;height:150px;pointer-events:none;z-index:10}
+.pblur>div{position:absolute;inset:0}
+.pblur>div:nth-child(1){backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px);
+  -webkit-mask-image:linear-gradient(to bottom,transparent 0%,#000 30%,#000 100%);mask-image:linear-gradient(to bottom,transparent 0%,#000 30%,#000 100%)}
+.pblur>div:nth-child(2){backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);
+  -webkit-mask-image:linear-gradient(to bottom,transparent 30%,#000 60%,#000 100%);mask-image:linear-gradient(to bottom,transparent 30%,#000 60%,#000 100%)}
+.pblur>div:nth-child(3){backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  -webkit-mask-image:linear-gradient(to bottom,transparent 60%,#000 90%);mask-image:linear-gradient(to bottom,transparent 60%,#000 90%)}
+/* 白色淡出，让底部内容更安静 */
+.pblur::after{content:"";position:absolute;inset:0;background:linear-gradient(to bottom,rgba(255,255,255,0),rgba(255,255,255,.55))}
+
+/* 悬浮底部 Tab：唯一的玻璃层 */
+.tabbar{position:absolute;left:var(--tab-gap);right:var(--tab-gap);bottom:var(--tab-bottom);height:var(--tab-h);z-index:20;
+  border-radius:calc(var(--tab-h) / 2);padding:6px;display:flex;
+  background:var(--glass-tint);
+  backdrop-filter:blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  -webkit-backdrop-filter:blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  box-shadow:var(--glass-shadow),inset 0 0 0 .5px var(--glass-edge);
+  touch-action:none;user-select:none;-webkit-user-select:none;contain:layout paint}
+/* 顶部一道细高光，模拟玻璃边缘 */
+.tabbar::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.9)}
+/* 选中块：只用 transform 移动，GPU 合成，安卓上也顺 */
+.pill{position:absolute;top:6px;bottom:6px;left:6px;border-radius:calc((var(--tab-h) - 12px) / 2);
+  background:var(--pill-bg);box-shadow:var(--pill-shadow);
+  transform:translate3d(var(--x,0px),0,0) scale(var(--sx,1),var(--sy,1));
+  transition:transform .42s cubic-bezier(.32,1.25,.5,1);will-change:transform}
+.pill.dragging{transition:transform .08s linear}
+
+.tab{position:relative;z-index:1;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+  border:0;background:transparent;font:inherit;color:var(--text-secondary);cursor:pointer;border-radius:26px;outline:none;
+  transition:color .2s ease}
+.tab:focus-visible{box-shadow:0 0 0 2px var(--text-dark)}
+.tab svg{width:24px;height:24px;stroke:currentColor;stroke-width:1.6;fill:none;stroke-linecap:round;stroke-linejoin:round;
+  transition:transform .2s ease}
+.tab span{font-size:10px;font-weight:500;letter-spacing:.2px}
+.tab[aria-selected="true"]{color:var(--text-black)}
+.tab[aria-selected="true"] span{font-weight:600}
+.tab:active svg{transform:scale(.9)}
+
+/* 关闭玻璃 / 不支持 backdrop-filter 时：纯白实心，保证能看清 */
+.no-glass .tabbar{background:#FFFFFF;backdrop-filter:none;-webkit-backdrop-filter:none}
+.no-glass .pill{background:#F2F2F7;box-shadow:inset 0 1px 2px rgba(0,0,0,.06)}
+.no-pblur .pblur{display:none}
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
+  .tabbar{background:#FFFFFF}
+  .pblur>div{display:none}
+}
+/* 省电模式：只留一层轻模糊 */
+.lite .pblur>div:nth-child(2),.lite .pblur>div:nth-child(3){display:none}
+.lite .tabbar{--glass-blur:12px;--glass-saturate:120%}
+/* 系统开启"减少动态效果"时，去掉弹性 */
+@media (prefers-reduced-motion:reduce){
+  .pill{transition:transform .01s linear}
+  .tab svg,.tab{transition:none}
+}
+
+/* 右侧调节面板（只是测试用） */
+.panel{width:280px;background:#fff;border-radius:16px;padding:18px;box-shadow:0 2px 12px rgba(0,0,0,.05)}
+.panel h2{font-size:17px;font-weight:700;margin-bottom:4px}
+.panel p.note{font-size:12px;color:var(--text-secondary);line-height:1.5;margin-bottom:12px}
+.opt{display:flex;justify-content:space-between;align-items:center;min-height:44px;font-size:15px;position:relative}
+.opt+.opt::before{content:"";position:absolute;top:0;left:0;right:0;height:.5px;background:var(--separator)}
+.switch{position:relative;width:51px;height:31px;border-radius:16px;background:#E5E5EA;border:0;cursor:pointer;transition:background .25s;flex:none}
+.switch::after{content:"";position:absolute;top:2px;left:2px;width:27px;height:27px;border-radius:50%;background:#fff;
+  box-shadow:0 3px 8px rgba(0,0,0,.15);transition:transform .25s cubic-bezier(.3,1.2,.5,1)}
+.switch[aria-checked="true"]{background:var(--accent-green)}
+.switch[aria-checked="true"]::after{transform:translateX(20px)}
+.fps{font-size:13px;color:var(--text-secondary);margin-top:10px;font-variant-numeric:tabular-nums}
+
+/* 真手机上打开：去掉外框，全屏显示，处理刘海和底部手势条 */
+@media (max-width:500px){
+  .stage{padding:0;display:block}
+  .phone{width:100%;height:100vh;height:100dvh;border-radius:0;padding:0;box-shadow:none}
+  .screen{border-radius:0}
+  .status-bar{display:none}
+  .scroller{padding-top:env(safe-area-inset-top,0px)}
+  .tabbar{bottom:calc(12px + env(safe-area-inset-bottom,0px))}
+  .panel{position:fixed;top:calc(8px + env(safe-area-inset-top,0px));right:8px;width:auto;left:auto;padding:4px 12px;border-radius:14px;
+    background:rgba(255,255,255,.92);box-shadow:0 4px 16px rgba(0,0,0,.1);z-index:50}
+  .panel h2,.panel p.note{display:none}
+  .panel.collapsed .opt,.panel.collapsed .fps{display:none}
+  .panel-toggle{display:block!important}
+}
+.panel-toggle{display:none;border:0;background:none;font:inherit;font-size:13px;color:var(--text-gray);padding:8px 0;cursor:pointer;width:100%;text-align:right}
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="phone">
+    <div class="screen" id="screen">
+      <div class="status-bar" aria-hidden="true">
+        <span>9:41</span>
+        <div class="notch"></div>
+        <div class="status-right">
+          <svg width="18" height="12" viewBox="0 0 18 12"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5.5" width="3" height="6.5" rx="1"/><rect x="10" y="3" width="3" height="9" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1"/></svg>
+          <svg width="26" height="12" viewBox="0 0 26 12"><rect x=".5" y=".5" width="22" height="11" rx="3" fill="none" stroke="#000" opacity=".4"/><rect x="2" y="2" width="17" height="8" rx="1.8"/><rect x="24" y="4" width="1.5" height="4" rx=".7" opacity=".4"/></svg>
+        </div>
+      </div>
+
+      <div class="scroller" id="scroller">
+        <h1 class="large-title">消息</h1>
+        <div id="list"></div>
+      </div>
+
+      <div class="pblur" aria-hidden="true"><div></div><div></div><div></div></div>
+
+      <nav class="tabbar" id="tabbar" role="tablist" aria-label="底部导航">
+        <div class="pill" id="pill" aria-hidden="true"></div>
+        <button class="tab" role="tab" aria-selected="true">
+          <svg viewBox="0 0 24 24"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3h11A2.5 2.5 0 0 1 20 5.5v8a2.5 2.5 0 0 1-2.5 2.5H10l-4.5 4v-4h0A1.5 1.5 0 0 1 4 14.5z"/></svg>
+          <span>消息</span>
+        </button>
+        <button class="tab" role="tab" aria-selected="false">
+          <svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3.2"/><path d="M3.5 19a5.5 5.5 0 0 1 11 0"/><path d="M15.5 5.2a3 3 0 0 1 0 5.6M17.5 14a5 5 0 0 1 3 5"/></svg>
+          <span>通讯录</span>
+        </button>
+        <button class="tab" role="tab" aria-selected="false">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/></svg>
+          <span>发现</span>
+        </button>
+        <button class="tab" role="tab" aria-selected="false">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="8.5" r="3.5"/><path d="M5 20a7 7 0 0 1 14 0"/></svg>
+          <span>我</span>
+        </button>
+      </nav>
+    </div>
+  </div>
+
+  <aside class="panel" id="panel">
+    <h2>悬浮 Tab 小样</h2>
+    <p class="note">只是视觉样品，不是正式功能。可以点、也可以在 Tab 上左右拖动。下面开关用来对比效果和测试流畅度。</p>
+    <button class="panel-toggle" id="panelToggle">测试开关</button>
+    <div class="opt">渐进模糊<button class="switch" role="switch" aria-checked="true" aria-label="渐进模糊" data-cls="no-pblur" data-invert="1"></button></div>
+    <div class="opt">玻璃质感<button class="switch" role="switch" aria-checked="true" aria-label="玻璃质感" data-cls="no-glass" data-invert="1"></button></div>
+    <div class="opt">省电模式<button class="switch" role="switch" aria-checked="false" aria-label="省电模式" data-cls="lite"></button></div>
+    <div class="fps" id="fps">滚动帧率：滑动列表后显示</div>
+  </aside>
+</div>
+
+<script>
+// 1. 生成背后的示例列表（只是为了检验模糊效果）
+const people=[["林夏","好的，明天见","09:41"],["周屿","[图片]","09:12"],["阿岚","那本书我看完了","昨天"],["沈既白","收到","昨天"],
+  ["许知意","今晚的月亮很好看","周二"],["陆川","发你的文件看一下","周一"],["江晚","嗯嗯","周一"],["程野","下次一起去","上周"],
+  ["苏念","晚安","上周"],["顾言","好","上周"]];
+const list=document.getElementById('list');
+people.forEach((p,i)=>{
+  if(i===3) list.insertAdjacentHTML('beforeend','<div class="block">深色内容块</div>');
+  if(i===7) list.insertAdjacentHTML('beforeend','<div class="block light">浅灰内容块</div>');
+  list.insertAdjacentHTML('beforeend',
+    `<div class="row"><div class="avatar a${i%6+1}"></div><div class="row-main"><div class="row-top"><span class="name">${p[0]}</span><span class="time">${p[2]}</span></div><div class="msg">${p[1]}</div></div></div>`);
+});
+
+// 2. Tab 选中块：只改 transform，不改 left/width，避免重排
+const bar=document.getElementById('tabbar'), pill=document.getElementById('pill');
+const tabs=[...bar.querySelectorAll('.tab')];
+let index=0, tabW=0;
+function measure(){ tabW=(bar.clientWidth-12)/tabs.length; pill.style.width=tabW+'px'; place(index*tabW); }
+function place(x,sx=1,sy=1){ pill.style.setProperty('--x',x+'px'); pill.style.setProperty('--sx',sx); pill.style.setProperty('--sy',sy); }
+function select(i,focus){
+  index=Math.max(0,Math.min(tabs.length-1,i));
+  tabs.forEach((t,k)=>{ t.setAttribute('aria-selected',k===index); t.tabIndex=k===index?0:-1; });
+  if(focus) tabs[index].focus();
+}
+function indexAt(clientX){ const r=bar.getBoundingClientRect(); return Math.floor((clientX-r.left-6)/tabW); }
+
+// 按下立刻响应；拖动时选中块跟手；松手吸附到最近一格
+let dragging=false, startX=0, moved=false;
+bar.addEventListener('pointerdown',e=>{
+  dragging=true; moved=false; startX=e.clientX; bar.setPointerCapture(e.pointerId);
+  select(indexAt(e.clientX)); place(index*tabW,1.06,.92);   // 轻轻压扁，像按下去
+});
+bar.addEventListener('pointermove',e=>{
+  if(!dragging) return;
+  if(Math.abs(e.clientX-startX)>6) moved=true;
+  if(!moved) return;
+  pill.classList.add('dragging');
+  const r=bar.getBoundingClientRect();
+  const x=Math.max(0,Math.min(bar.clientWidth-12-tabW,e.clientX-r.left-6-tabW/2));
+  place(x,1.1,.9);                                           // 拖动时稍微拉长
+  select(Math.round(x/tabW));
+});
+function release(){ if(!dragging) return; dragging=false; pill.classList.remove('dragging'); place(index*tabW); }
+bar.addEventListener('pointerup',release);
+bar.addEventListener('pointercancel',release);
+
+// 键盘：左右方向键切换（无障碍）
+bar.addEventListener('keydown',e=>{
+  if(e.key==='ArrowRight'){ select(index+1,true); place(index*tabW); }
+  if(e.key==='ArrowLeft'){ select(index-1,true); place(index*tabW); }
+});
+window.addEventListener('resize',measure);
+measure(); select(0);
+
+// 3. 测试开关
+const screen=document.getElementById('screen');
+document.querySelectorAll('.switch').forEach(s=>s.addEventListener('click',()=>{
+  const on=s.getAttribute('aria-checked')!=='true';
+  s.setAttribute('aria-checked',on);
+  screen.classList.toggle(s.dataset.cls, s.dataset.invert ? !on : on);
+}));
+document.getElementById('panelToggle').addEventListener('click',()=>document.getElementById('panel').classList.toggle('collapsed'));
+if(matchMedia('(max-width:500px)').matches) document.getElementById('panel').classList.add('collapsed');
+
+// 4. 简单帧率计：滚动时统计，方便在安卓上看卡不卡
+const fpsEl=document.getElementById('fps'), scroller=document.getElementById('scroller');
+let frames=0, t0=0, running=false, idle;
+function tick(t){ if(!t0) t0=t; frames++; if(t-t0>=1000){ fpsEl.textContent='滚动帧率：约 '+Math.round(frames*1000/(t-t0))+' fps'; frames=0; t0=t; } if(running) requestAnimationFrame(tick); }
+scroller.addEventListener('scroll',()=>{
+  if(!running){ running=true; t0=0; frames=0; requestAnimationFrame(tick); }
+  clearTimeout(idle); idle=setTimeout(()=>running=false,400);
+},{passive:true});
+</script>
+</body>
+</html>

@@ -1,0 +1,1866 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>小手机 - 高保真情绪板 v2</title>
+  <style>
+    /* ========== 主题系统 - 用户可自定义 ========== */
+    :root {
+      /* 背景色系 */
+      --bg-page: #F2F2F7;
+      --bg-card: #FFFFFF;
+      --bg-input: #E5E5EA;
+      --bg-elevated: #FFFFFF;
+
+      /* 玻璃效果 */
+      --glass-bg: rgba(255, 255, 255, 0.78);
+      --glass-bg-heavy: rgba(255, 255, 255, 0.92);
+      --glass-border: rgba(255, 255, 255, 0.6);
+      --glass-highlight: linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.4) 50%, rgba(255,255,255,0.1) 100%);
+      --glass-blur: 24px;
+      --glass-shadow: 0 2px 20px rgba(0, 0, 0, 0.08), 0 0 1px rgba(0, 0, 0, 0.1);
+
+      /* 文字色系 */
+      --text-primary: #000000;
+      --text-secondary: #3C3C43;
+      --text-tertiary: #8E8E93;
+      --text-quaternary: #C7C7CC;
+
+      /* 功能色 */
+      --accent-blue: #007AFF;
+      --accent-green: #34C759;
+      --accent-red: #FF3B30;
+      --accent-orange: #FF9500;
+      --accent-purple: #AF52DE;
+      --accent-pink: #FF2D55;
+      --accent-teal: #5AC8FA;
+
+      /* 分隔线 */
+      --separator: rgba(60, 60, 67, 0.12);
+      --separator-opaque: #C6C6C8;
+
+      /* 拟态效果 */
+      --neu-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+      --neu-shadow-pressed: inset 0 2px 4px rgba(0, 0, 0, 0.06);
+      --neu-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.8);
+
+      /* 圆角 */
+      --radius-xs: 6px;
+      --radius-sm: 10px;
+      --radius-md: 14px;
+      --radius-lg: 20px;
+      --radius-xl: 28px;
+
+      /* 字体 */
+      --font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Helvetica Neue", "PingFang SC", sans-serif;
+    }
+
+    /* 暗色模式 */
+    .dark-mode {
+      --bg-page: #000000;
+      --bg-card: #1C1C1E;
+      --bg-input: #2C2C2E;
+      --bg-elevated: #2C2C2E;
+
+      --glass-bg: rgba(44, 44, 46, 0.82);
+      --glass-bg-heavy: rgba(44, 44, 46, 0.95);
+      --glass-border: rgba(255, 255, 255, 0.1);
+      --glass-highlight: linear-gradient(135deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.05) 50%, rgba(255,255,255,0) 100%);
+      --glass-shadow: 0 2px 20px rgba(0, 0, 0, 0.4), 0 0 1px rgba(255, 255, 255, 0.1);
+
+      --text-primary: #FFFFFF;
+      --text-secondary: #EBEBF5;
+      --text-tertiary: #8E8E93;
+      --text-quaternary: #48484A;
+
+      --separator: rgba(84, 84, 88, 0.65);
+      --separator-opaque: #38383A;
+
+      --neu-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+      --neu-shadow-pressed: inset 0 2px 4px rgba(0, 0, 0, 0.2);
+      --neu-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: var(--font-family);
+      background: #0a0a0a;
+      min-height: 100vh;
+      padding: 40px 20px;
+      color: #fff;
+      line-height: 1.4;
+    }
+
+    /* ========== 情绪板容器 ========== */
+    .moodboard {
+      max-width: 1600px;
+      margin: 0 auto;
+    }
+
+    .moodboard-header {
+      text-align: center;
+      margin-bottom: 48px;
+    }
+
+    .moodboard-header h1 {
+      font-size: 36px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      margin-bottom: 12px;
+    }
+
+    .moodboard-header p {
+      font-size: 16px;
+      color: #888;
+    }
+
+    /* 主题切换 */
+    .theme-switcher {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      margin-bottom: 48px;
+    }
+
+    .theme-btn {
+      padding: 12px 28px;
+      border: 1px solid #333;
+      border-radius: 24px;
+      background: transparent;
+      color: #888;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .theme-btn:hover {
+      border-color: #666;
+      color: #fff;
+    }
+
+    .theme-btn.active {
+      background: #fff;
+      color: #000;
+      border-color: #fff;
+    }
+
+    /* ========== 屏幕展示 ========== */
+    .screens-section {
+      margin-bottom: 80px;
+    }
+
+    .section-title {
+      font-size: 24px;
+      font-weight: 600;
+      text-align: center;
+      margin-bottom: 32px;
+      color: #fff;
+    }
+
+    .screens-row {
+      display: flex;
+      justify-content: center;
+      gap: 48px;
+      flex-wrap: wrap;
+    }
+
+    .screen-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .screen-label {
+      font-size: 14px;
+      color: #666;
+      margin-bottom: 16px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    /* ========== 手机框架 ========== */
+    .iphone-frame {
+      width: 300px;
+      height: 650px;
+      background: linear-gradient(145deg, #2a2a2a, #1a1a1a);
+      border-radius: 48px;
+      padding: 10px;
+      box-shadow:
+        0 50px 100px rgba(0, 0, 0, 0.5),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1),
+        inset 0 -1px 0 rgba(0, 0, 0, 0.3);
+      position: relative;
+    }
+
+    .iphone-frame::before {
+      content: '';
+      position: absolute;
+      top: 10px;
+      right: -2px;
+      width: 3px;
+      height: 30px;
+      background: #333;
+      border-radius: 0 2px 2px 0;
+    }
+
+    .iphone-frame::after {
+      content: '';
+      position: absolute;
+      top: 60px;
+      right: -2px;
+      width: 3px;
+      height: 60px;
+      background: #333;
+      border-radius: 0 2px 2px 0;
+    }
+
+    .iphone-screen {
+      width: 100%;
+      height: 100%;
+      background: var(--bg-page);
+      border-radius: 40px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* ========== 状态栏 ========== */
+    .status-bar {
+      height: 54px;
+      padding: 12px 28px 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      position: relative;
+      z-index: 100;
+    }
+
+    .status-time {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text-primary);
+      min-width: 50px;
+    }
+
+    .dynamic-island {
+      width: 90px;
+      height: 28px;
+      background: #000;
+      border-radius: 16px;
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      top: 12px;
+    }
+
+    .status-icons {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      min-width: 60px;
+      justify-content: flex-end;
+    }
+
+    .status-icons svg {
+      width: 16px;
+      height: 16px;
+      fill: var(--text-primary);
+    }
+
+    .battery-icon {
+      display: flex;
+      align-items: center;
+      gap: 1px;
+    }
+
+    .battery-body {
+      width: 22px;
+      height: 11px;
+      border: 1px solid var(--text-primary);
+      border-radius: 3px;
+      padding: 1px;
+    }
+
+    .battery-level {
+      width: 70%;
+      height: 100%;
+      background: var(--text-primary);
+      border-radius: 1px;
+    }
+
+    .battery-cap {
+      width: 2px;
+      height: 5px;
+      background: var(--text-primary);
+      border-radius: 0 1px 1px 0;
+    }
+
+    /* ========== 导航栏 ========== */
+    .nav-bar {
+      height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+      position: relative;
+    }
+
+    .nav-back {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      color: var(--accent-blue);
+      font-size: 17px;
+      cursor: pointer;
+    }
+
+    .nav-back svg {
+      width: 12px;
+      height: 20px;
+      fill: var(--accent-blue);
+    }
+
+    .nav-title {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 17px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .nav-action {
+      color: var(--accent-blue);
+      font-size: 17px;
+      cursor: pointer;
+    }
+
+    /* 大标题 */
+    .large-title {
+      padding: 0 20px 8px;
+      font-size: 34px;
+      font-weight: 700;
+      color: var(--text-primary);
+      letter-spacing: -0.5px;
+    }
+
+    /* ========== 搜索栏 ========== */
+    .search-bar {
+      margin: 8px 16px 16px;
+      height: 36px;
+      background: var(--bg-input);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      padding: 0 12px;
+      gap: 6px;
+    }
+
+    .search-bar svg {
+      width: 16px;
+      height: 16px;
+      fill: var(--text-tertiary);
+      flex-shrink: 0;
+    }
+
+    .search-bar span {
+      font-size: 17px;
+      color: var(--text-tertiary);
+    }
+
+    /* ========== 设置列表 ========== */
+    .settings-scroll {
+      flex: 1;
+      overflow-y: auto;
+      padding: 0 16px 20px;
+    }
+
+    .settings-group {
+      background: var(--bg-card);
+      border-radius: var(--radius-md);
+      margin-bottom: 24px;
+      overflow: hidden;
+    }
+
+    .settings-group-label {
+      font-size: 13px;
+      color: var(--text-tertiary);
+      text-transform: uppercase;
+      padding: 8px 16px 6px;
+      letter-spacing: 0.2px;
+    }
+
+    /* 用户卡片 */
+    .user-card {
+      display: flex;
+      align-items: center;
+      padding: 12px 16px;
+      gap: 14px;
+      cursor: pointer;
+    }
+
+    .user-avatar {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #E5E5EA, #C7C7CC);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .user-avatar svg {
+      width: 32px;
+      height: 32px;
+      fill: var(--text-quaternary);
+    }
+
+    .user-info {
+      flex: 1;
+    }
+
+    .user-name {
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 2px;
+    }
+
+    .user-subtitle {
+      font-size: 13px;
+      color: var(--text-tertiary);
+    }
+
+    .chevron {
+      color: var(--text-quaternary);
+      font-size: 20px;
+    }
+
+    /* 设置项 */
+    .settings-item {
+      display: flex;
+      align-items: center;
+      padding: 11px 16px;
+      min-height: 44px;
+      gap: 14px;
+      cursor: pointer;
+      position: relative;
+    }
+
+    .settings-item:not(:last-child)::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 58px;
+      right: 0;
+      height: 0.5px;
+      background: var(--separator);
+    }
+
+    .settings-item:active {
+      background: var(--bg-input);
+    }
+
+    /* 设置图标 */
+    .settings-icon {
+      width: 30px;
+      height: 30px;
+      border-radius: 7px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .settings-icon svg {
+      width: 18px;
+      height: 18px;
+      fill: #fff;
+    }
+
+    .settings-icon.blue { background: linear-gradient(180deg, #5AC8FA 0%, #007AFF 100%); }
+    .settings-icon.green { background: linear-gradient(180deg, #4CD964 0%, #34C759 100%); }
+    .settings-icon.orange { background: linear-gradient(180deg, #FFD60A 0%, #FF9500 100%); }
+    .settings-icon.red { background: linear-gradient(180deg, #FF6961 0%, #FF3B30 100%); }
+    .settings-icon.purple { background: linear-gradient(180deg, #BF5AF2 0%, #AF52DE 100%); }
+    .settings-icon.pink { background: linear-gradient(180deg, #FF6B9D 0%, #FF2D55 100%); }
+    .settings-icon.teal { background: linear-gradient(180deg, #64D2FF 0%, #5AC8FA 100%); }
+    .settings-icon.gray { background: linear-gradient(180deg, #98989D 0%, #636366 100%); }
+    .settings-icon.indigo { background: linear-gradient(180deg, #7D7AFF 0%, #5856D6 100%); }
+
+    .settings-content {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .settings-title {
+      font-size: 17px;
+      color: var(--text-primary);
+    }
+
+    .settings-subtitle {
+      font-size: 13px;
+      color: var(--text-tertiary);
+      margin-top: 1px;
+    }
+
+    .settings-value {
+      font-size: 17px;
+      color: var(--text-tertiary);
+      margin-right: 4px;
+    }
+
+    .settings-chevron {
+      width: 8px;
+      height: 13px;
+      fill: var(--text-quaternary);
+      flex-shrink: 0;
+    }
+
+    /* 开关 */
+    .ios-switch {
+      width: 51px;
+      height: 31px;
+      background: var(--bg-input);
+      border-radius: 16px;
+      position: relative;
+      cursor: pointer;
+      transition: background 0.2s;
+      flex-shrink: 0;
+    }
+
+    .ios-switch.on {
+      background: var(--accent-green);
+    }
+
+    .ios-switch::after {
+      content: '';
+      position: absolute;
+      width: 27px;
+      height: 27px;
+      background: #fff;
+      border-radius: 50%;
+      top: 2px;
+      left: 2px;
+      transition: transform 0.2s;
+      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.15), 0 1px 1px rgba(0, 0, 0, 0.06);
+    }
+
+    .ios-switch.on::after {
+      transform: translateX(20px);
+    }
+
+    /* ========== 桌面 ========== */
+    .home-screen {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      background: linear-gradient(180deg, #E8E8ED 0%, #D1D1D6 50%, #C7C7CC 100%);
+      position: relative;
+    }
+
+    .dark-mode .home-screen {
+      background: linear-gradient(180deg, #1C1C1E 0%, #2C2C2E 50%, #1C1C1E 100%);
+    }
+
+    .home-content {
+      flex: 1;
+      padding: 16px 24px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .app-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 20px 16px;
+      margin-top: 20px;
+    }
+
+    .app-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+    }
+
+    .app-item:active .app-icon-box {
+      transform: scale(0.9);
+      opacity: 0.8;
+    }
+
+    /* 应用图标 - 原创设计 */
+    .app-icon-box {
+      width: 52px;
+      height: 52px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      transition: transform 0.1s, opacity 0.1s;
+      box-shadow:
+        0 4px 12px rgba(0, 0, 0, 0.15),
+        inset 0 1px 0 rgba(255, 255, 255, 0.3);
+    }
+
+    .app-icon-box::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 12px;
+      background: linear-gradient(135deg, rgba(255,255,255,0.4) 0%, transparent 50%);
+      pointer-events: none;
+    }
+
+    .app-icon-box svg {
+      width: 28px;
+      height: 28px;
+      fill: #fff;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* 各应用图标配色 */
+    .app-icon-box.settings { background: linear-gradient(135deg, #8E8E93 0%, #636366 100%); }
+    .app-icon-box.chat { background: linear-gradient(135deg, #34C759 0%, #30B350 100%); }
+    .app-icon-box.char { background: linear-gradient(135deg, #AF52DE 0%, #9B40CC 100%); }
+    .app-icon-box.photos { background: linear-gradient(135deg, #FF9500 0%, #FF6B00 100%); }
+    .app-icon-box.music { background: linear-gradient(135deg, #FF2D55 0%, #E62E4F 100%); }
+    .app-icon-box.notes { background: linear-gradient(135deg, #FFD60A 0%, #FFCC00 100%); }
+    .app-icon-box.calendar { background: linear-gradient(135deg, #FF3B30 0%, #E6352C 100%); }
+    .app-icon-box.maps { background: linear-gradient(135deg, #007AFF 0%, #0066DD 100%); }
+
+    .app-label {
+      font-size: 11px;
+      color: var(--text-primary);
+      text-align: center;
+      max-width: 60px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Dock - 液态玻璃效果 */
+    .dock {
+      margin: auto 8px 8px;
+      height: 76px;
+      background: var(--glass-bg);
+      backdrop-filter: blur(var(--glass-blur));
+      -webkit-backdrop-filter: blur(var(--glass-blur));
+      border-radius: var(--radius-xl);
+      padding: 12px 16px;
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      position: relative;
+      box-shadow: var(--glass-shadow);
+    }
+
+    .dock::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: var(--radius-xl);
+      padding: 1px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0.1) 100%);
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+      pointer-events: none;
+    }
+
+    .dock::after {
+      content: '';
+      position: absolute;
+      top: 1px;
+      left: 20px;
+      right: 20px;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.6), transparent);
+      pointer-events: none;
+    }
+
+    .dock .app-icon-box {
+      width: 50px;
+      height: 50px;
+    }
+
+    /* 底部指示条 */
+    .home-indicator {
+      width: 120px;
+      height: 5px;
+      background: var(--text-primary);
+      border-radius: 3px;
+      margin: 8px auto;
+      opacity: 0.2;
+    }
+
+    /* ========== 聊天列表 ========== */
+    .chat-screen {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      background: var(--bg-page);
+    }
+
+    .chat-list {
+      flex: 1;
+      overflow-y: auto;
+    }
+
+    .chat-item {
+      display: flex;
+      align-items: center;
+      padding: 10px 16px;
+      gap: 12px;
+      cursor: pointer;
+      position: relative;
+    }
+
+    .chat-item:active {
+      background: var(--bg-input);
+    }
+
+    .chat-item::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 82px;
+      right: 0;
+      height: 0.5px;
+      background: var(--separator);
+    }
+
+    .chat-avatar {
+      width: 54px;
+      height: 54px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      font-weight: 500;
+      color: #fff;
+    }
+
+    .chat-body {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .chat-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 4px;
+    }
+
+    .chat-name {
+      font-size: 17px;
+      font-weight: 500;
+      color: var(--text-primary);
+    }
+
+    .chat-time {
+      font-size: 15px;
+      color: var(--text-tertiary);
+      flex-shrink: 0;
+    }
+
+    .chat-preview-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .chat-preview {
+      font-size: 15px;
+      color: var(--text-tertiary);
+      flex: 1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .chat-badge {
+      width: 20px;
+      height: 20px;
+      background: var(--accent-blue);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 500;
+      color: #fff;
+      flex-shrink: 0;
+    }
+
+    /* ========== 聊天详情 ========== */
+    .chat-detail-screen {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      background: var(--bg-page);
+    }
+
+    .messages-container {
+      flex: 1;
+      overflow-y: auto;
+      padding: 12px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .message-row {
+      display: flex;
+      max-width: 80%;
+    }
+
+    .message-row.sent {
+      align-self: flex-end;
+    }
+
+    .message-row.received {
+      align-self: flex-start;
+    }
+
+    .message-bubble {
+      padding: 10px 14px;
+      border-radius: 18px;
+      font-size: 16px;
+      line-height: 1.35;
+      position: relative;
+    }
+
+    .message-row.sent .message-bubble {
+      background: var(--accent-blue);
+      color: #fff;
+      border-bottom-right-radius: 6px;
+    }
+
+    .message-row.received .message-bubble {
+      background: var(--bg-card);
+      color: var(--text-primary);
+      border-bottom-left-radius: 6px;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    }
+
+    /* 输入栏 - 玻璃效果 */
+    .chat-input-bar {
+      background: var(--glass-bg-heavy);
+      backdrop-filter: blur(var(--glass-blur));
+      -webkit-backdrop-filter: blur(var(--glass-blur));
+      padding: 8px 12px;
+      display: flex;
+      align-items: flex-end;
+      gap: 8px;
+      border-top: 0.5px solid var(--separator);
+    }
+
+    .input-wrapper {
+      flex: 1;
+      background: var(--bg-card);
+      border-radius: 20px;
+      border: 0.5px solid var(--separator-opaque);
+      padding: 8px 14px;
+      min-height: 36px;
+      display: flex;
+      align-items: center;
+    }
+
+    .input-wrapper span {
+      font-size: 17px;
+      color: var(--text-quaternary);
+    }
+
+    .send-button {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: var(--accent-blue);
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: transform 0.1s, background 0.15s;
+    }
+
+    .send-button:active {
+      transform: scale(0.9);
+      background: #0066DD;
+    }
+
+    .send-button svg {
+      width: 18px;
+      height: 18px;
+      fill: #fff;
+      margin-left: 2px;
+    }
+
+    /* ========== Char 馆 ========== */
+    .char-screen {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      background: var(--bg-page);
+    }
+
+    .char-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px;
+    }
+
+    .folders-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+    }
+
+    /* 真实文件夹设计 */
+    .folder-item {
+      aspect-ratio: 1;
+      position: relative;
+      cursor: pointer;
+      transition: transform 0.15s;
+    }
+
+    .folder-item:active {
+      transform: scale(0.96);
+    }
+
+    /* 文件夹底板 */
+    .folder-base {
+      position: absolute;
+      inset: 4px 0 0 0;
+      background: linear-gradient(180deg, #D1D1D6 0%, #C7C7CC 100%);
+      border-radius: 8px 8px 12px 12px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .dark-mode .folder-base {
+      background: linear-gradient(180deg, #3A3A3C 0%, #2C2C2E 100%);
+    }
+
+    /* 文件夹标签 */
+    .folder-tab {
+      position: absolute;
+      top: 0;
+      left: 8px;
+      width: 40%;
+      height: 12px;
+      background: linear-gradient(180deg, #E5E5EA 0%, #D1D1D6 100%);
+      border-radius: 4px 4px 0 0;
+      z-index: 1;
+    }
+
+    .dark-mode .folder-tab {
+      background: linear-gradient(180deg, #48484A 0%, #3A3A3C 100%);
+    }
+
+    /* 文件夹内的角色卡片 */
+    .folder-cards {
+      position: absolute;
+      top: 16px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 85%;
+      height: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .char-card {
+      width: 36px;
+      height: 46px;
+      border-radius: 4px;
+      position: absolute;
+      background: #fff;
+      border: 1.5px solid #fff;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      font-weight: 500;
+    }
+
+    .char-card:nth-child(1) {
+      transform: rotate(-10deg) translateX(-24px);
+      z-index: 1;
+      background: linear-gradient(135deg, #FFB5BA, #FF8A92);
+      color: #fff;
+    }
+
+    .char-card:nth-child(2) {
+      z-index: 2;
+      background: linear-gradient(135deg, #B5D4FF, #7AB8FF);
+      color: #fff;
+    }
+
+    .char-card:nth-child(3) {
+      transform: rotate(10deg) translateX(24px);
+      z-index: 1;
+      background: linear-gradient(135deg, #B5FFBA, #7AFF8A);
+      color: #fff;
+    }
+
+    /* 文件夹前盖 */
+    .folder-cover {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 42%;
+      background: linear-gradient(180deg, #EFEFF4 0%, #E5E5EA 100%);
+      border-radius: 0 0 12px 12px;
+      padding: 10px 12px;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      box-shadow: 0 -1px 0 rgba(255, 255, 255, 0.5);
+    }
+
+    .dark-mode .folder-cover {
+      background: linear-gradient(180deg, #48484A 0%, #3A3A3C 100%);
+      box-shadow: 0 -1px 0 rgba(255, 255, 255, 0.1);
+    }
+
+    .folder-name {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 2px;
+    }
+
+    .folder-count {
+      font-size: 11px;
+      color: var(--text-tertiary);
+    }
+
+    /* 空文件夹 */
+    .folder-item.empty .folder-cards {
+      display: none;
+    }
+
+    .folder-item.empty .folder-cover {
+      height: 100%;
+      border-radius: 12px;
+      align-items: center;
+      justify-content: center;
+      background: var(--bg-input);
+    }
+
+    .folder-item.empty .folder-base,
+    .folder-item.empty .folder-tab {
+      display: none;
+    }
+
+    .add-folder-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: var(--separator);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .add-folder-icon svg {
+      width: 24px;
+      height: 24px;
+      fill: var(--text-tertiary);
+    }
+
+    /* ========== 组件展示区 ========== */
+    .components-section {
+      margin-bottom: 80px;
+    }
+
+    .component-showcase {
+      background: #1a1a1a;
+      border-radius: 20px;
+      padding: 40px;
+    }
+
+    .component-group {
+      margin-bottom: 48px;
+    }
+
+    .component-group:last-child {
+      margin-bottom: 0;
+    }
+
+    .component-group-title {
+      font-size: 14px;
+      color: #666;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 24px;
+    }
+
+    .component-row {
+      display: flex;
+      gap: 32px;
+      flex-wrap: wrap;
+      align-items: flex-start;
+    }
+
+    .component-item {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .component-label {
+      font-size: 12px;
+      color: #666;
+    }
+
+    /* 按钮状态展示 */
+    .button-states {
+      display: flex;
+      gap: 16px;
+      align-items: center;
+    }
+
+    .demo-button {
+      padding: 12px 24px;
+      border-radius: 12px;
+      font-size: 17px;
+      font-weight: 500;
+      border: none;
+      cursor: pointer;
+      transition: all 0.15s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .demo-button.primary {
+      background: var(--accent-blue);
+      color: #fff;
+      box-shadow: 0 4px 12px rgba(0, 122, 255, 0.3);
+    }
+
+    .demo-button.primary::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 50%;
+      background: linear-gradient(180deg, rgba(255,255,255,0.2) 0%, transparent 100%);
+      pointer-events: none;
+    }
+
+    .demo-button.primary.pressed {
+      background: #0066DD;
+      box-shadow: 0 2px 6px rgba(0, 122, 255, 0.2);
+      transform: scale(0.97);
+    }
+
+    .demo-button.secondary {
+      background: var(--bg-card);
+      color: var(--accent-blue);
+      box-shadow: var(--neu-shadow), var(--neu-highlight);
+    }
+
+    .demo-button.secondary.pressed {
+      box-shadow: var(--neu-shadow-pressed);
+      transform: scale(0.97);
+    }
+
+    .demo-button.glass {
+      background: var(--glass-bg);
+      backdrop-filter: blur(20px);
+      color: var(--text-primary);
+      border: 1px solid var(--glass-border);
+      box-shadow: var(--glass-shadow);
+    }
+
+    .demo-button.glass::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.6), transparent);
+    }
+
+    /* 玻璃卡片展示 */
+    .glass-demo {
+      width: 200px;
+      height: 120px;
+      background: var(--glass-bg);
+      backdrop-filter: blur(var(--glass-blur));
+      border-radius: 16px;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-primary);
+      font-size: 15px;
+      box-shadow: var(--glass-shadow);
+    }
+
+    .glass-demo::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      border-radius: 16px;
+      padding: 1px;
+      background: linear-gradient(135deg, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0.1) 50%, transparent 100%);
+      -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+      -webkit-mask-composite: xor;
+      mask-composite: exclude;
+      pointer-events: none;
+    }
+
+    .glass-demo::after {
+      content: '';
+      position: absolute;
+      top: 1px;
+      left: 16px;
+      right: 16px;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.5), transparent);
+      pointer-events: none;
+    }
+
+    .glass-bg-pattern {
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle at 20% 30%, rgba(255, 100, 100, 0.3) 0%, transparent 40%),
+        radial-gradient(circle at 80% 70%, rgba(100, 100, 255, 0.3) 0%, transparent 40%),
+        radial-gradient(circle at 50% 50%, rgba(100, 255, 100, 0.2) 0%, transparent 50%);
+      border-radius: 16px;
+      z-index: -1;
+    }
+
+    /* 开关展示 */
+    .switch-row {
+      display: flex;
+      gap: 24px;
+      align-items: center;
+    }
+
+    /* 色彩展示 */
+    .color-showcase {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .color-chip {
+      width: 80px;
+      height: 80px;
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      font-size: 10px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    .color-chip .value {
+      opacity: 0.8;
+    }
+
+    /* 设计说明 */
+    .design-principles {
+      background: #1a1a1a;
+      border-radius: 20px;
+      padding: 40px;
+      color: #999;
+      line-height: 1.8;
+    }
+
+    .design-principles h3 {
+      color: #fff;
+      font-size: 18px;
+      margin-bottom: 20px;
+    }
+
+    .design-principles ul {
+      padding-left: 20px;
+    }
+
+    .design-principles li {
+      margin-bottom: 12px;
+    }
+
+    .design-principles strong {
+      color: #ccc;
+    }
+
+    .note-box {
+      margin-top: 24px;
+      padding: 16px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 12px;
+      border-left: 3px solid var(--accent-blue);
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <div class="moodboard">
+    <header class="moodboard-header">
+      <h1>小手机 · 高保真情绪板</h1>
+      <p>韩系简约 · 细腻拟态 · 液态玻璃 · iOS 26 气质</p>
+    </header>
+
+    <div class="theme-switcher">
+      <button class="theme-btn active" onclick="setTheme('light')">亮色模式</button>
+      <button class="theme-btn" onclick="setTheme('dark')">暗色模式</button>
+    </div>
+
+    <!-- 四屏展示 -->
+    <section class="screens-section">
+      <h2 class="section-title">核心页面</h2>
+      <div class="screens-row">
+
+        <!-- 桌面 -->
+        <div class="screen-item">
+          <div class="screen-label">桌面</div>
+          <div class="iphone-frame">
+            <div class="iphone-screen" id="screen-home">
+              <div class="home-screen">
+                <div class="status-bar">
+                  <span class="status-time">9:41</span>
+                  <div class="dynamic-island"></div>
+                  <div class="status-icons">
+                    <svg viewBox="0 0 18 18"><path d="M1 7l2 2c3.5-3.5 9.5-3.5 13 0l2-2C12.5 1.5 5.5 1.5 1 7zm5 5l3 3 3-3c-1.7-1.7-4.3-1.7-6 0zM4 10l2 2c2-2 5-2 7 0l2-2c-3-3-8-3-11 0z"/></svg>
+                    <div class="battery-icon">
+                      <div class="battery-body"><div class="battery-level"></div></div>
+                      <div class="battery-cap"></div>
+                    </div>
+                  </div>
+                </div>
+                <div class="home-content">
+                  <div class="app-grid">
+                    <div class="app-item">
+                      <div class="app-icon-box settings">
+                        <svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.31.06-.63.06-.94 0-.31-.02-.63-.06-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.04.31-.06.63-.06.94s.02.63.06.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
+                      </div>
+                      <span class="app-label">设置</span>
+                    </div>
+                    <div class="app-item">
+                      <div class="app-icon-box chat">
+                        <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H6l-2 2V4h16v12z"/></svg>
+                      </div>
+                      <span class="app-label">聊天</span>
+                    </div>
+                    <div class="app-item">
+                      <div class="app-icon-box char">
+                        <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+                      </div>
+                      <span class="app-label">Char馆</span>
+                    </div>
+                    <div class="app-item">
+                      <div class="app-icon-box photos">
+                        <svg viewBox="0 0 24 24"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
+                      </div>
+                      <span class="app-label">相册</span>
+                    </div>
+                    <div class="app-item">
+                      <div class="app-icon-box music">
+                        <svg viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
+                      </div>
+                      <span class="app-label">音乐</span>
+                    </div>
+                    <div class="app-item">
+                      <div class="app-icon-box notes">
+                        <svg viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
+                      </div>
+                      <span class="app-label">备忘录</span>
+                    </div>
+                    <div class="app-item">
+                      <div class="app-icon-box calendar">
+                        <svg viewBox="0 0 24 24"><path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zm0-12H5V6h14v2zm-7 5h5v5h-5v-5z"/></svg>
+                      </div>
+                      <span class="app-label">日历</span>
+                    </div>
+                    <div class="app-item">
+                      <div class="app-icon-box maps">
+                        <svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+                      </div>
+                      <span class="app-label">地图</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="dock">
+                  <div class="app-item">
+                    <div class="app-icon-box" style="background: linear-gradient(135deg, #34C759 0%, #30B350 100%);">
+                      <svg viewBox="0 0 24 24"><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/></svg>
+                    </div>
+                  </div>
+                  <div class="app-item">
+                    <div class="app-icon-box chat">
+                      <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H6l-2 2V4h16v12z"/></svg>
+                    </div>
+                  </div>
+                  <div class="app-item">
+                    <div class="app-icon-box" style="background: linear-gradient(135deg, #5AC8FA 0%, #007AFF 100%);">
+                      <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+                    </div>
+                  </div>
+                </div>
+                <div class="home-indicator"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 设置 -->
+        <div class="screen-item">
+          <div class="screen-label">设置</div>
+          <div class="iphone-frame">
+            <div class="iphone-screen" id="screen-settings">
+              <div class="chat-screen">
+                <div class="status-bar">
+                  <span class="status-time">9:41</span>
+                  <div class="dynamic-island"></div>
+                  <div class="status-icons">
+                    <svg viewBox="0 0 18 18"><path d="M1 7l2 2c3.5-3.5 9.5-3.5 13 0l2-2C12.5 1.5 5.5 1.5 1 7zm5 5l3 3 3-3c-1.7-1.7-4.3-1.7-6 0zM4 10l2 2c2-2 5-2 7 0l2-2c-3-3-8-3-11 0z"/></svg>
+                    <div class="battery-icon">
+                      <div class="battery-body"><div class="battery-level"></div></div>
+                      <div class="battery-cap"></div>
+                    </div>
+                  </div>
+                </div>
+                <div class="large-title">设置</div>
+                <div class="search-bar">
+                  <svg viewBox="0 0 20 20"><path d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"/></svg>
+                  <span>搜索</span>
+                </div>
+                <div class="settings-scroll">
+                  <!-- 用户卡片 -->
+                  <div class="settings-group">
+                    <div class="user-card">
+                      <div class="user-avatar">
+                        <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+                      </div>
+                      <div class="user-info">
+                        <div class="user-name">用户</div>
+                        <div class="user-subtitle">账户、云端等</div>
+                      </div>
+                      <span class="chevron">›</span>
+                    </div>
+                  </div>
+
+                  <!-- 功能设置 -->
+                  <div class="settings-group">
+                    <div class="settings-item">
+                      <div class="settings-icon blue">
+                        <svg viewBox="0 0 24 24"><path d="M12 1C7.03 1 3 5.03 3 10v6c0 2.76 2.24 5 5 5h1v-8H5v-3c0-3.86 3.14-7 7-7s7 3.14 7 7v3h-4v8h1c2.76 0 5-2.24 5-5v-6c0-4.97-4.03-9-9-9z"/></svg>
+                      </div>
+                      <div class="settings-content">
+                        <div class="settings-title">飞行模式</div>
+                      </div>
+                      <div class="ios-switch" onclick="this.classList.toggle('on')"></div>
+                    </div>
+                    <div class="settings-item">
+                      <div class="settings-icon teal">
+                        <svg viewBox="0 0 24 24"><path d="M1 9l2 2c4.97-4.97 13.03-4.97 18 0l2-2C16.93 2.93 7.08 2.93 1 9zm8 8l3 3 3-3c-1.65-1.66-4.34-1.66-6 0zm-4-4l2 2c2.76-2.76 7.24-2.76 10 0l2-2C15.14 9.14 8.87 9.14 5 13z"/></svg>
+                      </div>
+                      <div class="settings-content">
+                        <div class="settings-title">API 连接</div>
+                      </div>
+                      <svg class="settings-chevron" viewBox="0 0 8 13"><path d="M1 1l5.5 5.5L1 12" stroke="currentColor" stroke-width="2" fill="none"/></svg>
+                    </div>
+                    <div class="settings-item">
+                      <div class="settings-icon purple">
+                        <svg viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
+                      </div>
+                      <div class="settings-content">
+                        <div class="settings-title">语音设定</div>
+                      </div>
+                      <svg class="settings-chevron" viewBox="0 0 8 13"><path d="M1 1l5.5 5.5L1 12" stroke="currentColor" stroke-width="2" fill="none"/></svg>
+                    </div>
+                  </div>
+
+                  <!-- 通用设置 -->
+                  <div class="settings-group">
+                    <div class="settings-item">
+                      <div class="settings-icon gray">
+                        <svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.31.06-.63.06-.94 0-.31-.02-.63-.06-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.04.31-.06.63-.06.94s.02.63.06.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
+                      </div>
+                      <div class="settings-content">
+                        <div class="settings-title">通用</div>
+                      </div>
+                      <svg class="settings-chevron" viewBox="0 0 8 13"><path d="M1 1l5.5 5.5L1 12" stroke="currentColor" stroke-width="2" fill="none"/></svg>
+                    </div>
+                    <div class="settings-item">
+                      <div class="settings-icon indigo">
+                        <svg viewBox="0 0 24 24"><path d="M20 8.69V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69zM12 18c-3.31 0-6-2.69-6-6s2.69-6 6-6 6 2.69 6 6-2.69 6-6 6zm0-10c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4z"/></svg>
+                      </div>
+                      <div class="settings-content">
+                        <div class="settings-title">显示与亮度</div>
+                      </div>
+                      <svg class="settings-chevron" viewBox="0 0 8 13"><path d="M1 1l5.5 5.5L1 12" stroke="currentColor" stroke-width="2" fill="none"/></svg>
+                    </div>
+                    <div class="settings-item">
+                      <div class="settings-icon green">
+                        <svg viewBox="0 0 24 24"><path d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm0 10.99h7c-.53 4.12-3.28 7.79-7 8.94V12H5V6.3l7-3.11v8.8z"/></svg>
+                      </div>
+                      <div class="settings-content">
+                        <div class="settings-title">辅助功能</div>
+                      </div>
+                      <svg class="settings-chevron" viewBox="0 0 8 13"><path d="M1 1l5.5 5.5L1 12" stroke="currentColor" stroke-width="2" fill="none"/></svg>
+                    </div>
+                  </div>
+                </div>
+                <div class="home-indicator"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 聊天 -->
+        <div class="screen-item">
+          <div class="screen-label">聊天</div>
+          <div class="iphone-frame">
+            <div class="iphone-screen" id="screen-chat">
+              <div class="chat-detail-screen">
+                <div class="status-bar">
+                  <span class="status-time">9:41</span>
+                  <div class="dynamic-island"></div>
+                  <div class="status-icons">
+                    <svg viewBox="0 0 18 18"><path d="M1 7l2 2c3.5-3.5 9.5-3.5 13 0l2-2C12.5 1.5 5.5 1.5 1 7zm5 5l3 3 3-3c-1.7-1.7-4.3-1.7-6 0zM4 10l2 2c2-2 5-2 7 0l2-2c-3-3-8-3-11 0z"/></svg>
+                    <div class="battery-icon">
+                      <div class="battery-body"><div class="battery-level"></div></div>
+                      <div class="battery-cap"></div>
+                    </div>
+                  </div>
+                </div>
+                <div class="nav-bar">
+                  <div class="nav-back">
+                    <svg viewBox="0 0 12 20"><path d="M10 0L0 10l10 10" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    返回
+                  </div>
+                  <span class="nav-title">夏目凛</span>
+                  <span class="nav-action"></span>
+                </div>
+                <div class="messages-container">
+                  <div class="message-row received">
+                    <div class="message-bubble">早上好！今天天气不错呢</div>
+                  </div>
+                  <div class="message-row sent">
+                    <div class="message-bubble">早上好～想去图书馆看看</div>
+                  </div>
+                  <div class="message-row received">
+                    <div class="message-bubble">听起来不错，我也想去，一起吗？</div>
+                  </div>
+                  <div class="message-row sent">
+                    <div class="message-bubble">当然可以，下午两点见？</div>
+                  </div>
+                  <div class="message-row received">
+                    <div class="message-bubble">好的，图书馆门口见！</div>
+                  </div>
+                </div>
+                <div class="chat-input-bar">
+                  <div class="input-wrapper">
+                    <span>输入消息...</span>
+                  </div>
+                  <button class="send-button">
+                    <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+                  </button>
+                </div>
+                <div class="home-indicator"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Char 馆 -->
+        <div class="screen-item">
+          <div class="screen-label">Char 馆</div>
+          <div class="iphone-frame">
+            <div class="iphone-screen" id="screen-char">
+              <div class="char-screen">
+                <div class="status-bar">
+                  <span class="status-time">9:41</span>
+                  <div class="dynamic-island"></div>
+                  <div class="status-icons">
+                    <svg viewBox="0 0 18 18"><path d="M1 7l2 2c3.5-3.5 9.5-3.5 13 0l2-2C12.5 1.5 5.5 1.5 1 7zm5 5l3 3 3-3c-1.7-1.7-4.3-1.7-6 0zM4 10l2 2c2-2 5-2 7 0l2-2c-3-3-8-3-11 0z"/></svg>
+                    <div class="battery-icon">
+                      <div class="battery-body"><div class="battery-level"></div></div>
+                      <div class="battery-cap"></div>
+                    </div>
+                  </div>
+                </div>
+                <div class="nav-bar">
+                  <div class="nav-back">
+                    <svg viewBox="0 0 12 20"><path d="M10 0L0 10l10 10" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    返回
+                  </div>
+                  <span class="nav-title">Char 馆</span>
+                  <span class="nav-action" style="color: var(--accent-blue);">编辑</span>
+                </div>
+                <div class="char-content">
+                  <div class="folders-grid">
+                    <!-- 世界 1 -->
+                    <div class="folder-item">
+                      <div class="folder-base"></div>
+                      <div class="folder-tab"></div>
+                      <div class="folder-cards">
+                        <div class="char-card">夏</div>
+                        <div class="char-card">樱</div>
+                        <div class="char-card">苍</div>
+                      </div>
+                      <div class="folder-cover">
+                        <div class="folder-name">现代都市</div>
+                        <div class="folder-count">5 位角色</div>
+                      </div>
+                    </div>
+
+                    <!-- 世界 2 -->
+                    <div class="folder-item">
+                      <div class="folder-base"></div>
+                      <div class="folder-tab"></div>
+                      <div class="folder-cards">
+                        <div class="char-card" style="background: linear-gradient(135deg, #E8D4FF, #C9A8FF);">枫</div>
+                        <div class="char-card" style="background: linear-gradient(135deg, #FFE4D4, #FFB89A);">雪</div>
+                        <div class="char-card" style="background: linear-gradient(135deg, #D4F4FF, #9AE1FF);">海</div>
+                      </div>
+                      <div class="folder-cover">
+                        <div class="folder-name">幻想大陆</div>
+                        <div class="folder-count">8 位角色</div>
+                      </div>
+                    </div>
+
+                    <!-- 世界 3 -->
+                    <div class="folder-item">
+                      <div class="folder-base"></div>
+                      <div class="folder-tab"></div>
+                      <div class="folder-cards">
+                        <div class="char-card" style="background: linear-gradient(135deg, #D4FFE4, #9AFFB8);">博</div>
+                        <div class="char-card" style="background: linear-gradient(135deg, #FFF4D4, #FFE49A);">士</div>
+                      </div>
+                      <div class="folder-cover">
+                        <div class="folder-name">科幻纪元</div>
+                        <div class="folder-count">3 位角色</div>
+                      </div>
+                    </div>
+
+                    <!-- 世界 4 -->
+                    <div class="folder-item">
+                      <div class="folder-base"></div>
+                      <div class="folder-tab"></div>
+                      <div class="folder-cards">
+                        <div class="char-card" style="background: linear-gradient(135deg, #FFD4E4, #FF9ABC); transform: none;">月</div>
+                      </div>
+                      <div class="folder-cover">
+                        <div class="folder-name">古风江湖</div>
+                        <div class="folder-count">1 位角色</div>
+                      </div>
+                    </div>
+
+                    <!-- 空位 5 -->
+                    <div class="folder-item empty">
+                      <div class="folder-cover">
+                        <div class="add-folder-icon">
+                          <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- 空位 6 -->
+                    <div class="folder-item empty">
+                      <div class="folder-cover">
+                        <div class="add-folder-icon">
+                          <svg viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></svg>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="home-indicator"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- 组件展示 -->
+    <section class="components-section">
+      <h2 class="section-title">组件与材质</h2>
+      <div class="component-showcase" id="components">
+
+        <!-- 按钮状态 -->
+        <div class="component-group">
+          <div class="component-group-title">按钮状态（默认 / 按下）</div>
+          <div class="component-row">
+            <div class="component-item">
+              <div class="button-states">
+                <button class="demo-button primary">主要按钮</button>
+                <button class="demo-button primary pressed">按下状态</button>
+              </div>
+              <span class="component-label">Primary Button</span>
+            </div>
+            <div class="component-item">
+              <div class="button-states">
+                <button class="demo-button secondary">次要按钮</button>
+                <button class="demo-button secondary pressed">按下状态</button>
+              </div>
+              <span class="component-label">Secondary Button (拟态)</span>
+            </div>
+            <div class="component-item">
+              <div class="button-states">
+                <button class="demo-button glass">玻璃按钮</button>
+              </div>
+              <span class="component-label">Glass Button</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 开关 -->
+        <div class="component-group">
+          <div class="component-group-title">开关</div>
+          <div class="switch-row">
+            <div class="component-item">
+              <div class="ios-switch"></div>
+              <span class="component-label">关闭状态</span>
+            </div>
+            <div class="component-item">
+              <div class="ios-switch on"></div>
+              <span class="component-label">开启状态</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 玻璃效果 -->
+        <div class="component-group">
+          <div class="component-group-title">液态玻璃效果</div>
+          <div class="component-row">
+            <div class="component-item">
+              <div style="position: relative; width: 200px; height: 120px;">
+                <div class="glass-bg-pattern"></div>
+                <div class="glass-demo">玻璃卡片</div>
+              </div>
+              <span class="component-label">背景透出 + 边缘高光 + 模糊</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 色彩系统 -->
+        <div class="component-group">
+          <div class="component-group-title">色彩系统</div>
+          <div class="color-showcase">
+            <div class="color-chip" style="background: #FFFFFF; color: #000; border: 1px solid #E5E5EA;">
+              <span>纯白</span>
+              <span class="value">#FFF</span>
+            </div>
+            <div class="color-chip" style="background: #F2F2F7; color: #000;">
+              <span>页面底</span>
+              <span class="value">#F2F2F7</span>
+            </div>
+            <div class="color-chip" style="background: #E5E5EA; color: #000;">
+              <span>输入框</span>
+              <span class="value">#E5E5EA</span>
+            </div>
+            <div class="color-chip" style="background: #000000; color: #fff;">
+              <span>主文字</span>
+              <span class="value">#000</span>
+            </div>
+            <div class="color-chip" style="background: #8E8E93; color: #fff;">
+              <span>次文字</span>
+              <span class="value">#8E8E93</span>
+            </div>
+            <div class="color-chip" style="background: #007AFF; color: #fff;">
+              <span>强调蓝</span>
+              <span class="value">#007AFF</span>
+            </div>
+            <div class="color-chip" style="background: #34C759; color: #fff;">
+              <span>成功绿</span>
+              <span class="value">#34C759</span>
+            </div>
+            <div class="color-chip" style="background: #FF3B30; color: #fff;">
+              <span>危险红</span>
+              <span class="value">#FF3B30</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- 设计说明 -->
+    <section>
+      <div class="design-principles">
+        <h3>设计原则</h3>
+        <ul>
+          <li><strong>色彩：</strong>冷白、纯黑、灰阶为主，蓝色仅用于可点击元素和重要操作</li>
+          <li><strong>拟态：</strong>按钮有细微高低差和柔和阴影，按下时阴影内收并轻微缩放</li>
+          <li><strong>液态玻璃：</strong>Dock、导航栏、输入栏有透明模糊效果，顶部高光线模拟光泽，边缘渐变边框</li>
+          <li><strong>图标：</strong>原创 SVG 图标，渐变底板 + 白色图形，统一视觉重量</li>
+          <li><strong>文件夹：</strong>真实文件夹造型 — 底板、标签、夹在其中的角色卡片、前盖</li>
+          <li><strong>排版：</strong>大标题 34px，正文 17px，说明 13px；分组之间有留白，组内用 0.5px 分隔线</li>
+          <li><strong>交互：</strong>点击立即反馈，动画 150-200ms，尊重减少动态效果设置</li>
+        </ul>
+        <div class="note-box">
+          这是设计情绪板，用于确认视觉方向。所有页面为示意图，不是已实现功能。
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <script>
+    function setTheme(theme) {
+      const screens = ['screen-home', 'screen-settings', 'screen-chat', 'screen-char', 'components'];
+      const btns = document.querySelectorAll('.theme-btn');
+
+      screens.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+          if (theme === 'dark') {
+            el.classList.add('dark-mode');
+          } else {
+            el.classList.remove('dark-mode');
+          }
+        }
+      });
+
+      btns.forEach(btn => {
+        btn.classList.remove('active');
+        if ((theme === 'light' && btn.textContent.includes('亮')) ||
+            (theme === 'dark' && btn.textContent.includes('暗'))) {
+          btn.classList.add('active');
+        }
+      });
+    }
+
+    // 开关交互
+    document.querySelectorAll('.ios-switch').forEach(sw => {
+      sw.addEventListener('click', function() {
+        this.classList.toggle('on');
+      });
+    });
+  </script>
+</body>
+</html>
