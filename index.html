@@ -14,15 +14,38 @@
 <link rel="stylesheet" href="css/surfaces.css">
 <link rel="stylesheet" href="css/settings.css">
 <link rel="stylesheet" href="css/chat.css">
+<link rel="stylesheet" href="css/lock.css">
 </head>
 <body>
 <div class="device">
-  <div class="screen">
+  <div class="screen" data-lock="boot" style="--p:0">
     <div class="statusbar" aria-hidden="true"></div>
     <div class="layer layer-home"></div>
     <div class="layer layer-apps"></div>
     <div class="layer layer-overlay"></div>
     <div class="home-bar" hidden></div>
+    <!-- 锁屏：上滑或轻点空白处解锁（js/lock.js） -->
+    <div class="lockscreen">
+      <div class="lk-wall" aria-hidden="true"><i class="lk-blob lk-b1"></i><i class="lk-blob lk-b2"></i><i class="lk-blob lk-b3"></i><i class="lk-blob lk-b4"></i><i class="lk-grain"></i></div>
+      <section class="lk-main" aria-label="锁屏，上滑或轻点空白处解锁" tabindex="0">
+        <div class="lk-top">
+          <svg class="lk-glyph" viewBox="0 0 20 22" aria-hidden="true"><path class="shackle" d="M5.5 10V7a4.5 4.5 0 0 1 9 0v3"/><rect x="3" y="10" width="14" height="10.5" rx="3"/></svg>
+          <div class="lk-date"><span data-clock="md"></span><span class="sep"></span><span data-clock="w"></span></div>
+          <div class="lk-time" data-clock="big"></div>
+        </div>
+        <div class="lk-notes" aria-label="通知" hidden></div>
+        <p class="lk-hint">上滑解锁</p>
+      </section>
+      <div class="lk-homebar" aria-hidden="true"></div>
+    </div>
+    <!-- 启动画面 -->
+    <section class="boot" aria-label="LinH Pocket YI，正在启动">
+      <canvas class="boot-stars" aria-hidden="true"></canvas>
+      <div class="boot-center">
+        <div class="boot-mark"><img src="icons/icon-512.png" alt="" width="512" height="512" draggable="false"></div>
+        <svg class="boot-name" role="img" aria-label="LinH Pocket YI"><path/></svg>
+      </div>
+    </section>
   </div>
 </div>
 <script src="js/core.js"></script>
@@ -36,6 +59,8 @@
 <script src="js/apps/settings-pages.js"></script>
 <script src="js/apps/chat.js"></script>
 <script src="js/apps/chat-conv.js"></script>
+<script src="js/brand-name.js"></script>
+<script src="js/lock.js"></script>
 <script src="js/main.js"></script>
 </body>
 </html>
