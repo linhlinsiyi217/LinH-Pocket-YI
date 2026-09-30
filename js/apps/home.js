@@ -29,6 +29,26 @@
     clockWide: { name: '时钟（宽）', w: 4, h: 2 },
     date:      { name: '日历',     w: 2, h: 2 }
   };
+  // 小组件可选尺寸（小 / 中 / 大），编辑时切换
+  const SIZES = [[2, 2, '小'], [4, 2, '中'], [4, 4, '大']];
+  const CSS_MAX = 4000, TEXT_MAX = 40;
+  // 小组件自定义：l1 / l2 替换两行文字（空 = 自动），img 背景图（dataURL），css 只作用于这个小组件
+  function cleanCfg(c){
+    if (!c || typeof c !== 'object') return null;
+    const out = {};
+    ['l1', 'l2'].forEach(k => { if (typeof c[k] === 'string' && c[k].trim()) out[k] = c[k].slice(0, TEXT_MAX); });
+    if (typeof c.img === 'string' && /^data:image\//.test(c.img)) out.img = c.img;
+    if (typeof c.css === 'string' && c.css.trim()) out.css = c.css.slice(0, CSS_MAX);
+    return Object.keys(out).length ? out : null;
+  }
+  // 自定义 CSS 的括号必须配平，否则会跑出这个小组件的作用范围
+  function cssBalanced(s){
+    s = s.replace(/\/\*[\s\S]*?(\*\/|$)/g, '').replace(/"(\\.|[^"\\])*"|'(\\.|[^'\\])*'/g, '""');
+    let d = 0;
+    for (const ch of s) { if (ch === '{') d++; else if (ch === '}' && --d < 0) return false; }
+    return d === 0 && !/<\/?style/i.test(s);
+  }
+  const wcls = id => 'wc-' + String(id).replace(/[^\w-]/g, '_');
   const esc = XS.esc;
   const $ = (s, r) => (r || document).querySelector(s);
   const scale = () => XS.frameScale || 1;
@@ -72,7 +92,8 @@
   const clone = o => o == null ? null : JSON.parse(JSON.stringify(o));
   // base = 已保存的布局；每次渲染都从它重新整理出 L，窗口暂时变矮时挪动的位置不会写回
   let base = null;
-  const save = () => { base = clone(L); XS.store.set(KEY, L); };
+  // 写入失败（多半是图片撑满了存储）时不更新 base，下次渲染会回到上一次保存的样子
+  const save = () => { if (!XS.store.set(KEY, L)) return false; base = clone(L); return true; };
   const getRemovedApps = () => new Set(XS.store.get('home.removedApps', []));
   const markRemoved = id => { const s = getRemovedApps(); s.add(id); XS.store.set('home.removedApps', [...s]); };
   const unmarkRemoved = id => { const s = getRemovedApps(); s.delete(id); XS.store.set('home.removedApps', [...s]); };
@@ -118,7 +139,13 @@
     const c = Math.max(0, o.c | 0), r = Math.max(0, o.r | 0);
     if (o.t === 'app') return XS.apps[o.id] ? { t: 'app', id: o.id, c, r } : null;
     const k = WIDGETS[o.kind];
-    if (o.t === 'w' && k) return { t: 'w', id: String(o.id || XS.uid('w')), kind: o.kind, c, r, w: k.w, h: k.h };
+    if (o.t === 'w' && k) {
+      const sz = SIZES.find(s => s[0] === o.w && s[1] === o.h) || [k.w, k.h];
+      const it = { t: 'w', id: String(o.id || XS.uid('w')), kind: o.kind, c, r, w: sz[0], h: sz[1] };
+      const cfg = cleanCfg(o.cfg);
+      if (cfg) it.cfg = cfg;
+      return it;
+    }
     return null;
   }
   // 读取后整理：去掉未知应用、重复项、重叠项；超出当前行数的挪到空位；漏掉的应用补回桌面
@@ -153,14 +180,35 @@
   const appBtn = (a, key, style='') => `<button class="app tap" data-app="${a.id}" data-key="${key}" aria-label="${esc(a.name)}"${style ? ` style="${style}"` : ''}>
     <span class="app-icon ${a.variant}">${XS.appIcons[a.icon]}</span><span class="app-label">${esc(a.name)}</span>
     ${editing && key.startsWith('app:') ? `<button class="app-del tap" data-appdel="${a.id}" aria-label="移除${esc(a.name)}">${XS.icon('close')}</button>` : ''}</button>`;
+  // data-line 1 / 2：可以被自定义文字替换的两行
   const widgetBody = kind => ({
-    clock:     '<div class="w-top"><span data-clock="w"></span><span data-clock="md"></span></div><div class="w-time" data-clock="t"></div>',
-    clockWide: '<div class="w-time" data-clock="t"></div><div class="w-side"><div class="w-week" data-clock="w"></div><div class="w-date" data-clock="md"></div></div>',
-    date:      '<div class="w-week" data-clock="w"></div><div class="w-day" data-clock="day"></div><div class="w-date" data-clock="ym"></div>'
+    clock:     '<div class="w-top"><span data-clock="w" data-line="1"></span><span data-clock="md" data-line="2"></span></div><div class="w-time" data-clock="t"></div>',
+    clockWide: '<div class="w-time" data-clock="t"></div><div class="w-side"><div class="w-week" data-clock="w" data-line="1"></div><div class="w-date" data-clock="md" data-line="2"></div></div>',
+    date:      '<div class="w-week" data-clock="w" data-line="1"></div><div class="w-day" data-clock="day"></div><div class="w-date" data-clock="ym" data-line="2"></div>'
   })[kind];
-  const widgetHtml = it => `<div class="widget wk-${it.kind}" data-w="${esc(it.id)}" role="group" aria-label="${WIDGETS[it.kind].name}小组件"
-    style="grid-column:${it.c + 1} / span ${it.w};grid-row:${it.r + 1} / span ${it.h}">
-    <button class="w-del tap" data-del="${esc(it.id)}" aria-label="移除${WIDGETS[it.kind].name}小组件">${XS.icon('close')}</button>${widgetBody(it.kind)}</div>`;
+  // 小组件外壳：preview 为 true 时用于编辑面板里的实时预览（不带网格位置和删除键）
+  function widgetHtml(it, preview){
+    const cfg = it.cfg || {}, name = WIDGETS[it.kind].name;
+    const cls = `widget wk-${it.kind} ws-${it.w}x${it.h} ${preview ? 'wc-preview' : wcls(it.id)}${cfg.img ? ' has-img' : ''}`;
+    const style = (preview ? '' : `grid-column:${it.c + 1} / span ${it.w};grid-row:${it.r + 1} / span ${it.h};`)
+      + (cfg.img ? `--w-img:url(&quot;${esc(cfg.img)}&quot;)` : '');
+    return `<div class="${cls}"${preview ? '' : ` data-w="${esc(it.id)}"`} role="group" aria-label="${name}小组件${preview ? '预览' : ''}"${style ? ` style="${style}"` : ''}>
+    ${preview ? '' : `<button class="w-del tap" data-del="${esc(it.id)}" aria-label="移除${name}小组件">${XS.icon('close')}</button>`}${widgetBody(it.kind)}</div>`;
+  }
+  // 把自定义文字填进去；其余带 data-clock 的位置由时钟每分钟刷新
+  function fillLines(el, cfg){
+    el.querySelectorAll('[data-line]').forEach(n => {
+      const v = cfg && cfg['l' + n.dataset.line];
+      if (v) { n.textContent = v; n.dataset.fixed = ''; } else delete n.dataset.fixed;
+    });
+  }
+  // 每个小组件的自定义 CSS 限定在自己的 class 里（用 CSS 嵌套），通过 textContent 写入，不会注入标签
+  const scopedCss = (sel, css) => css && cssBalanced(css) ? `${sel}${sel}{${css}\n}\n` : '';
+  function applyWidgetCss(){
+    let st = $('style[data-wcss]', root);
+    if (!st) { st = document.createElement('style'); st.dataset.wcss = ''; root.appendChild(st); }
+    st.textContent = L.pages.flat().filter(it => it.t === 'w' && it.cfg && it.cfg.css).map(it => scopedCss('.' + wcls(it.id), it.cfg.css)).join('');
+  }
 
   const curPage = () => pagesEl && pagesEl.clientWidth ? Math.round(pagesEl.scrollLeft / pagesEl.clientWidth) : 0;
   const gridOf = p => pagesEl.children[p] && pagesEl.children[p].firstElementChild;
@@ -204,6 +252,9 @@
     const p = Math.max(0, Math.min(L.pages.length - 1, page == null ? curPage() : page));
     pagesEl.innerHTML = L.pages.map(pageHtml).join('');
     dockEl.innerHTML = L.dock.map(id => appBtn(XS.apps[id], 'dock:' + id)).join('');
+    dockEl.classList.toggle('is-empty', !L.dock.length);
+    L.pages.flat().forEach(it => { if (it.t === 'w' && it.cfg) fillLines(pagesEl.querySelector(`[data-w="${CSS.escape(it.id)}"]`), it.cfg); });
+    applyWidgetCss();
     pagesEl.scrollLeft = p * pagesEl.clientWidth;
     renderDots();
     tick(true);
@@ -211,19 +262,23 @@
 
   /* ---------- 时钟：每秒检查，分钟变了才改文字 ---------- */
   let lastKey = '';
-  function tick(force){
-    if (!root) return;
-    const n = new Date(), key = `${n.getDate()}-${n.getHours()}-${n.getMinutes()}`;
-    if (!force && key === lastKey) return;
-    lastKey = key;
-    const v = {
+  function clockValues(){
+    const n = new Date();
+    return {
       t: n.getHours() + ':' + String(n.getMinutes()).padStart(2, '0'),
       w: '星期' + WEEK[n.getDay()],
       md: `${n.getMonth() + 1}月${n.getDate()}日`,
       day: String(n.getDate()),
       ym: `${n.getFullYear()}年${n.getMonth() + 1}月`
     };
-    root.querySelectorAll('[data-clock]').forEach(el => { el.textContent = v[el.dataset.clock]; });
+  }
+  const fillClock = scope => { const v = clockValues(); scope.querySelectorAll('[data-clock]:not([data-fixed])').forEach(el => { el.textContent = v[el.dataset.clock]; }); };
+  function tick(force){
+    if (!root) return;
+    const n = new Date(), key = `${n.getDate()}-${n.getHours()}-${n.getMinutes()}`;
+    if (!force && key === lastKey) return;
+    lastKey = key;
+    fillClock(root);
   }
   setInterval(tick, 1000);
 
@@ -266,12 +321,142 @@
     const list = XS.ui.h(`<div class="wpick">${Object.entries(WIDGETS).map(([kind, k]) => `<button class="wpick-item tap-row" data-kind="${kind}">
       <span class="wpick-shape" style="--w:${k.w};--h:${k.h}" aria-hidden="true"></span>
       <span class="wpick-text"><span class="wpick-name">${k.name}</span><span class="wpick-sub">占 ${k.w} × ${k.h} 格</span></span></button>`).join('')}
-      <p class="wpick-hint">只会放进空着的格子，不会盖住图标。当前页放不下时会放到后面的页面。</p></div>`);
+      <p class="wpick-hint">只会放进空着的格子，不会盖住图标。当前页放不下时会放到后面的页面。添加后在编辑状态下轻点小组件，可以改尺寸、文字、图片和样式。</p></div>`);
     const close = XS.ui.sheet({ title: '添加小组件', content: list, doneText: '完成' });
     list.addEventListener('click', e => {
       const b = e.target.closest('[data-kind]');
       if (b) { close(); addWidget(b.dataset.kind); }
     });
+  }
+
+  /* ---------- 小组件编辑：尺寸、文字、图片、CSS，实时预览 ---------- */
+  function findWidget(id){
+    for (let p = 0; p < L.pages.length; p++) {
+      const item = L.pages[p].find(x => x.t === 'w' && x.id === id);
+      if (item) return { page: p, item };
+    }
+    return null;
+  }
+  // 图片缩到最长边 720px 再存，避免撑爆本地存储
+  function loadImage(file){
+    return new Promise((ok, fail) => {
+      const url = URL.createObjectURL(file), img = new Image();
+      img.onload = () => {
+        const s = Math.min(1, 720 / Math.max(img.width, img.height)), cv = document.createElement('canvas');
+        cv.width = Math.round(img.width * s); cv.height = Math.round(img.height * s);
+        const g = cv.getContext('2d');
+        g.fillStyle = '#fff'; g.fillRect(0, 0, cv.width, cv.height);
+        g.drawImage(img, 0, 0, cv.width, cv.height);
+        URL.revokeObjectURL(url);
+        ok(cv.toDataURL('image/jpeg', .82));
+      };
+      img.onerror = () => { URL.revokeObjectURL(url); fail(new Error('bad image')); };
+      img.src = url;
+    });
+  }
+  function widgetEditor(id){
+    const found = findWidget(id);
+    if (!found) return;
+    const k = WIDGETS[found.item.kind];
+    const d = { kind: found.item.kind, w: found.item.w, h: found.item.h, cfg: { ...(found.item.cfg || {}) } };
+    const ph = { clock: ['星期几', '几月几日'], clockWide: ['星期几', '几月几日'], date: ['星期几', '几年几月'] }[d.kind];
+    const box = XS.ui.h(`<div class="wedit">
+      <div class="wedit-stage" aria-live="polite"></div>
+      <div class="group-block"><div class="group">
+        <div class="seg-row"><div class="row-title">尺寸</div>
+          <div class="segmented" role="radiogroup" aria-label="尺寸">${SIZES.map(([w, h, t]) => `<button class="seg" role="radio" data-sz="${w}x${h}">${t} ${w}×${h}</button>`).join('')}</div></div>
+      </div></div>
+      <div class="group-block"><div class="group-label">文字</div><div class="group">
+        <div class="field-inline"><label for="we-l1">第一行</label><input id="we-l1" data-f="l1" maxlength="${TEXT_MAX}" placeholder="自动：${ph[0]}" autocomplete="off"></div>
+        <div class="field-inline"><label for="we-l2">第二行</label><input id="we-l2" data-f="l2" maxlength="${TEXT_MAX}" placeholder="自动：${ph[1]}" autocomplete="off"></div>
+      </div><div class="group-foot">留空就显示自动的日期文字；时间数字始终自动走。</div></div>
+      <div class="group-block"><div class="group-label">图片</div><div class="wedit-img">
+        <button class="btn btn-sm btn-plain tap" data-a="pick"></button>
+        <button class="btn btn-sm btn-plain tap" data-a="noimg">移除图片</button>
+        <input type="file" accept="image/*" hidden aria-label="选择小组件图片"></div></div>
+      <div class="group-block"><div class="group-label">CSS</div>
+        <label class="field wedit-css"><span class="sr-only">小组件 CSS</span><textarea data-f="css" maxlength="${CSS_MAX}" spellcheck="false" autocapitalize="off"
+          placeholder="只作用于这个小组件，例如：&#10;background: #111; color: #fff;&#10;.w-time { font-weight: 600; }"></textarea>
+        <span class="hint" data-csshint>直接写属性改外框；写选择器改里面的元素：.w-time 时间、.w-week / .w-date 文字。</span></label></div>
+      <button class="btn btn-block btn-danger tap" data-a="reset">恢复默认</button>
+    </div>`);
+    const stage = $('.wedit-stage', box), seg = $('.segmented', box), file = $('input[type=file]', box);
+    const cssTa = $('[data-f="css"]', box), hint = $('[data-csshint]', box), hintText = hint.textContent;
+    const pv = document.createElement('style');
+    box.appendChild(pv);
+    // 预览尺寸按桌面真实格子算，再整体缩到面板里
+    function paint(){
+      const cellW = M.colW || 80, cellH = M.cellH || 84, gap = M.gap || 20, mx = M.wmx || 10;
+      const W = d.w * cellW - 2 * mx, H = d.h * cellH + (d.h - 1) * gap;
+      const s = Math.min(1, 200 / H, (stage.clientWidth || 320) / W);
+      stage.innerHTML = widgetHtml({ ...d, id: 'preview' }, true);
+      const el = stage.firstElementChild;
+      Object.assign(el.style, { width: W + 'px', height: H + 'px', margin: 0, transform: `scale(${s})`, transformOrigin: 'top center' });
+      stage.style.height = H * s + 'px';
+      fillLines(el, d.cfg); fillClock(el);
+      const ok = !d.cfg.css || cssBalanced(d.cfg.css);
+      pv.textContent = ok ? scopedCss('.wc-preview', d.cfg.css || '') : '';
+      hint.textContent = ok ? hintText : '大括号 { } 没有配对，这段 CSS 暂时不生效，也不能保存。';
+      hint.classList.toggle('bad', !ok);
+      $('[data-a="pick"]', box).textContent = d.cfg.img ? '更换图片' : '上传图片';
+      $('[data-a="noimg"]', box).hidden = !d.cfg.img;
+    }
+    const btns = [...seg.querySelectorAll('.seg')];
+    const idx = () => Math.max(0, btns.findIndex(b => b.dataset.sz === `${d.w}x${d.h}`));
+    const tabs = XS.ui.pillTabs(seg, { itemSel: '.seg', attr: 'aria-checked', index: idx(), onChange: i => {
+      const [w, h] = btns[i].dataset.sz.split('x').map(Number); d.w = w; d.h = h; paint();
+    }});
+    function syncForm(){
+      box.querySelectorAll('[data-f]').forEach(f => { f.value = d.cfg[f.dataset.f] || ''; });
+      tabs.select(idx());
+    }
+    box.addEventListener('input', e => {
+      const f = e.target.dataset.f;
+      if (!f) return;
+      if (e.target.value.trim()) d.cfg[f] = e.target.value; else delete d.cfg[f];
+      paint();
+    });
+    box.addEventListener('click', e => {
+      const a = e.target.closest('[data-a]');
+      if (!a) return;
+      if (a.dataset.a === 'pick') file.click();
+      else if (a.dataset.a === 'noimg') { delete d.cfg.img; paint(); }
+      else if (a.dataset.a === 'reset') { d.w = k.w; d.h = k.h; d.cfg = {}; syncForm(); paint(); XS.ui.toast('已恢复默认，点“保存”后生效'); }
+    });
+    file.addEventListener('change', async () => {
+      const f = file.files[0]; file.value = '';
+      if (!f) return;
+      try { d.cfg.img = await loadImage(f); paint(); } catch (e) { XS.ui.toast('这张图片读不出来，换一张试试'); }
+    });
+    XS.ui.sheet({ title: `编辑${k.name}`, content: box, doneText: '保存', onDone: () => saveWidget(id, d) });
+    syncForm();
+    requestAnimationFrame(paint);
+  }
+  // 保存：尺寸变了先在原位试，放不下就挪到最近的空位 / 后面的页面
+  function saveWidget(id, d){
+    if (d.cfg.css && !cssBalanced(d.cfg.css)) { XS.ui.toast('CSS 的大括号没有配对，先改好再保存'); return false; }
+    const found = findWidget(id);
+    if (!found) return true;
+    const { page, item } = found, items = L.pages[page];
+    const old = { w: item.w, h: item.h, c: item.c, r: item.r };
+    let at = page;
+    if (d.w !== item.w || d.h !== item.h) {
+      if (d.w > COLS || d.h > rows) { XS.ui.toast('屏幕高度不够，放不下这个尺寸'); return false; }
+      item.w = d.w; item.h = d.h;
+      if (!fits(items, item.c, item.r, item.w, item.h, item)) {
+        const f = findFree(items, item.w, item.h, item, { c: item.c, r: item.r });
+        if (f) Object.assign(item, f);
+        else { removeFrom(items, item); at = placeAnywhere(item, page); }
+        if (at < 0) { Object.assign(item, old); items.push(item); XS.ui.toast('放不下这个尺寸'); return false; }
+      }
+    }
+    const cfg = cleanCfg(d.cfg);
+    if (cfg) item.cfg = cfg; else delete item.cfg;
+    normalize();
+    if (!save()) { XS.ui.toast('本地存储空间不够，图片可能太大'); render(); return false; }
+    render(at);
+    if (at !== page) XS.ui.toast(`这一页放不下，已移到第 ${at + 1} 页`);
+    return true;
   }
 
   /* ---------- 拖动 ---------- */
@@ -372,7 +557,9 @@
     [ghost, ...ghost.querySelectorAll('[data-key],[data-w],[data-del],[data-clock]')].forEach(n => {
       n.removeAttribute('data-key'); n.removeAttribute('data-w'); n.removeAttribute('data-del');
     });
+    const img = el.style.getPropertyValue('--w-img');
     ghost.removeAttribute('style');
+    if (img) ghost.style.setProperty('--w-img', img);
     const left = (r.left - rr.left) / k, top = (r.top - rr.top) / k;
     Object.assign(ghost.style, { left: left + 'px', top: top + 'px', width: r.width / k + 'px', height: r.height / k + 'px' });
     root.appendChild(ghost);
@@ -518,7 +705,10 @@
       const dot = e.target.closest('[data-dot]');
       if (dot) { pagesEl.scrollTo({ left: dot.dataset.dot * pagesEl.clientWidth, behavior: reduced() ? 'auto' : 'smooth' }); return; }
       const b = e.target.closest('[data-app]');
-      if (editing) { if (!b && !e.target.closest('.widget')) setEditing(false); return; }
+      // 编辑模式下轻点小组件：打开它的编辑面板（按住拖动不会触发）
+      const wEl = e.target.closest('[data-w]');
+      if (editing && wEl) { widgetEditor(wEl.dataset.w); return; }
+      if (editing) { if (!b) setEditing(false); return; }
       if (b) XS.nav.openApp(b.dataset.app, b);
     });
     pagesEl.addEventListener('scroll', () => {
