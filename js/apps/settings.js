@@ -61,7 +61,7 @@
         ${group([
           { id: 'general', icon: 'gear', title: '通用', value: '未开放', muted: true, chev: true },
           { id: 'display', icon: 'sun', title: '显示与亮度', chev: true },
-          { id: 'homescreen', icon: 'grid', title: '主屏幕与 App 资源库', value: '未开放', muted: true, chev: true },
+          { id: 'homescreen', icon: 'grid', title: '主屏幕与 App 资源库', chev: true },
           { id: 'access', icon: 'access', title: '辅助功能', chev: true }
         ])}
         ${group([
@@ -77,7 +77,7 @@
     const v = p.view;
     bindSwitch(v, 'flight', 'flightMode', on => XS.ui.toast(on ? '飞行模式已开启：AI 请求已暂停' : '飞行模式已关闭'));
 
-    const names = { voice: '语音设定', general: '通用', homescreen: '主屏幕与 App 资源库', backup: '云备份' };
+    const names = { voice: '语音设定', general: '通用', backup: '云备份' };
     v.addEventListener('click', e => {
       const b = e.target.closest('button[data-id]');
       if (!b) return;

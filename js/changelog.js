@@ -12,9 +12,21 @@
   const esc = XS.esc;
   const $ = (s, r) => (r || document).querySelector(s);
 
-  const VERSION = 'v0.2.0';
+  const VERSION = 'v0.3.0';
 
   const LOGS = {
+    'v0.3.0': {
+      date: '2026-10-01',
+      note: '应用可以移除和恢复了',
+      added: [
+        { t: '应用移除与恢复', d: '主屏幕长按应用图标，点击 × 可以从主屏幕和 Dock 移除，移除后不会自动再次出现；在「设置 › 主屏幕与 App 资源库」里随时可以放回桌面第一个空位。' }
+      ],
+      adjusted: [],
+      fixed: [
+        { t: '聊天历史重复', d: '修复最新的用户消息在构建提示词时被重复添加两次的问题，现在每条消息只会在对话历史中出现一次。' }
+      ],
+      patched: []
+    },
     'v0.2.0': {
       date: '2026-09-30',
       note: '应用图标补齐，聊天更自然',

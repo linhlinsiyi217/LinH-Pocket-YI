@@ -129,6 +129,35 @@
     return p.view;
   };
 
+  /* 主屏幕与 App 资源库：查看并恢复被长按移除的应用 */
+  pages.homescreen = () => {
+    const p = page('主屏幕与 App 资源库', '<div data-hs></div>');
+    const box = p.body.querySelector('[data-hs]');
+    const render = () => {
+      const ids = [...XS.homeApi.getRemovedApps()].filter(id => XS.apps[id]);
+      box.innerHTML = ids.length
+        ? `<div class="group-block"><div class="group-label">已从主屏幕移除</div><div class="group">
+            ${ids.map(id => { const a = XS.apps[id];
+              return `<div class="row"><span class="perm-app"><span class="app-icon ${a.variant}">${XS.appIcons[a.icon]}</span></span>
+                <span class="row-main"><span class="row-title">${esc(a.name)}</span></span>
+                <button class="guide-btn" data-restore="${id}">放回桌面</button></div>`;
+            }).join('')}
+          </div><div class="group-foot">在主屏幕长按图标、点 × 可以移除；这里可以随时放回，会放在桌面第一个空位。</div></div>`
+        : `<div class="group-block"><div class="group">${XS.sui.row({ title: '没有被移除的应用', muted: true })}</div>
+            <div class="group-foot">在主屏幕长按图标、点 × 可以把应用从桌面和 Dock 移除，移除后会出现在这里。</div></div>`;
+    };
+    render();
+    box.addEventListener('click', e => {
+      const b = e.target.closest('[data-restore]');
+      if (!b) return;
+      const id = b.dataset.restore, name = XS.apps[id] ? XS.apps[id].name : '';
+      XS.homeApi.restoreApp(id);
+      render();
+      XS.ui.toast(`已把「${name}」放回桌面`);
+    });
+    return p.view;
+  };
+
   pages.perm = () => {
     const info = [
       ['chat', '使用：本地存储（联系人、聊天记录）、网络（只在发送消息时请求你配置的 API）'],

@@ -8,40 +8,54 @@
   const fmt = text => esc(text).split('\n').map(line =>
     /^\s*（[^（）]*）\s*$/.test(line) ? `<span class="act">${line}</span>` : line.replace(/\*([^*\n]+)\*/g, '<span class="act">$1</span>')).join('\n');
 
-  // 构建分层提示词：稳定角色身份 + 当前状态 + 时间感知
-  function buildPrompt(c, msgs){
+  // 使用 lifelike-core.js 构建完整的六层提示词系统
+  function buildPrompt(c, msgs, userInput){
     const me = XS.profile.get();
-    const layers = [];
 
-    // 第一层：稳定角色身份（不随对话变化）
-    layers.push(`你正在扮演「${c.name}」，和用户在手机聊天软件里一对一聊天。`);
-    if (c.persona) layers.push(`角色设定：${c.persona}`);
-    layers.push(`用户的名字是「${me.name || '我'}」。${me.persona ? '用户的设定：' + me.persona : ''}`);
+    // 构建角色设定（支持字符串或五层对象格式）
+    const characterProfile = c.persona || c.name;
 
-    // 第二层：说话风格指导
-    layers.push('请始终以角色身份、用第一人称回复，像真实聊天一样简短自然。动作或神态可以写在 *星号* 里。');
+    // 构建用户资料
+    const userProfile = me.name ? `用户名字：${me.name}${me.persona ? '\n用户设定：' + me.persona : ''}` : '';
 
-    // 第三层：时间感知与上下文连续性
+    // 构建历史消息（转换为 lifelike 需要的格式）
+    const history = msgs
+      .filter(m => m.status !== 'failed')
+      .slice(-30)
+      .map(m => ({
+        role: m.role === 'self' ? 'user' : 'assistant',
+        content: m.text
+      }));
+
+    // 时间感知层：检查对话间隔
+    let activationText = '';
     const lastMsg = msgs.length > 0 ? msgs[msgs.length - 1] : null;
     if (lastMsg && lastMsg.ts) {
       const gap = Date.now() - lastMsg.ts;
       const hours = gap / (1000 * 60 * 60);
       if (hours > 12) {
-        layers.push(`距离上次对话已经过了${hours > 24 ? Math.floor(hours / 24) + '天多' : Math.floor(hours) + '小时多'}，可以自然地提及时间流逝。`);
+        activationText = `距离上次对话已经过了${hours > 24 ? Math.floor(hours / 24) + '天多' : Math.floor(hours) + '小时多'}，可以自然地提及时间流逝。`;
       }
     }
 
-    return layers.filter(Boolean).join('\n');
-  }
+    // 调用 lifelike 核心模块构建完整提示词
+    const ctx = XS.lifelike.buildPromptContext({
+      characterProfile,
+      userProfile,
+      worldbookEntries: [],     // 未来可扩展世界书功能
+      activePresets: [],         // 未来可扩展预设功能
+      calibrations: [],          // 未来可扩展校准功能
+      rollingSummary: '',        // 未来可扩展摘要功能
+      relevantMemories: [],      // 未来可扩展记忆功能
+      history,
+      userInput,
+      now: new Date(),
+      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      activationText,
+      styleInFirstUserMessage: false  // 使用 system 字段方式
+    });
 
-  // 校验输出：处理明显错误，不过度限制自然短回复
-  function validateOutput(text, characterName){
-    if (!text || typeof text !== 'string') return { ok: false, reason: '回复为空' };
-    const trimmed = text.trim();
-    if (!trimmed) return { ok: false, reason: '回复只有空白' };
-    if (trimmed.length > 800) return { ok: false, reason: '回复过长（超过 800 字）' };
-    // 不限制短回复：一两个字、单个表情、简单应答都可以
-    return { ok: true, text: trimmed };
+    return ctx;
   }
 
   // 真正发请求：成功则追加对方消息；失败把这条标记为失败
@@ -56,46 +70,37 @@
     };
     mark('sending');
     const allMsgs = data.msgs(cid);
-    const history = allMsgs.filter(m => m.status !== 'failed' || m.id === msgId).slice(-30)
-      .map(m => ({ role: m.role === 'self' ? 'user' : 'assistant', content: m.text }));
+    const userMsg = allMsgs.find(m => m.id === msgId);
+    if (!userMsg) {
+      delete data.pending[cid];
+      return;
+    }
 
-    const systemContent = buildPrompt(c, allMsgs);
-    let retries = 0;
-    const maxRetries = 2;
+    const ctx = buildPrompt(c, allMsgs.filter(m => m.id !== msgId), userMsg.text);
 
-    while (retries <= maxRetries) {
-      try {
-        const reply = await XS.api.chat([{ role: 'system', content: systemContent }, ...history]);
-        const validation = validateOutput(reply, c.name);
+    try {
+      // 使用 lifelike 模块的校验和重试机制
+      const reply = await XS.lifelike.requestWithOneRetry(
+        async (request) => {
+          // 将 ctx.system 和 ctx.messages 转换为现有 API 格式
+          const apiMessages = [
+            { role: 'system', content: request.system },
+            ...request.messages
+          ];
+          return await XS.api.chat(apiMessages);
+        },
+        ctx
+      );
 
-        if (!validation.ok) {
-          if (retries < maxRetries) {
-            retries++;
-            // 重试时加上具体要求
-            history.push({ role: 'assistant', content: reply });
-            history.push({ role: 'user', content: `上一条回复有问题（${validation.reason}），请重新回复。` });
-            continue;
-          } else {
-            throw new Error(`回复格式问题：${validation.reason}`);
-          }
-        }
-
-        delete data.pending[cid];
-        const list = mark('ok');
-        if (list && data.contact(cid)) {
-          list.push({ id: XS.uid('m'), role: 'other', text: validation.text, ts: Date.now() });
-          data.saveMsgs(cid, list);
-        }
-        return;
-      } catch (e) {
-        if (retries < maxRetries && e.kind !== 'config' && e.kind !== 'flight') {
-          retries++;
-          continue;
-        }
-        delete data.pending[cid];
-        mark('failed', { kind: e.kind || 'unknown', message: e.message || '未知错误' });
-        return;
+      delete data.pending[cid];
+      const list = mark('ok');
+      if (list && data.contact(cid)) {
+        list.push({ id: XS.uid('m'), role: 'other', text: reply, ts: Date.now() });
+        data.saveMsgs(cid, list);
       }
+    } catch (e) {
+      delete data.pending[cid];
+      mark('failed', { kind: e.kind || 'unknown', message: e.message || '未知错误' });
     }
   }
 

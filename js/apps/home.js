@@ -19,9 +19,7 @@
     wallet:   { id: 'wallet',   name: '钱包',    icon: 'wallet',   variant: 'ai-light' },
     messages: { id: 'messages', name: '短信',    icon: 'messages', variant: 'ai-light' },
     phone:    { id: 'phone',    name: '电话',    icon: 'phone',    variant: 'ai-light' },
-    library:  { id: 'library',  name: '书房',    icon: 'library',  variant: 'ai-light' },
-    wechat:   { id: 'wechat',   name: '微信',    icon: 'wechat',   variant: 'ai-light' },
-    moments:  { id: 'moments',  name: '朋友圈',  icon: 'moments',  variant: 'ai-light' }
+    library:  { id: 'library',  name: '书房',    icon: 'library',  variant: 'ai-light' }
   };
 
   const COLS = 4, DOCK_MAX = 4, KEY = 'home', HOLD_MS = 450;
@@ -65,9 +63,7 @@
         { t: 'app', id: 'wallet', c: 3, r: 0 },
         { t: 'app', id: 'messages', c: 0, r: 1 },
         { t: 'app', id: 'phone', c: 1, r: 1 },
-        { t: 'app', id: 'library', c: 2, r: 1 },
-        { t: 'app', id: 'wechat', c: 0, r: 2 },
-        { t: 'app', id: 'moments', c: 1, r: 2 }
+        { t: 'app', id: 'library', c: 2, r: 1 }
       ]
     ],
     dock: Object.values(XS.apps).filter(a => a.dock).map(a => a.id) });
@@ -77,6 +73,9 @@
   // base = 已保存的布局；每次渲染都从它重新整理出 L，窗口暂时变矮时挪动的位置不会写回
   let base = null;
   const save = () => { base = clone(L); XS.store.set(KEY, L); };
+  const getRemovedApps = () => new Set(XS.store.get('home.removedApps', []));
+  const markRemoved = id => { const s = getRemovedApps(); s.add(id); XS.store.set('home.removedApps', [...s]); };
+  const unmarkRemoved = id => { const s = getRemovedApps(); s.delete(id); XS.store.set('home.removedApps', [...s]); };
 
   // 这一块（c, r, w, h）是否在范围内且没有和其他项重叠
   function fits(items, c, r, w, h, exclude){
@@ -141,7 +140,8 @@
       });
       return out;
     });
-    Object.keys(XS.apps).forEach(id => { if (!seen.has(id)) overflow.push({ t: 'app', id, c: 0, r: 0 }); });
+    const removed = getRemovedApps();
+    Object.keys(XS.apps).forEach(id => { if (!seen.has(id) && !removed.has(id)) overflow.push({ t: 'app', id, c: 0, r: 0 }); });
     if (!L.pages.length) L.pages.push([]);
     overflow.forEach(it => placeAnywhere(it, 0));
     L.pages = L.pages.filter(p => p.length);
@@ -151,7 +151,8 @@
 
   /* ---------- 渲染 ---------- */
   const appBtn = (a, key, style='') => `<button class="app tap" data-app="${a.id}" data-key="${key}" aria-label="${esc(a.name)}"${style ? ` style="${style}"` : ''}>
-    <span class="app-icon ${a.variant}">${XS.appIcons[a.icon]}</span><span class="app-label">${esc(a.name)}</span></button>`;
+    <span class="app-icon ${a.variant}">${XS.appIcons[a.icon]}</span><span class="app-label">${esc(a.name)}</span>
+    ${editing && key.startsWith('app:') ? `<button class="app-del tap" data-appdel="${a.id}" aria-label="移除${esc(a.name)}">${XS.icon('close')}</button>` : ''}</button>`;
   const widgetBody = kind => ({
     clock:     '<div class="w-top"><span data-clock="w"></span><span data-clock="md"></span></div><div class="w-time" data-clock="t"></div>',
     clockWide: '<div class="w-time" data-clock="t"></div><div class="w-side"><div class="w-week" data-clock="w"></div><div class="w-date" data-clock="md"></div></div>',
@@ -236,6 +237,24 @@
     L.pages.forEach(items => { const it = items.find(x => x.t === 'w' && x.id === id); if (it) removeFrom(items, it); });
     save(); render();
   }
+  function removeApp(id){
+    L.pages.forEach(items => { const it = items.find(x => x.t === 'app' && x.id === id); if (it) removeFrom(items, it); });
+    removeFrom(L.dock, id);
+    markRemoved(id);
+    save(); render();
+  }
+  // 供设置页「主屏幕与 App 资源库」调用：把应用放回桌面第一处空位
+  function restoreApp(id){
+    unmarkRemoved(id);
+    if (!base) base = XS.store.get(KEY, defaults());
+    L = clone(base);
+    if (!L.pages.length) L.pages.push([]);
+    placeAnywhere({ t: 'app', id, c: 0, r: 0 }, 0);
+    normalize();
+    save();
+    if (root) render();
+  }
+  XS.homeApi = { getRemovedApps, restoreApp };
   function addWidget(kind){
     const k = WIDGETS[kind], it = { t: 'w', id: XS.uid('w'), kind, c: 0, r: 0, w: k.w, h: k.h };
     const p = placeAnywhere(it, curPage());
@@ -492,6 +511,8 @@
       if (suppress) { suppress = false; return; }
       const del = e.target.closest('[data-del]');
       if (del) { removeWidget(del.dataset.del); return; }
+      const appdel = e.target.closest('[data-appdel]');
+      if (appdel) { removeApp(appdel.dataset.appdel); return; }
       const a = e.target.closest('.he-btn');
       if (a) { a.dataset.a === 'widget' ? widgetSheet() : setEditing(false); return; }
       const dot = e.target.closest('[data-dot]');
