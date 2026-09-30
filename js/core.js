@@ -63,6 +63,8 @@
     custom: { wallpaper: null, icons: null, font: null, accent: null } // 高级自定义（预留）
   };
   let settings = merge(DEFAULTS, XS.store.get('settings', {}));
+  // 旧版「自动锁定」已移除，清掉早先保存的选项
+  if ('autoLock' in settings) { delete settings.autoLock; XS.store.set('settings', settings); }
 
   const getPath = (obj, path) => path.split('.').reduce((o, k) => (o == null ? undefined : o[k]), obj);
   XS.settings = {

@@ -1,0 +1,58 @@
+/* ============================================================
+   锁屏密码键盘（js/passcode.js）：锁屏和「设置 › 密码与安全」共用
+   黑白灰浅玻璃按键；按键 76px 圆形，375px 宽也有足够间距
+   颜色走 --pc-* 变量：锁屏里跟锁屏墨色，设置里跟系统文字色
+   ============================================================ */
+.pc{--pc-ink:var(--c-text);--pc-ink-2:var(--c-text-secondary);--pc-key:rgba(120,120,128,.12);--pc-key-on:rgba(120,120,128,.3);--pc-edge:rgba(0,0,0,.05);
+  display:flex;flex-direction:column;align-items:center;width:100%;outline:none;color:var(--pc-ink);-webkit-user-select:none;user-select:none}
+.pc-head{display:flex;flex-direction:column;align-items:center}
+.pc-glyph{width:17px;height:19px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;opacity:.72}
+.pc-glyph rect{fill:currentColor;stroke:none}
+.pc-title{margin-top:14px;font-size:20px;font-weight:500;letter-spacing:.2px}
+.pc-dots{display:flex;gap:18px;margin-top:22px;height:14px}
+.pc-dots i{width:13px;height:13px;border-radius:50%;box-shadow:inset 0 0 0 1.4px currentColor;opacity:.7;transition:background-color .12s,opacity .12s}
+.pc-dots i.on{background:currentColor;opacity:1}
+.pc-msg{min-height:20px;margin-top:14px;font-size:14px;line-height:20px;color:var(--pc-ink-2);text-align:center;padding:0 20px}
+.pc-msg.err{color:var(--c-red)}
+.pc-keys{display:grid;grid-template-columns:repeat(3,76px);gap:16px 26px;margin-top:22px}
+.pc-key{width:76px;height:76px;border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--pc-ink);
+  background:var(--pc-key);box-shadow:inset 0 1px 0 rgba(255,255,255,.5),inset 0 0 0 .5px var(--pc-edge);transition:background-color .25s}
+.pc-key span{font-size:34px;font-weight:400;line-height:1;font-variant-numeric:tabular-nums}
+.pc-key small{margin-top:1px;font-size:10px;font-weight:600;letter-spacing:2px;line-height:1;opacity:.8}
+.pc-key:active{background:var(--pc-key-on);transition:none}
+.pc-key:focus-visible,.pc-act:focus-visible{outline:2px solid var(--c-blue);outline-offset:2px}
+.pc-act{height:76px;font-size:17px;color:var(--pc-ink);border-radius:38px}
+.pc-act:active{opacity:.5}
+.pc.is-busy .pc-keys,.pc.is-cool .pc-key{pointer-events:none}
+.pc.is-cool .pc-key{opacity:.35}
+.pc.shake .pc-dots{animation:pcShake .42s cubic-bezier(.36,.07,.19,.97)}
+@keyframes pcShake{15%,55%{transform:translateX(-10px)}35%,75%{transform:translateX(10px)}90%{transform:translateX(-3px)}}
+[data-theme="dark"] .pc{--pc-key:rgba(255,255,255,.1);--pc-key-on:rgba(255,255,255,.26);--pc-edge:rgba(255,255,255,.06)}
+[data-theme="dark"] .pc-key{box-shadow:inset 0 1px 0 rgba(255,255,255,.08),inset 0 0 0 .5px var(--pc-edge)}
+@media (max-height:640px){.pc-keys{gap:10px 22px;margin-top:14px}.pc-key,.pc-act{width:68px;height:68px}.pc-keys{grid-template-columns:repeat(3,68px)}}
+
+/* —— 锁屏里：盖在壁纸上，锁屏内容淡出；验证通过后跟解锁进度一起淡出 —— */
+.lk-code{position:absolute;inset:0;z-index:2;display:flex;align-items:center;justify-content:center;padding:var(--status-h) 0 calc(var(--safe-bottom) + 24px);
+  background:rgba(255,255,255,.28);opacity:0;transition:opacity .28s var(--ease-out)}
+[data-theme="dark"] .lk-code{background:rgba(0,0,0,.3)}
+.lk-code .pc{--pc-ink:var(--lk-ink);--pc-ink-2:var(--lk-ink-2);--pc-key:rgba(255,255,255,.46);--pc-key-on:rgba(255,255,255,.85);transform:translateY(14px) scale(.98);transition:transform .32s var(--ease-page)}
+[data-theme="dark"] .lk-code .pc{--pc-key:rgba(255,255,255,.12);--pc-key-on:rgba(255,255,255,.3)}
+.lk-code.show{opacity:1}
+.lk-code.show .pc{transform:none}
+.lk-code.passed{opacity:calc(1 - var(--p) * 2);transition:none}
+.lockscreen:has(.lk-code.show) .lk-main{opacity:0;transition:opacity .2s}
+[data-motion="reduce"] .lk-code,[data-motion="reduce"] .lk-code .pc{transition-duration:.01s;transform:none}
+
+/* 开了密码且还没验证：拖动锁屏时桌面不跟着露出来 */
+.screen.need-code:not([data-lock="open"]) .layer-home,.screen.need-code:not([data-lock="open"]) .layer-apps,.screen.need-code:not([data-lock="open"]) .layer-overlay{opacity:0!important}
+.screen.need-code:not([data-lock="open"]) .lk-wall{opacity:1}
+
+/* —— 设置里：放在页面中间 —— */
+.pc-page .page-body{display:flex;flex-direction:column;align-items:center;padding:28px 0 40px}
+/* 「改用 4 / 6 位数字密码」：只在输入新密码时出现 */
+.pc-opt{margin-top:18px;min-height:44px;padding:0 16px;font-size:var(--fs-sub);color:var(--c-blue)}
+.pc-opt[hidden]{display:none}
+/* 设置里可换行的说明行（登录设备等） */
+.row.wrap{align-items:flex-start;padding-top:11px;padding-bottom:11px}
+.row.wrap .row-sub{white-space:normal;line-height:1.45;margin-top:3px}
+.row.wrap .row-value{padding-top:1px}

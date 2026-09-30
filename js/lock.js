@@ -293,23 +293,67 @@
   boot.addEventListener('pointercancel', bootUp);
   boot.addEventListener('pointerleave', e => { if (e.pointerType === 'mouse') sky.follow(null); });
 
+  /* —— 锁屏密码（js/passcode.js）——
+     开了密码时，所有解锁入口（上滑、轻点、回车、通知、XS.lock.unlock）都先到这里输密码；
+     只有验证通过（passed）才真正执行 unlock。锁着时桌面不跟手露出，只有壁纸和键盘。 */
+  let passed = false, codeEl = null, codePad = null, pending = null;
+  const needCode = () => XS.passcode && XS.passcode.enabled() && !passed;
+  const syncCode = () => { screen.classList.toggle('need-code', !!needCode()); };
+  function askCode(after){
+    pending = after || null;
+    if (codeEl) { codePad.focus(); return; }
+    codePad = XS.passcode.pad({ title: '输入密码', len: XS.passcode.length(), onDone: checkCode, onCancel: cancelCode });
+    codeEl = document.createElement('div'); codeEl.className = 'lk-code';
+    codeEl.appendChild(codePad.el);
+    ls.appendChild(codeEl);
+    lock.inert = true;
+    requestAnimationFrame(() => requestAnimationFrame(() => { if (codeEl) codeEl.classList.add('show'); }));
+    setTimeout(() => codePad && codePad.focus(), 60);
+  }
+  async function checkCode(code){
+    const r = await XS.passcode.verify(code);
+    if (!codeEl) return;
+    if (!r.ok) { codePad.fail(XS.passcode.failText(r)); return; }
+    passed = true; syncCode();
+    const after = pending; pending = null;
+    codeEl.classList.add('passed');
+    unlock(0, after);
+  }
+  function closeCode(){
+    if (!codeEl) return;
+    const el = codeEl; codePad.destroy(); codeEl = codePad = null;
+    el.classList.remove('show');
+    setTimeout(() => el.remove(), reduced() ? 0 : 320);
+    lock.inert = false;
+  }
+  function cancelCode(){
+    if (!codeEl || passed) return;
+    pending = null; closeCode(); lock.focus({ preventScroll: true });
+  }
+
   /* —— 锁屏 ⇄ 桌面 —— */
   function unlock(fromP, after){
     if (state !== 'lock') return;
+    if (needCode()) { tween(0, 200, easePage); askCode(after); return; }
     setState('unlocking'); lock.classList.add('opened');
     const rest = 1 - (fromP ?? p);
     tween(1, 260 + 360 * rest, easePage, () => {
       setState('open'); screen.style.removeProperty('--p');
+      closeCode();
       XS.emit('unlocked');
       after && after();
     });
   }
   function relock(){
     if (state !== 'open') return;
+    passed = false; syncCode();
     setP(1); setState('locking'); lock.classList.remove('opened');
     open = true; renderNotes();
     tween(0, 420, easePage, () => { setState('lock'); lock.focus({ preventScroll: true }); });
   }
+  /* 旧的「自动锁定」（切到后台一段时间后自动锁屏）已移除：切走再回来不会锁屏。
+     开了密码时，只有刷新 / 重新打开页面或手动锁屏后，解锁才需要输入密码。 */
+  XS.on('passcode', syncCode);
   function bump(){
     lock.classList.remove('bump'); void lock.offsetWidth; lock.classList.add('bump');
     setTimeout(() => lock.classList.remove('bump'), 450);
@@ -383,7 +427,7 @@
   XS.lock = { start: playBoot, unlock: () => { if (state === 'boot') showLock(); unlock(); }, relock, whenOpen, get state(){ return state; } };
 
   tick(); setInterval(tick, 1000);
-  renderNotes();
+  renderNotes(); syncCode();
   // 仅用于检查多条通知的排版：地址加 ?demo-notes=N 时载入演示通知（js/lock-demo.js），正常打开不会出现
   const demo = new URLSearchParams(location.search).get('demo-notes');
   if (demo != null) { const s = document.createElement('script'); s.src = 'js/lock-demo.js'; s.dataset.count = demo; document.body.appendChild(s); }

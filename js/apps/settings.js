@@ -54,6 +54,7 @@
           <span class="row-main"><span class="name">${esc(prof.name || '我')}</span><span class="sub">本机使用 · 未登录，数据只保存在这台设备</span></span>${CHEV}</button></div>
         ${group([
           { id: 'flight', icon: 'airplane', title: '飞行模式', sw: XS.settings.get('flightMode') },
+          { id: 'security', icon: 'lock', title: '密码与安全', value: XS.passcode.enabled() ? '已开启' : '未开启', muted: true, chev: true },
           { id: 'api', icon: 'plug', title: 'API 连接', value: apiState(), chev: true },
           { id: 'voice', icon: 'wave', title: '语音设定', value: '未开放', muted: true, chev: true }
         ])}
@@ -68,6 +69,9 @@
           { id: 'data', icon: 'db', title: '数据管理', chev: true },
           { id: 'backup', icon: 'cloud', title: '云备份', value: '未开放', muted: true, chev: true }
         ])}
+        ${group([
+          { id: 'changelog', icon: 'refresh', title: '更新日志', tag: XS.changelog.VERSION, chev: true }
+        ])}
         <div class="set-empty" hidden>没有找到相关设置</div>
       </div>`;
     const v = p.view;
@@ -79,6 +83,7 @@
       if (!b) return;
       const id = b.dataset.id;
       if (names[id]) return soon(names[id]);
+      if (id === 'changelog') return XS.nav.push(XS.changelog.settingsPage());
       const page = XS.settingsPages[id];
       if (page) XS.nav.push(page());
     });
@@ -100,6 +105,7 @@
     // 回到这一页时刷新状态（例如 API 刚填好）
     const refresh = () => {
       const val = v.querySelector('[data-id="api"] [data-value]'); if (val) val.textContent = apiState();
+      const sec = v.querySelector('[data-id="security"] [data-value]'); if (sec) sec.textContent = XS.passcode.enabled() ? '已开启' : '未开启';
       const fm = v.querySelector('[data-id="flight"] .switch'); fm.setAttribute('aria-checked', !!XS.settings.get('flightMode'));
       const pr = XS.profile.get(), card = v.querySelector('.user-card');
       card.querySelector('.name').textContent = pr.name || '我';

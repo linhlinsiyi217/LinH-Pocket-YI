@@ -24,6 +24,10 @@
   function frame(){
     const full = innerWidth <= 500 || matchMedia('(pointer: coarse)').matches;
     root.dataset.frame = full ? 'full' : 'device';
+    // 显示模式：fullscreen（安装后系统栏全隐，假状态栏是唯一一层）>
+    // standalone（安装后系统状态栏由系统画，页面里那条收起）> browser（普通浏览器）
+    root.dataset.dm = matchMedia('(display-mode: fullscreen)').matches ? 'fullscreen'
+      : matchMedia('(display-mode: standalone)').matches ? 'standalone' : 'browser';
     const dev = document.querySelector('.device');
     if (!dev) return;
     if (full) { dev.style.transform = ''; XS.frameScale = 1; return; }

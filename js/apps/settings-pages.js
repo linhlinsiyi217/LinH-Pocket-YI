@@ -1,4 +1,4 @@
-/* 设置的子页面：个人资料、API 连接、显示与亮度、辅助功能、应用权限、数据管理 */
+/* 设置的子页面：个人资料、API 连接、显示与亮度、辅助功能、应用权限、密码与安全、数据管理 */
 (function(){
   const { group, seg, bindSeg, bindSwitch } = XS.sui;
   const esc = XS.esc;
@@ -70,6 +70,21 @@
   };
 
   pages.access = () => {
+    /* 引导设置：4 个手机系统侧的保活引导，查看步骤 + 手动标记完成 */
+    const GUIDES = [
+      ['battery', '电池优化', ['打开手机的「设置」', '找到「电池」→「电池优化」', '找到你的浏览器 App', '选择「不受限制」']],
+      ['background', '后台运行权限', ['打开「设置」', '进入「应用管理」', '找到你的浏览器 App', '开启「允许后台运行」']],
+      ['recent', '锁定最近任务', ['打开手机多任务界面', '找到你的浏览器页面', '下拉该页面卡片', '出现锁图标即锁定成功']],
+      ['saver', '关闭省电模式', ['打开「设置」→「电池」', '关闭「省电模式」']]
+    ];
+    const guideDone = id => !!XS.settings.get('guide.' + id);
+    const guideRow = ([id, title]) => guideDone(id)
+      ? `<div class="row no-icon guide-row" data-guide="${id}"><span class="row-main"><span class="row-title">${esc(title)}</span></span><span class="guide-done">${XS.icon('check')}已完成</span></div>`
+      : `<div class="row no-icon guide-row" data-guide="${id}"><span class="row-main"><span class="row-title">${esc(title)}</span></span>
+          <button class="guide-btn" data-view="${id}">查看</button>${guideSeen(id) ? `<button class="guide-btn ok" data-ok="${id}">我开好了</button>` : ''}</div>`;
+    const guideSeen = id => !!XS.settings.get('guideSeen.' + id);
+    const renderGuides = () => GUIDES.map(guideRow).join('');
+
     const p = page('辅助功能', `
       <div class="group-block"><div class="group">
         ${seg('动态效果', 'motion', [['system', '跟随系统'], ['reduce', '减少'], ['full', '完整']])}
@@ -77,9 +92,38 @@
       <div class="group-block"><div class="group-label">文字大小</div><div class="group">
         ${seg('大小', 'textScale', [['0.9', '小'], ['1', '标准'], ['1.1', '大'], ['1.2', '特大']])}
         <div class="set-preview">这是一段预览文字。<small>聊天、设置等页面的文字会一起变化。</small></div>
-      </div></div>`);
+      </div></div>
+      <div class="group-block"><div class="group-label">引导设置</div><div class="group" data-guides>
+        ${renderGuides()}
+      </div><div class="group-foot">按引导在手机系统里设置好，小手机在后台才不容易被关掉。「后台保活」开关在 设置 › 密码与安全。</div></div>`);
     bindSeg(p.body, 'motion');
     bindSeg(p.body, 'textScale', v => XS.settings.set('textScale', parseFloat(v)));
+
+    /* 引导弹窗 */
+    const overlay = p.body.querySelector('.layer-overlay') || document.querySelector('.layer-overlay');
+    const openGuide = id => {
+      const g = GUIDES.find(x => x[0] === id); if (!g) return;
+      XS.settings.set('guideSeen.' + id, true);
+      const el = XS.ui.h(`<div class="gd-mask" role="dialog" aria-modal="true" aria-label="${esc(g[1])}">
+        <div class="gd-panel">
+          <div class="gd-body">
+            <h3 class="gd-title">${esc(g[1])}</h3>
+            <ol class="gd-steps">${g[2].map(s => `<li>${esc(s)}</li>`).join('')}</ol>
+          </div>
+          <div class="gd-foot"><button class="gd-ok">我知道了</button></div>
+        </div></div>`);
+      const close = () => { el.classList.add('out'); setTimeout(() => { el.remove(); refreshGuides(); }, 180); };
+      el.addEventListener('click', e => { if (e.target === el || e.target.closest('.gd-ok')) close(); });
+      overlay.append(el);
+      requestAnimationFrame(() => el.classList.add('in'));
+    };
+    const refreshGuides = () => { const box = p.body.querySelector('[data-guides]'); if (box) box.innerHTML = renderGuides(); };
+    p.body.addEventListener('click', e => {
+      const v = e.target.closest('[data-view]'); if (v) return openGuide(v.dataset.view);
+      const ok = e.target.closest('[data-ok]');
+      if (ok) { XS.settings.set('guide.' + ok.dataset.ok, true); refreshGuides(); XS.ui.toast('已标记完成'); }
+    });
+    p.view.addEventListener('shown', refreshGuides);
     return p.view;
   };
 
@@ -96,6 +140,95 @@
     }).join('')}</div><div class="group-foot">小手机不读取通讯录、相册、定位、麦克风。</div></div>`);
     return p.view;
   };
+
+  /* —— 密码与安全：本机界面锁（js/passcode.js）+ 后台保活（js/keepalive.js）+ 登录设备 —— */
+  pages.security = () => {
+    const pc = XS.passcode;
+    const p = page('密码与安全', '<div data-sec></div>');
+    const box = p.body.querySelector('[data-sec]');
+    const render = () => {
+      const on = pc.enabled(), ok = pc.supported();
+      box.innerHTML = `
+        <div class="group-block"><div class="group-label">锁屏密码</div><div class="group">
+          ${XS.sui.row({ title: '锁屏密码', value: on ? `已开启 · ${pc.length()} 位数字` : '未开启', muted: !on })}
+          ${on
+            ? XS.sui.row({ id: 'change', title: '更改密码', cls: 'link' }) + XS.sui.row({ id: 'off', title: '关闭锁屏密码', cls: 'link' })
+            : XS.sui.row({ id: 'set', title: '设置锁屏密码', cls: 'link', disabled: !ok })}
+        </div><div class="group-foot">${ok
+          ? `可选 4 位或 6 位数字。这是这台设备上「小手机」界面的本机锁：开启后，解锁进入主屏幕前需要输入密码。它不连接服务器，不保护任何线上账号或数据库，也不会加密本地数据，和将来的账号登录密码无关。密码不以明文保存，只保存加盐后的校验值。连续输错 ${pc.FREE} 次后需要等待一段时间再试。忘记密码只能在浏览器里清除本站数据，聊天记录等会一起删除。`
+          : '当前浏览器环境不能安全保存密码（需要 https 地址，并允许本地存储），暂时无法开启。'}</div></div>
+        <div class="group-block"><div class="group-label">后台保活</div><div class="group">
+          ${XS.sui.row({ id: 'ka', title: '后台保活', sw: XS.settings.get('keepAlive') !== false })}
+        </div><div class="group-foot">开启后会循环播放一段静音音频，让浏览器把小手机当作正在播放，降低切到后台后被清理的概率，但不能保证一定不被关掉：系统省电、清理后台或其他 App 播放声音时仍可能停下。播放期间锁屏或通知栏可能显示播放控件。</div></div>
+        <div class="group-block"><div class="group-label">账号</div><div class="group">
+          ${XS.sui.row({ id: 'devices', title: '登录设备', value: '未接通', muted: true, chev: true })}
+        </div></div>`;
+      bindSwitch(box, 'ka', 'keepAlive', v => window.toggleKeepAlive && window.toggleKeepAlive(v));
+    };
+    render();
+    box.addEventListener('click', e => {
+      const b = e.target.closest('button[data-id]'); if (!b || b.getAttribute('aria-disabled') === 'true') return;
+      if (b.dataset.id === 'devices') return XS.nav.push(devicesPage());
+      if (['set', 'change', 'off'].includes(b.dataset.id)) XS.nav.push(codeFlow(b.dataset.id));
+    });
+    p.view.addEventListener('shown', render);
+    return p.view;
+  };
+
+  /* 登录设备：账号登录还没有接进小手机（auth/ 里只有未配置的登录页草稿，没有后端），
+     这里只如实说明缺什么，不显示任何设备列表、不模拟三台上限 */
+  function devicesPage(){
+    const miss = [
+      ['账号服务', '还没有配置账号后端，无法登录，也没有地方记录登录过的设备。'],
+      ['登录入口', '小手机里还没有登录和退出，现在用的都是这台设备本地的数据。'],
+      ['设备记录', '需要由后端记下每次登录的设备，并在移除时真正让那台设备退出、释放名额。']
+    ];
+    const p = page('登录设备', `
+      <div class="group-block"><div class="group">
+        ${XS.sui.row({ title: '登录后可管理设备', sub: '接通账号后，这里会显示已登录的设备数量、当前设备、系统和最近活动时间，最多保留 3 台，可以移除其他设备。', cls: 'wrap' })}
+      </div></div>
+      <div class="group-block"><div class="group-label">目前还缺</div><div class="group">
+        ${miss.map(([t, s]) => XS.sui.row({ title: t, sub: s, value: '未接通', muted: true, cls: 'wrap' })).join('')}
+      </div><div class="group-foot">锁屏密码只锁这台设备上的小手机界面，不是账号登录密码。</div></div>`);
+    p.view.querySelectorAll('.row').forEach(r => r.setAttribute('tabindex', '-1'));
+    return p.view;
+  }
+
+  /* 设置 / 更改 / 关闭密码的输入页：mode = set | change | off
+     旧密码先验证；新密码可选 4 位或 6 位，输两次对比一致才保存。输入内容只在闭包里，不写日志 */
+  function codeFlow(mode){
+    const pc = XS.passcode;
+    const titles = { set: '设置密码', change: '更改密码', off: '关闭密码' };
+    const p = XS.nav.page({ title: titles[mode], grouped: true, back: true, cls: 'set-page pc-page' });
+    let step = mode === 'set' ? 'new' : 'old', first = '', len = mode === 'set' ? 6 : pc.length();
+    const prompt = () => ({ old: '输入当前密码', new: `输入新的 ${len} 位密码`, again: '再次输入新密码' })[step];
+    // 只在输入新密码那一步显示「改用 4 / 6 位」
+    const opt = XS.ui.h('<button class="pc-opt" type="button"></button>');
+    const syncOpt = () => { opt.hidden = step !== 'new'; opt.textContent = `改用 ${len === 6 ? 4 : 6} 位数字密码`; };
+    const go = (s, fail) => { step = s; pad.setLen(s === 'old' ? pc.length() : len); pad.reset(prompt()); if (fail) pad.fail(fail); syncOpt(); };
+    const pad = pc.pad({ title: prompt(), len, onCancel: () => XS.nav.back(), onDone: async code => {
+      if (step === 'old') {
+        const r = await pc.verify(code);
+        if (!r.ok) return pad.fail(pc.failText(r));
+        if (mode === 'off') { pc.clear(); XS.nav.back(); XS.ui.toast('锁屏密码已关闭'); return; }
+        len = pc.length(); go('new');
+      } else if (step === 'new') {
+        first = code; go('again');
+      } else {
+        if (code !== first) { first = ''; go('new', '两次输入不一致，请重新设置'); return; }
+        first = '';
+        try { await pc.set(code); } catch (e) { go('new', e.message); return; }
+        XS.nav.back(); XS.ui.toast(mode === 'set' ? '锁屏密码已开启' : '密码已更改');
+      }
+    } });
+    opt.addEventListener('click', () => { if (step !== 'new') return; len = len === 6 ? 4 : 6; go('new'); });
+    p.body.append(pad.el, opt);
+    syncOpt();
+    p.view.addEventListener('shown', () => pad.focus());
+    // 离开页面时清掉键盘监听和暂存的第一次输入
+    new MutationObserver((_, ob) => { if (!p.view.isConnected) { pad.destroy(); first = ''; ob.disconnect(); } }).observe(document.querySelector('.layer-apps'), { childList: true });
+    return p.view;
+  }
 
   pages.data = () => {
     const contacts = XS.store.get('contacts', []);

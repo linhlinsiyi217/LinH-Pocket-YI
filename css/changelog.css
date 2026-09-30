@@ -1,0 +1,83 @@
+/* ============================================================
+   更新通知弹窗 + 设置 › 更新日志
+   珍珠玻璃面板、居中标题、细线分组；详情原地展开
+   ============================================================ */
+
+/* —— 弹窗：固定框体，只有中间内容滚动 —— */
+.cl-pop{position:absolute;left:50%;top:50%;z-index:85;width:min(328px,calc(100% - 44px));height:min(560px,calc(100% - 120px));
+  display:flex;flex-direction:column;border-radius:26px;overflow:hidden;outline:none;
+  background:linear-gradient(180deg,rgba(255,255,255,.94),rgba(246,247,250,.9));
+  -webkit-backdrop-filter:blur(28px) saturate(1.4);backdrop-filter:blur(28px) saturate(1.4);
+  box-shadow:0 24px 60px rgba(20,24,40,.16),0 4px 14px rgba(20,24,40,.06),inset 0 0 0 .5px rgba(0,0,0,.06);
+  opacity:0;transform:translate(-50%,-48%) scale(.965);
+  transition:opacity var(--dur-mid) var(--ease-out),transform var(--dur-mid) var(--ease-out)}
+.cl-pop.show{opacity:1;transform:translate(-50%,-50%) scale(1)}
+/* 顶部内高光 + 右上角一道弧形反光 */
+.cl-pop::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;z-index:2;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.95)}
+.cl-pop::after{content:"";position:absolute;top:-60px;right:-60px;width:150px;height:150px;border-radius:50%;pointer-events:none;
+  border:1px solid rgba(255,255,255,.9);border-left-color:transparent;border-bottom-color:transparent;transform:rotate(8deg);opacity:.9}
+
+.cl-head{flex:none;position:relative;text-align:center;padding:30px 28px 18px}
+.cl-spark{display:block;width:13px;height:13px;margin:0 auto 10px;color:var(--c-text-tertiary)}
+.cl-title{font-size:1.25rem;font-weight:600;letter-spacing:.14em;text-indent:.14em;color:var(--c-text)}
+.cl-ver{display:flex;align-items:center;justify-content:center;gap:10px;margin-top:9px;
+  font-size:var(--fs-sub);letter-spacing:.08em;color:var(--c-text-secondary);font-variant-numeric:tabular-nums}
+.cl-rule{width:18px;height:.5px;background:currentColor;opacity:.6}
+.cl-lead{margin-top:10px;font-size:var(--fs-sub);line-height:1.6;letter-spacing:.04em;color:var(--c-text-secondary)}
+.cl-head::after{content:"";position:absolute;left:28px;right:28px;bottom:0;height:.5px;background:var(--c-separator)}
+
+.cl-body{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;padding:6px 24px 4px;scrollbar-width:none}
+.cl-body::-webkit-scrollbar{display:none}
+.cl-sec{padding-top:16px}
+.cl-sec+.cl-sec{margin-top:6px}
+.cl-tag{font-size:var(--fs-sub);font-weight:600;letter-spacing:.06em;white-space:nowrap;flex:none}
+.cl-sec>.cl-tag{display:block;margin:0 0 4px -4px}
+
+/* 条目：标题行 + 展开说明（grid 0fr→1fr 平滑展开） */
+.cl-row{display:flex;align-items:center;gap:10px;width:100%;min-height:46px;text-align:left;color:var(--c-text)}
+.cl-t{flex:1;min-width:0;font-size:.9375rem;letter-spacing:.04em}
+.cl-chev{width:7px;height:12px;flex:none;color:var(--c-text-tertiary);transition:transform var(--dur-mid) var(--ease-out)}
+.cl-item.open .cl-chev{transform:rotate(90deg)}
+.cl-more{display:grid;grid-template-rows:0fr;transition:grid-template-rows var(--dur-mid) var(--ease-out)}
+.cl-more>div{overflow:hidden;min-height:0}
+.cl-item.open .cl-more{grid-template-rows:1fr}
+.cl-d{font-size:var(--fs-sub);line-height:1.65;letter-spacing:.03em;color:var(--c-text-secondary);padding:0 0 14px;
+  opacity:0;transition:opacity var(--dur-fast) var(--ease-out)}
+.cl-item.open .cl-d{opacity:1}
+.cl-item.flat+.cl-item.flat{box-shadow:inset 0 .5px 0 var(--c-separator)}
+
+/* 署名：虚线下方两行 */
+.cl-sign{display:flex;flex-direction:column;align-items:center;gap:3px;margin:22px 0 18px;padding-top:16px;
+  border-top:1px dashed var(--c-separator);font-size:var(--fs-caption);letter-spacing:.12em;line-height:1.5;color:var(--c-text-secondary)}
+.cl-sign span+span{color:var(--c-text-tertiary)}
+
+.cl-foot{flex:none;padding:12px 24px 22px;box-shadow:inset 0 .5px 0 var(--c-separator)}
+.cl-ok{width:100%;height:46px;border-radius:var(--r-pill);background:var(--c-primary);color:var(--c-on-primary);
+  font-size:var(--fs-callout);font-weight:600;letter-spacing:.12em;font-variant-numeric:tabular-nums;transition:opacity var(--dur-fast)}
+.cl-ok:disabled{opacity:.35}
+.cl-ok:not(:disabled):active{opacity:.75}
+
+[data-theme="dark"] .cl-pop{background:linear-gradient(180deg,rgba(44,44,48,.94),rgba(30,30,33,.92));
+  box-shadow:0 24px 60px rgba(0,0,0,.55),inset 0 0 0 .5px rgba(255,255,255,.09)}
+[data-theme="dark"] .cl-pop::before{box-shadow:inset 0 1px 0 rgba(255,255,255,.12)}
+[data-theme="dark"] .cl-pop::after{border-color:rgba(255,255,255,.1);border-left-color:transparent;border-bottom-color:transparent}
+
+/* —— 设置 › 更新日志 —— */
+.cl-log .page-body{padding-bottom:24px}
+.cl-v{margin:8px 0 26px}
+.cl-v-head{display:flex;align-items:baseline;gap:10px;padding:0 32px;font-size:var(--fs-title);font-weight:600;letter-spacing:.06em;font-variant-numeric:tabular-nums}
+.cl-v-now{font-size:var(--fs-caption);font-weight:500;letter-spacing:.08em;color:var(--c-text-secondary)}
+.cl-v-sub{padding:4px 32px 0;font-size:var(--fs-sub);letter-spacing:.04em;color:var(--c-text-secondary)}
+.cl-cards{display:flex;flex-direction:column;gap:10px;margin:14px 16px 0}
+.cl-item.card{background:var(--c-surface);border-radius:14px;padding:0 16px;box-shadow:0 1px 2px rgba(0,0,0,.03),inset 0 0 0 .5px rgba(0,0,0,.04)}
+.cl-item.card .cl-row{min-height:50px}
+.cl-item.card .cl-tag{margin-left:-4px}
+.cl-item.card .cl-t{font-size:var(--fs-body);letter-spacing:.02em}
+.cl-item.card .cl-d{padding:0 0 14px;border-top:.5px solid var(--c-separator);padding-top:10px}
+[data-theme="dark"] .cl-item.card{box-shadow:inset 0 0 0 .5px rgba(255,255,255,.06)}
+.cl-log .cl-sign{margin:10px 32px 8px}
+
+/* 减少动态效果：直接到位 */
+[data-motion="reduce"] .cl-pop{transition:opacity .12s linear;transform:translate(-50%,-50%)}
+[data-motion="reduce"] .cl-more,[data-motion="reduce"] .cl-d,[data-motion="reduce"] .cl-chev{transition:none}
