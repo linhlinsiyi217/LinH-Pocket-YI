@@ -6,7 +6,22 @@
   XS.apps = {
     chat:     { id: 'chat',     name: '聊天',    icon: 'chat',     variant: 'ai-dark',  dock: true },
     settings: { id: 'settings', name: '设置',    icon: 'settings', variant: 'ai-gray',  dock: true },
-    charhall: { id: 'charhall', name: 'Char 馆', icon: 'char',     variant: 'ai-light' }
+    charhall: { id: 'charhall', name: 'Char 馆', icon: 'char',     variant: 'ai-light' },
+    photos:   { id: 'photos',   name: '相册',    icon: 'photos',   variant: 'ai-light' },
+    camera:   { id: 'camera',   name: '相机',    icon: 'camera',   variant: 'ai-dark' },
+    music:    { id: 'music',    name: '音乐',    icon: 'music',    variant: 'ai-light' },
+    notes:    { id: 'notes',    name: '备忘录',  icon: 'notes',    variant: 'ai-light' },
+    calendar: { id: 'calendar', name: '日历',    icon: 'calendar', variant: 'ai-light' },
+    weather:  { id: 'weather',  name: '天气',    icon: 'weather',  variant: 'ai-light' },
+    maps:     { id: 'maps',     name: '地图',    icon: 'maps',     variant: 'ai-light' },
+    browser:  { id: 'browser',  name: '浏览器',  icon: 'browser',  variant: 'ai-light' },
+    files:    { id: 'files',    name: '文件',    icon: 'files',    variant: 'ai-light' },
+    wallet:   { id: 'wallet',   name: '钱包',    icon: 'wallet',   variant: 'ai-light' },
+    messages: { id: 'messages', name: '短信',    icon: 'messages', variant: 'ai-light' },
+    phone:    { id: 'phone',    name: '电话',    icon: 'phone',    variant: 'ai-light' },
+    library:  { id: 'library',  name: '书房',    icon: 'library',  variant: 'ai-light' },
+    wechat:   { id: 'wechat',   name: '微信',    icon: 'wechat',   variant: 'ai-light' },
+    moments:  { id: 'moments',  name: '朋友圈',  icon: 'moments',  variant: 'ai-light' }
   };
 
   const COLS = 4, DOCK_MAX = 4, KEY = 'home', HOLD_MS = 450;
@@ -32,7 +47,29 @@
 
   /* ---------- 布局数据 ---------- */
   const defaults = () => ({ v: 1,
-    pages: [[{ t: 'w', id: 'w_clock', kind: 'clockWide', c: 0, r: 0, w: 4, h: 2 }, { t: 'app', id: 'charhall', c: 0, r: 2 }]],
+    pages: [
+      [
+        { t: 'w', id: 'w_clock', kind: 'clockWide', c: 0, r: 0, w: 4, h: 2 },
+        { t: 'app', id: 'charhall', c: 0, r: 2 },
+        { t: 'app', id: 'photos', c: 1, r: 2 },
+        { t: 'app', id: 'music', c: 2, r: 2 },
+        { t: 'app', id: 'notes', c: 3, r: 2 },
+        { t: 'app', id: 'calendar', c: 0, r: 3 },
+        { t: 'app', id: 'weather', c: 1, r: 3 },
+        { t: 'app', id: 'maps', c: 2, r: 3 }
+      ],
+      [
+        { t: 'app', id: 'camera', c: 0, r: 0 },
+        { t: 'app', id: 'browser', c: 1, r: 0 },
+        { t: 'app', id: 'files', c: 2, r: 0 },
+        { t: 'app', id: 'wallet', c: 3, r: 0 },
+        { t: 'app', id: 'messages', c: 0, r: 1 },
+        { t: 'app', id: 'phone', c: 1, r: 1 },
+        { t: 'app', id: 'library', c: 2, r: 1 },
+        { t: 'app', id: 'wechat', c: 0, r: 2 },
+        { t: 'app', id: 'moments', c: 1, r: 2 }
+      ]
+    ],
     dock: Object.values(XS.apps).filter(a => a.dock).map(a => a.id) });
   const size = it => it.t === 'w' ? [it.w, it.h] : [1, 1];
   const removeFrom = (arr, x) => { const i = arr.indexOf(x); if (i >= 0) arr.splice(i, 1); };

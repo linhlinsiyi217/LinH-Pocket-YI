@@ -8,12 +8,40 @@
   const fmt = text => esc(text).split('\n').map(line =>
     /^\s*（[^（）]*）\s*$/.test(line) ? `<span class="act">${line}</span>` : line.replace(/\*([^*\n]+)\*/g, '<span class="act">$1</span>')).join('\n');
 
-  function systemPrompt(c){
+  // 构建分层提示词：稳定角色身份 + 当前状态 + 时间感知
+  function buildPrompt(c, msgs){
     const me = XS.profile.get();
-    return [`你正在扮演「${c.name}」，和用户在手机聊天软件里一对一聊天。`,
-      c.persona ? `角色设定：${c.persona}` : '',
-      `用户的名字是「${me.name || '我'}」。${me.persona ? '用户的设定：' + me.persona : ''}`,
-      '请始终以角色身份、用第一人称回复，像真实聊天一样简短自然。动作或神态可以写在 *星号* 里。'].filter(Boolean).join('\n');
+    const layers = [];
+
+    // 第一层：稳定角色身份（不随对话变化）
+    layers.push(`你正在扮演「${c.name}」，和用户在手机聊天软件里一对一聊天。`);
+    if (c.persona) layers.push(`角色设定：${c.persona}`);
+    layers.push(`用户的名字是「${me.name || '我'}」。${me.persona ? '用户的设定：' + me.persona : ''}`);
+
+    // 第二层：说话风格指导
+    layers.push('请始终以角色身份、用第一人称回复，像真实聊天一样简短自然。动作或神态可以写在 *星号* 里。');
+
+    // 第三层：时间感知与上下文连续性
+    const lastMsg = msgs.length > 0 ? msgs[msgs.length - 1] : null;
+    if (lastMsg && lastMsg.ts) {
+      const gap = Date.now() - lastMsg.ts;
+      const hours = gap / (1000 * 60 * 60);
+      if (hours > 12) {
+        layers.push(`距离上次对话已经过了${hours > 24 ? Math.floor(hours / 24) + '天多' : Math.floor(hours) + '小时多'}，可以自然地提及时间流逝。`);
+      }
+    }
+
+    return layers.filter(Boolean).join('\n');
+  }
+
+  // 校验输出：处理明显错误，不过度限制自然短回复
+  function validateOutput(text, characterName){
+    if (!text || typeof text !== 'string') return { ok: false, reason: '回复为空' };
+    const trimmed = text.trim();
+    if (!trimmed) return { ok: false, reason: '回复只有空白' };
+    if (trimmed.length > 800) return { ok: false, reason: '回复过长（超过 800 字）' };
+    // 不限制短回复：一两个字、单个表情、简单应答都可以
+    return { ok: true, text: trimmed };
   }
 
   // 真正发请求：成功则追加对方消息；失败把这条标记为失败
@@ -27,16 +55,47 @@
       m.status = status; m.error = err; data.saveMsgs(cid, list); return list;
     };
     mark('sending');
-    const history = data.msgs(cid).filter(m => m.status !== 'failed' || m.id === msgId).slice(-30)
+    const allMsgs = data.msgs(cid);
+    const history = allMsgs.filter(m => m.status !== 'failed' || m.id === msgId).slice(-30)
       .map(m => ({ role: m.role === 'self' ? 'user' : 'assistant', content: m.text }));
-    try {
-      const reply = await XS.api.chat([{ role: 'system', content: systemPrompt(c) }, ...history]);
-      delete data.pending[cid];
-      const list = mark('ok');
-      if (list && data.contact(cid)) { list.push({ id: XS.uid('m'), role: 'other', text: reply, ts: Date.now() }); data.saveMsgs(cid, list); }
-    } catch (e) {
-      delete data.pending[cid];
-      mark('failed', { kind: e.kind || 'unknown', message: e.message || '未知错误' });
+
+    const systemContent = buildPrompt(c, allMsgs);
+    let retries = 0;
+    const maxRetries = 2;
+
+    while (retries <= maxRetries) {
+      try {
+        const reply = await XS.api.chat([{ role: 'system', content: systemContent }, ...history]);
+        const validation = validateOutput(reply, c.name);
+
+        if (!validation.ok) {
+          if (retries < maxRetries) {
+            retries++;
+            // 重试时加上具体要求
+            history.push({ role: 'assistant', content: reply });
+            history.push({ role: 'user', content: `上一条回复有问题（${validation.reason}），请重新回复。` });
+            continue;
+          } else {
+            throw new Error(`回复格式问题：${validation.reason}`);
+          }
+        }
+
+        delete data.pending[cid];
+        const list = mark('ok');
+        if (list && data.contact(cid)) {
+          list.push({ id: XS.uid('m'), role: 'other', text: validation.text, ts: Date.now() });
+          data.saveMsgs(cid, list);
+        }
+        return;
+      } catch (e) {
+        if (retries < maxRetries && e.kind !== 'config' && e.kind !== 'flight') {
+          retries++;
+          continue;
+        }
+        delete data.pending[cid];
+        mark('failed', { kind: e.kind || 'unknown', message: e.message || '未知错误' });
+        return;
+      }
     }
   }
 

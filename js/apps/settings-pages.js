@@ -69,14 +69,16 @@
     return p.view;
   };
 
+  /* 引导设置：统一定义，供多个页面复用；面向一加 Ace 5 至尊版 / ColorOS 16 */
+  const GUIDES = [
+    ['saver', '关闭省电模式', ['打开手机「设置」', '进入「电池」', '关闭「省电模式」和「超级省电」', '检查「自动开启省电」设置（如有）']],
+    ['background', '后台运行权限', ['打开「设置」→「应用管理」', '找到承载小手机的浏览器或应用', '进入「应用信息」', '开启「允许后台活动」']],
+    ['battery', '电池优化与自启动', ['在「应用信息」页面', '点击「电池」或「电池优化」', '选择「不受限制」或「无限制」', '检查「自启动」是否允许']],
+    ['recent', '锁定最近任务', ['打开手机多任务界面（最近任务）', '找到承载小手机的应用卡片', '下拉该卡片', '看到锁图标即锁定成功']],
+    ['standby', '睡眠待机优化（可选）', ['打开「设置」→「电池」', '查看「睡眠待机优化」或类似选项', '如果小手机后台仍被清理，可尝试调整']]
+  ];
+
   pages.access = () => {
-    /* 引导设置：4 个手机系统侧的保活引导，查看步骤 + 手动标记完成 */
-    const GUIDES = [
-      ['battery', '电池优化', ['打开手机的「设置」', '找到「电池」→「电池优化」', '找到你的浏览器 App', '选择「不受限制」']],
-      ['background', '后台运行权限', ['打开「设置」', '进入「应用管理」', '找到你的浏览器 App', '开启「允许后台运行」']],
-      ['recent', '锁定最近任务', ['打开手机多任务界面', '找到你的浏览器页面', '下拉该页面卡片', '出现锁图标即锁定成功']],
-      ['saver', '关闭省电模式', ['打开「设置」→「电池」', '关闭「省电模式」']]
-    ];
     const guideDone = id => !!XS.settings.get('guide.' + id);
     const guideRow = ([id, title]) => guideDone(id)
       ? `<div class="row no-icon guide-row" data-guide="${id}"><span class="row-main"><span class="row-title">${esc(title)}</span></span><span class="guide-done">${XS.icon('check')}已完成</span></div>`
@@ -146,6 +148,16 @@
     const pc = XS.passcode;
     const p = page('密码与安全', '<div data-sec></div>');
     const box = p.body.querySelector('[data-sec]');
+
+    /* 引导行渲染 */
+    const guideDone = id => !!XS.settings.get('guide.' + id);
+    const guideSeen = id => !!XS.settings.get('guideSeen.' + id);
+    const guideRow = ([id, title]) => guideDone(id)
+      ? `<div class="row no-icon guide-row" data-guide="${id}"><span class="row-main"><span class="row-title">${esc(title)}</span></span><span class="guide-done">${XS.icon('check')}已完成</span></div>`
+      : `<div class="row no-icon guide-row" data-guide="${id}"><span class="row-main"><span class="row-title">${esc(title)}</span></span>
+          <button class="guide-btn" data-view="${id}">查看</button>${guideSeen(id) ? `<button class="guide-btn ok" data-ok="${id}">我已设置</button>` : ''}</div>`;
+    const renderGuides = () => GUIDES.map(guideRow).join('');
+
     const render = () => {
       const on = pc.enabled(), ok = pc.supported();
       box.innerHTML = `
@@ -160,6 +172,9 @@
         <div class="group-block"><div class="group-label">后台保活</div><div class="group">
           ${XS.sui.row({ id: 'ka', title: '后台保活', sw: XS.settings.get('keepAlive') !== false })}
         </div><div class="group-foot">开启后会循环播放一段静音音频，让浏览器把小手机当作正在播放，降低切到后台后被清理的概率，但不能保证一定不被关掉：系统省电、清理后台或其他 App 播放声音时仍可能停下。播放期间锁屏或通知栏可能显示播放控件。</div></div>
+        <div class="group-block"><div class="group-label">手机系统设置引导</div><div class="group" data-sec-guides>
+          ${renderGuides()}
+        </div><div class="group-foot">按引导在手机系统侧设置好，可降低被清理的概率。网页无法替你关闭安卓省电模式，也无法检查系统权限，需要手动完成；这些设置不能保证网页永久留在后台，也不能保证锁屏后定时运行 AI。菜单名称以实际手机显示为准。</div></div>
         <div class="group-block"><div class="group-label">账号</div><div class="group">
           ${XS.sui.row({ id: 'devices', title: '登录设备', value: '未接通', muted: true, chev: true })}
         </div></div>`;
@@ -170,7 +185,29 @@
       const b = e.target.closest('button[data-id]'); if (!b || b.getAttribute('aria-disabled') === 'true') return;
       if (b.dataset.id === 'devices') return XS.nav.push(devicesPage());
       if (['set', 'change', 'off'].includes(b.dataset.id)) XS.nav.push(codeFlow(b.dataset.id));
+      /* 引导查看和完成 */
+      const v = e.target.closest('[data-view]'); if (v) return openGuide(v.dataset.view);
+      const ok = e.target.closest('[data-ok]');
+      if (ok) { XS.settings.set('guide.' + ok.dataset.ok, true); render(); XS.ui.toast('已标记完成'); }
     });
+    /* 引导弹窗 */
+    const overlay = p.view.closest('.layer-page')?.querySelector('.layer-overlay') || document.querySelector('.layer-overlay');
+    const openGuide = id => {
+      const g = GUIDES.find(x => x[0] === id); if (!g) return;
+      XS.settings.set('guideSeen.' + id, true);
+      const el = XS.ui.h(`<div class="gd-mask" role="dialog" aria-modal="true" aria-label="${esc(g[1])}">
+        <div class="gd-panel">
+          <div class="gd-body">
+            <h3 class="gd-title">${esc(g[1])}</h3>
+            <ol class="gd-steps">${g[2].map(s => `<li>${esc(s)}</li>`).join('')}</ol>
+          </div>
+          <div class="gd-foot"><button class="gd-ok">我知道了</button></div>
+        </div></div>`);
+      const close = () => { el.classList.add('out'); setTimeout(() => { el.remove(); render(); }, 180); };
+      el.addEventListener('click', e => { if (e.target === el || e.target.closest('.gd-ok')) close(); });
+      overlay.append(el);
+      requestAnimationFrame(() => el.classList.add('in'));
+    };
     p.view.addEventListener('shown', render);
     return p.view;
   };

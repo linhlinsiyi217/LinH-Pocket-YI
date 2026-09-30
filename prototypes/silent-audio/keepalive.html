@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>静音音频生成 · LinH Pocket YI</title>
+<style>
+  :root{
+    --c-bg:#F2F2F7; --c-text:#000; --c-text-2:#3C3C43; --c-text-secondary:#8A8A8E; --c-text-tertiary:#C7C7CC;
+    --c-separator:rgba(60,60,67,.12); --c-primary:#1C1C1E; --c-on-primary:#fff; --c-fill:rgba(120,120,128,.12);
+    --c-red:#FF3B30; --c-green:#34C759;
+    --glass:linear-gradient(180deg,rgba(255,255,255,.86),rgba(246,247,250,.78));
+    --glass-edge:rgba(0,0,0,.06); --glass-hi:rgba(255,255,255,.95);
+    --shadow:0 24px 60px rgba(20,24,40,.12),0 4px 14px rgba(20,24,40,.05);
+    --font:-apple-system,BlinkMacSystemFont,"SF Pro Text","PingFang SC","HarmonyOS Sans SC","MiSans","Microsoft YaHei",sans-serif;
+    --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  }
+  @media (prefers-color-scheme:dark){
+    :root{
+      --c-bg:#000; --c-text:#fff; --c-text-2:rgba(235,235,245,.82); --c-text-secondary:#8D8D93; --c-text-tertiary:#48484A;
+      --c-separator:rgba(84,84,88,.55); --c-primary:#F2F2F7; --c-on-primary:#000; --c-fill:rgba(120,120,128,.24);
+      --glass:linear-gradient(180deg,rgba(44,44,48,.86),rgba(30,30,33,.8));
+      --glass-edge:rgba(255,255,255,.09); --glass-hi:rgba(255,255,255,.12);
+      --shadow:0 24px 60px rgba(0,0,0,.55);
+    }
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{min-height:100%}
+  body{font-family:var(--font);color:var(--c-text);background:var(--c-bg);-webkit-font-smoothing:antialiased;
+    display:flex;justify-content:center;padding:max(40px,env(safe-area-inset-top)) 20px max(32px,env(safe-area-inset-bottom))}
+  /* 背景两团很淡的灰，给玻璃一点可透的层次 */
+  body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;
+    background:radial-gradient(420px 320px at 15% 10%,rgba(160,165,180,.22),transparent 70%),
+               radial-gradient(380px 300px at 90% 85%,rgba(170,170,180,.2),transparent 70%)}
+  main{width:100%;max-width:400px;display:flex;flex-direction:column;gap:20px}
+
+  .glass{position:relative;border-radius:26px;background:var(--glass);
+    -webkit-backdrop-filter:blur(28px) saturate(1.4);backdrop-filter:blur(28px) saturate(1.4);
+    box-shadow:var(--shadow),inset 0 0 0 .5px var(--glass-edge),inset 0 1px 0 var(--glass-hi)}
+
+  .card{padding:32px 24px 24px;text-align:center}
+  .spark{display:block;width:13px;height:13px;margin:0 auto 10px;color:var(--c-text-tertiary)}
+  h1{font-size:1.25rem;font-weight:600;letter-spacing:.14em;text-indent:.14em}
+  .spec{display:flex;align-items:center;justify-content:center;gap:10px;margin-top:10px;
+    font-size:.8125rem;letter-spacing:.06em;color:var(--c-text-secondary);font-variant-numeric:tabular-nums}
+  .rule{width:18px;height:.5px;background:currentColor;opacity:.6}
+
+  .meter{margin:26px 0 20px;padding-top:20px;border-top:.5px solid var(--c-separator)}
+  .time{font-size:2.5rem;font-weight:300;letter-spacing:.04em;font-variant-numeric:tabular-nums}
+  .bar{height:4px;margin:14px 8px 0;border-radius:2px;background:var(--c-fill);overflow:hidden}
+  .bar i{display:block;height:100%;width:0;background:var(--c-primary);border-radius:inherit;transition:width .3s linear}
+  .status{min-height:1.5em;margin-top:12px;font-size:.8125rem;line-height:1.5;color:var(--c-text-secondary)}
+  .status.err{color:var(--c-red)} .status.ok{color:var(--c-green)}
+
+  .btn{width:100%;min-height:50px;border:0;border-radius:999px;font:inherit;font-size:1rem;font-weight:600;letter-spacing:.08em;
+    background:var(--c-primary);color:var(--c-on-primary);cursor:pointer;transition:opacity .15s,transform .12s}
+  .btn:active{transform:scale(.98)}
+  .btn:disabled{opacity:.35;cursor:default;transform:none}
+  .btn.ghost{margin-top:10px;background:var(--c-fill);color:var(--c-text);font-weight:500}
+  .btn:focus-visible{outline:2px solid #007AFF;outline-offset:3px}
+  [hidden]{display:none!important}
+
+  .help{padding:22px 24px 20px}
+  h2{font-size:.8125rem;font-weight:600;letter-spacing:.08em;color:var(--c-text-secondary);margin-bottom:12px}
+  ol{list-style:none;counter-reset:s}
+  li{counter-increment:s;position:relative;padding:0 0 12px 26px;font-size:.875rem;line-height:1.6;color:var(--c-text-2)}
+  li::before{content:counter(s);position:absolute;left:0;top:2px;width:18px;height:18px;border-radius:50%;
+    background:var(--c-fill);font-size:.6875rem;font-weight:600;line-height:18px;text-align:center;color:var(--c-text)}
+  code{font-family:var(--mono);font-size:.75rem;padding:1px 5px;border-radius:5px;background:var(--c-fill);word-break:break-all}
+  .tip{margin-top:4px;padding-top:12px;border-top:1px dashed var(--c-separator);font-size:.8125rem;line-height:1.6;color:var(--c-text-secondary)}
+  .sign{text-align:center;font-size:.6875rem;letter-spacing:.12em;line-height:1.6;color:var(--c-text-secondary)}
+  .sign span{display:block} .sign span+span{color:var(--c-text-tertiary)}
+
+  @media (prefers-reduced-motion:reduce){ .bar i,.btn{transition:none} }
+</style>
+</head>
+<body>
+<main>
+  <section class="glass card" aria-labelledby="t">
+    <svg class="spark" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 1.5c.5 3.4 1.6 4.5 5 5-3.4.5-4.5 1.6-5 5-.5-3.4-1.6-4.5-5-5 3.4-.5 4.5-1.6 5-5z" fill="currentColor"/></svg>
+    <h1 id="t">静音音频</h1>
+    <div class="spec"><span class="rule"></span><span>48 kHz · 单声道 · WebM · 10 分钟</span><span class="rule"></span></div>
+
+    <div class="meter">
+      <div class="time" id="time" aria-hidden="true">00:00</div>
+      <div class="bar" role="progressbar" aria-label="录制进度" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="bar"><i></i></div>
+      <p class="status" id="status" role="status" aria-live="polite">浏览器会实时录制，需要约 10 分钟，期间请保持本页打开。</p>
+    </div>
+
+    <button class="btn" id="go">生成10分钟静音音频</button>
+    <button class="btn ghost" id="stop" hidden>取消</button>
+  </section>
+
+  <section class="glass help" aria-labelledby="h">
+    <h2 id="h">使用说明</h2>
+    <ol>
+      <li>下载音频文件后，上传到你的 GitHub 仓库，用来获取直链。</li>
+      <li>直链拼法：<code>https://cdn.jsdelivr.net/gh/你的用户名/仓库名/文件名.webm</code></li>
+      <li>把直链填入 <code>chat.js</code> 中的 <code>KEEPALIVE_AUDIO_URL</code> 常量。</li>
+    </ol>
+    <p class="tip">提示：建议音频时长 10 分钟以上，避免灵动岛频繁闪烁。</p>
+  </section>
+
+  <div class="sign"><span>LinH Pocket YI</span><span>@LinH仪</span></div>
+</main>
+
+<script>
+(() => {
+  const RATE = 48000, SECONDS = 600, CHANNELS = 1;
+  const $ = id => document.getElementById(id);
+  const goBtn = $('go'), stopBtn = $('stop'), statusEl = $('status'), timeEl = $('time'), bar = $('bar'), fill = bar.firstElementChild;
+
+  const say = (text, cls = '') => { statusEl.textContent = text; statusEl.className = 'status ' + cls; };
+  const fmt = s => String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(Math.floor(s % 60)).padStart(2, '0');
+  const setProgress = sec => {
+    const pct = Math.min(100, sec / SECONDS * 100);
+    timeEl.textContent = fmt(Math.min(sec, SECONDS));
+    fill.style.width = pct + '%';
+    bar.setAttribute('aria-valuenow', String(Math.round(pct)));
+  };
+
+  // 只接受 WebM/Opus（Opus 原生就是 48kHz）
+  const MIME = ['audio/webm;codecs=opus', 'audio/webm'].find(t => window.MediaRecorder && MediaRecorder.isTypeSupported(t));
+  if (!window.AudioContext && !window.webkitAudioContext || !MIME) {
+    goBtn.disabled = true;
+    say('这个浏览器不支持录制 WebM 音频，请用电脑上的 Chrome、Edge 或 Firefox 打开。', 'err');
+  }
+
+  /* —— 给 WebM 写入时长 ——
+     MediaRecorder 边录边写，文件头里没有 Duration，播放器会显示时长未知、不好循环。
+     这里在 Segment › Info 里补一个 Duration（float64，单位为 TimecodeScale）。 */
+  const ID_SEGMENT = 0x18538067, ID_INFO = 0x1549A966, ID_SCALE = 0x2AD7B1, ID_DURATION = 0x4489;
+  function readId(u, p){
+    const b = u[p]; let len = 1;
+    if (b & 0x80) len = 1; else if (b & 0x40) len = 2; else if (b & 0x20) len = 3; else if (b & 0x10) len = 4; else return null;
+    let v = 0; for (let i = 0; i < len; i++) v = v * 256 + u[p + i];
+    return { v, len };
+  }
+  function readSize(u, p){
+    const b = u[p]; let len = 1, mask = 0x80;
+    while (len <= 8 && !(b & mask)) { len++; mask >>= 1; }
+    if (len > 8) return null;
+    let v = b & (mask - 1), allOnes = v === mask - 1;
+    for (let i = 1; i < len; i++) { v = v * 256 + u[p + i]; if (u[p + i] !== 0xFF) allOnes = false; }
+    return { v: allOnes ? -1 : v, len };   // -1 = 未知大小（直播式写入）
+  }
+  function sizeBytes(n, len){          // 按固定长度写 EBML 大小
+    const out = new Uint8Array(len);
+    for (let i = len - 1; i >= 0; i--) { out[i] = n & 0xFF; n = Math.floor(n / 256); }
+    out[0] |= 0x80 >> (len - 1);
+    return out;
+  }
+  async function fixDuration(blob, ms){
+    const headLen = Math.min(blob.size, 64 * 1024);
+    const u = new Uint8Array(await blob.slice(0, headLen).arrayBuffer());
+    // 跳过 EBML 头，找到 Segment
+    let p = 0;
+    const ebml = readId(u, p); if (!ebml) return blob;
+    let s = readSize(u, p + ebml.len); p += ebml.len + s.len + s.v;
+    const seg = readId(u, p); if (!seg || seg.v !== ID_SEGMENT) return blob;
+    s = readSize(u, p + seg.len); p += seg.len + s.len;
+    // 在 Segment 子元素里找 Info
+    while (p < u.length - 12) {
+      const id = readId(u, p); if (!id) return blob;
+      const sz = readSize(u, p + id.len); if (!sz || sz.v < 0) return blob;
+      const body = p + id.len + sz.len;
+      if (id.v !== ID_INFO) { p = body + sz.v; continue; }
+      let q = body, scale = 1e6;
+      while (q < body + sz.v) {
+        const cid = readId(u, q), csz = readSize(u, q + cid.len), cb = q + cid.len + csz.len;
+        if (cid.v === ID_DURATION) return blob;          // 已经有了
+        if (cid.v === ID_SCALE) { scale = 0; for (let i = 0; i < csz.v; i++) scale = scale * 256 + u[cb + i]; }
+        q = cb + csz.v;
+      }
+      // 新 Duration 元素：ID(2) + 大小(1) + float64(8)
+      const dur = new Uint8Array(11);
+      dur.set([0x44, 0x89, 0x88]);
+      new DataView(dur.buffer).setFloat64(3, ms * 1e6 / scale);
+      const newSize = sizeBytes(sz.v + dur.length, sz.len);   // 沿用原来的大小字段长度
+      if (sz.v + dur.length >= 2 ** (7 * sz.len) - 1) return blob;
+      return new Blob([
+        u.slice(0, p + id.len), newSize, u.slice(body, body + sz.v), dur, u.slice(body + sz.v),
+        blob.slice(headLen)
+      ], { type: blob.type });
+    }
+    return blob;
+  }
+
+  let ctx = null, rec = null, timer = 0, wake = null, cancelled = false;
+
+  function cleanup(){
+    clearInterval(timer);
+    if (ctx) { ctx.close().catch(() => {}); ctx = null; }
+    if (wake) { wake.release().catch(() => {}); wake = null; }
+    goBtn.disabled = false; goBtn.hidden = false; stopBtn.hidden = true;
+    removeEventListener('beforeunload', guard);
+  }
+  const guard = e => { e.preventDefault(); e.returnValue = ''; };
+
+  goBtn.addEventListener('click', async () => {
+    cancelled = false;
+    try {
+      const AC = window.AudioContext || window.webkitAudioContext;
+      ctx = new AC({ sampleRate: RATE });
+      if (ctx.sampleRate !== RATE) throw new Error(`浏览器不支持 48kHz（当前 ${ctx.sampleRate} Hz），请换 Chrome、Edge 或 Firefox。`);
+      await ctx.resume();
+
+      // 1 秒全零的单声道缓冲，循环播放 = 连续静音
+      const buf = ctx.createBuffer(CHANNELS, RATE, RATE);
+      const src = ctx.createBufferSource();
+      src.buffer = buf; src.loop = true;
+      const dest = ctx.createMediaStreamDestination();
+      dest.channelCount = CHANNELS; dest.channelCountMode = 'explicit';
+      src.connect(dest);
+
+      const chunks = [];
+      rec = new MediaRecorder(dest.stream, { mimeType: MIME, audioBitsPerSecond: 32000 });
+      rec.ondataavailable = e => { if (e.data && e.data.size) chunks.push(e.data); };
+      rec.onstop = async () => {
+        const ms = Math.round(ctx ? ctx.currentTime * 1000 : SECONDS * 1000);
+        cleanup();
+        if (cancelled) { setProgress(0); say('已取消。'); return; }
+        say('正在整理文件…');
+        const raw = new Blob(chunks, { type: 'audio/webm' });
+        let out = raw;
+        try { out = await fixDuration(raw, Math.min(ms, SECONDS * 1000)); } catch {}
+        const url = URL.createObjectURL(out);
+        const a = Object.assign(document.createElement('a'), { href: url, download: 'silence-10min-48k-mono.webm' });
+        document.body.append(a); a.click(); a.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 60e3);
+        say(`已下载 silence-10min-48k-mono.webm（${(out.size / 1024).toFixed(0)} KB）`, 'ok');
+      };
+
+      src.start();
+      rec.start(1000);
+      const t0 = ctx.currentTime;
+      goBtn.disabled = true; goBtn.hidden = true; stopBtn.hidden = false; stopBtn.focus();
+      addEventListener('beforeunload', guard);
+      try { wake = await navigator.wakeLock?.request('screen'); } catch {}
+      say('正在录制静音… 请保持本页打开，可以切到别的标签页。');
+
+      // 以音频时钟为准计时，后台标签页定时器变慢也不会录短
+      timer = setInterval(() => {
+        const sec = ctx.currentTime - t0;
+        setProgress(sec);
+        if (sec >= SECONDS && rec.state === 'recording') { clearInterval(timer); rec.stop(); src.stop(); }
+      }, 250);
+    } catch (err) {
+      cleanup();
+      say(err.message || '生成失败，请换个浏览器再试。', 'err');
+    }
+  });
+
+  stopBtn.addEventListener('click', () => {
+    cancelled = true;
+    if (rec && rec.state === 'recording') rec.stop(); else cleanup();
+  });
+})();
+</script>
+</body>
+</html>

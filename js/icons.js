@@ -66,7 +66,67 @@
       <rect x="17" y="12" width="24" height="31" rx="5" fill="#D8D8DC" transform="rotate(-9 29 27.5)"/>
       <rect x="21" y="17" width="24" height="31" rx="5" fill="#1C1C1E"/>
       <circle cx="33" cy="28" r="4.6" fill="#fff"/>
-      <path d="M25.5 42.5a7.5 7.5 0 0 1 15 0" fill="#fff"/></svg>`
+      <path d="M25.5 42.5a7.5 7.5 0 0 1 15 0" fill="#fff"/></svg>`,
+    photos:`<svg viewBox="0 0 60 60" aria-hidden="true">
+      <rect x="13" y="15" width="34" height="30" rx="6" fill="none" stroke="#1C1C1E" stroke-width="3.2"/>
+      <circle cx="23" cy="25" r="3.5" fill="#1C1C1E"/>
+      <path d="M14 40l8-8 6 6 5-5 12 12v-1.5a4.5 4.5 0 0 0-4.5-4.5h-27A4.5 4.5 0 0 0 9 43.5V45z" fill="#1C1C1E"/></svg>`,
+    camera:`<svg viewBox="0 0 60 60" aria-hidden="true">
+      <rect x="12" y="19" width="36" height="28" rx="6" fill="none" stroke="#fff" stroke-width="3.2"/>
+      <path d="M22 19l3-6h10l3 6" fill="none" stroke="#fff" stroke-width="3.2" stroke-linejoin="round"/>
+      <circle cx="30" cy="33" r="8" fill="none" stroke="#fff" stroke-width="3"/></svg>`,
+    music:`<svg viewBox="0 0 60 60" aria-hidden="true">
+      <path d="M24 40V20l18-3v20" fill="none" stroke="#1C1C1E" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/>
+      <circle cx="20" cy="40" r="5" fill="#1C1C1E"/><circle cx="38" cy="37" r="5" fill="#1C1C1E"/></svg>`,
+    notes:`<svg viewBox="0 0 60 60" aria-hidden="true">
+      <path d="M16 12h20l12 12v24a4 4 0 0 1-4 4H16a4 4 0 0 1-4-4V16a4 4 0 0 1 4-4z" fill="none" stroke="#1C1C1E" stroke-width="3.2"/>
+      <path d="M36 12v12h12" fill="none" stroke="#1C1C1E" stroke-width="3.2" stroke-linejoin="round"/>
+      <path d="M22 32h16M22 38h10" stroke="#1C1C1E" stroke-width="2.6" stroke-linecap="round"/></svg>`,
+    calendar:`<svg viewBox="0 0 60 60" aria-hidden="true">
+      <rect x="13" y="16" width="34" height="32" rx="5" fill="none" stroke="#1C1C1E" stroke-width="3.2"/>
+      <path d="M22 12v8M38 12v8M13 26h34" stroke="#1C1C1E" stroke-width="3.2" stroke-linecap="round"/>
+      <circle cx="22" cy="35" r="1.8" fill="#1C1C1E"/><circle cx="30" cy="35" r="1.8" fill="#1C1C1E"/>
+      <circle cx="38" cy="35" r="1.8" fill="#1C1C1E"/><circle cx="22" cy="42" r="1.8" fill="#1C1C1E"/></svg>`,
+    weather:`<svg viewBox="0 0 60 60" aria-hidden="true">
+      <circle cx="30" cy="22" r="7" fill="none" stroke="#F5A623" stroke-width="3"/>
+      <path d="M30 9v3M30 36v3M48 22h-3M15 22h-3M42.7 12.7l-2.1 2.1M19.4 36l-2.1 2.1M42.7 31.3l-2.1-2.1M19.4 18l-2.1-2.1" stroke="#F5A623" stroke-width="2.8" stroke-linecap="round"/>
+      <path d="M18 40h18a6 6 0 0 0 0-12 9 9 0 0 0-18 0" fill="none" stroke="#1C1C1E" stroke-width="3"/></svg>`,
+    maps:`<svg viewBox="0 0 60 60" aria-hidden="true">
+      <path d="M30 16c-5.5 0-10 4.5-10 10 0 7.5 10 18 10 18s10-10.5 10-18c0-5.5-4.5-10-10-10z" fill="none" stroke="#E74C3C" stroke-width="3.2"/>
+      <circle cx="30" cy="26" r="4" fill="#E74C3C"/></svg>`,
+    browser:`<svg viewBox="0 0 60 60" aria-hidden="true">
+      <rect x="12" y="16" width="36" height="28" rx="5" fill="none" stroke="#0A84FF" stroke-width="3.2"/>
+      <path d="M12 24h36" stroke="#0A84FF" stroke-width="3.2"/>
+      <circle cx="18" cy="20" r="1.2" fill="#0A84FF"/><circle cx="22.5" cy="20" r="1.2" fill="#0A84FF"/>
+      <circle cx="27" cy="20" r="1.2" fill="#0A84FF"/></svg>`,
+    files:`<svg viewBox="0 0 60 60" aria-hidden="true">
+      <path d="M22 12h10l6 6v24a4 4 0 0 1-4 4H22a4 4 0 0 1-4-4V16a4 4 0 0 1 4-4z" fill="none" stroke="#0A84FF" stroke-width="3.2"/>
+      <path d="M32 12v10h6" fill="none" stroke="#0A84FF" stroke-width="3.2" stroke-linejoin="round"/>
+      <path d="M26 48h12a4 4 0 0 0 4-4V20" fill="none" stroke="#0A84FF" stroke-width="3.2" stroke-linecap="round"/></svg>`,
+    wallet:`<svg viewBox="0 0 60 60" aria-hidden="true">
+      <rect x="14" y="20" width="32" height="24" rx="4" fill="none" stroke="#34C759" stroke-width="3.2"/>
+      <path d="M18 20V16a4 4 0 0 1 4-4h16a4 4 0 0 1 4 4v4" fill="none" stroke="#34C759" stroke-width="3.2"/>
+      <circle cx="38" cy="32" r="2.5" fill="#34C759"/></svg>`,
+    messages:`<svg viewBox="0 0 60 60" aria-hidden="true">
+      <rect x="13" y="18" width="34" height="26" rx="5" fill="none" stroke="#34C759" stroke-width="3.2"/>
+      <path d="M13 24l14 10 3-2 3 2 14-10" fill="none" stroke="#34C759" stroke-width="3" stroke-linejoin="round"/></svg>`,
+    phone:`<svg viewBox="0 0 60 60" aria-hidden="true">
+      <path d="M42 38v5a3 3 0 0 1-3.3 3c-10.3-.9-18.7-7.5-21.5-15A14.8 14.8 0 0 1 15 21a3 3 0 0 1 3-3h5a3 3 0 0 1 3 2.6c.2 1.4.5 2.8 1 4a3 3 0 0 1-.7 3.2l-2.1 2.1a24 24 0 0 0 9 9l2.1-2.1a3 3 0 0 1 3.2-.7c1.2.5 2.6.8 4 1A3 3 0 0 1 45 40z" fill="none" stroke="#34C759" stroke-width="3"/></svg>`,
+    library:`<svg viewBox="0 0 60 60" aria-hidden="true">
+      <path d="M17 14h8v32h-8a2 2 0 0 1-2-2V16a2 2 0 0 1 2-2z" fill="none" stroke="#8E4B10" stroke-width="3"/>
+      <rect x="25" y="14" width="10" height="32" rx="1" fill="none" stroke="#8E4B10" stroke-width="3"/>
+      <path d="M35 14h8a2 2 0 0 1 2 2v28a2 2 0 0 1-2 2h-8V14z" fill="none" stroke="#8E4B10" stroke-width="3"/>
+      <path d="M30 20v8" stroke="#8E4B10" stroke-width="2" stroke-linecap="round"/></svg>`,
+    wechat:`<svg viewBox="0 0 60 60" aria-hidden="true">
+      <path d="M24 18c-7 0-12.5 4.6-12.5 10.3 0 3.2 1.8 6.1 4.7 7.9l-1.1 4.3 4.8-2.6c1.3.4 2.7.6 4.1.6 7 0 12.5-4.6 12.5-10.3S31 18 24 18z" fill="#07C160"/>
+      <circle cx="19" cy="27.5" r="1.6" fill="#fff"/><circle cx="29" cy="27.5" r="1.6" fill="#fff"/>
+      <path d="M32 28.5c.8-.2 1.6-.2 2.5-.2 5.8 0 10.5 3.8 10.5 8.5 0 2.6-1.5 5-4 6.5l.9 3.5-4-2.2c-1.1.3-2.2.5-3.4.5-5.8 0-10.5-3.8-10.5-8.5 0-.4 0-.7.1-1.1" fill="#07C160"/>
+      <circle cx="38" cy="36.5" r="1.3" fill="#fff"/><circle cx="44.5" cy="36.5" r="1.3" fill="#fff"/></svg>`,
+    moments:`<svg viewBox="0 0 60 60" aria-hidden="true">
+      <circle cx="30" cy="30" r="18" fill="none" stroke="#0A84FF" stroke-width="3"/>
+      <circle cx="30" cy="30" r="4" fill="#0A84FF"/>
+      <circle cx="30" cy="15" r="2.5" fill="#0A84FF"/><circle cx="41.5" cy="21.5" r="2.5" fill="#0A84FF"/>
+      <circle cx="45" cy="30" r="2.5" fill="#0A84FF"/><circle cx="18.5" cy="38.5" r="2.5" fill="#0A84FF"/></svg>`
   };
 
   window.XS = window.XS || {};

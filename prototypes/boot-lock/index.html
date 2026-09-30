@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light" data-motion="full">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>启动画面 + 锁屏 · 预览原型</title>
+<!-- 独立原型：只读引用正式项目的设计令牌和图标库，不修改正式文件 -->
+<link rel="stylesheet" href="../../css/tokens.css">
+<link rel="stylesheet" href="proto.css">
+</head>
+<body>
+<main class="stage">
+  <div class="device" id="device">
+    <div class="screen" id="screen" style="--p:0">
+
+      <!-- 壁纸：锁屏和桌面共用同一张，桌面上多一层薄纱 -->
+      <div class="wall" aria-hidden="true">
+        <i class="blob b1"></i><i class="blob b2"></i><i class="blob b3"></i><i class="blob b4"></i>
+        <i class="grain"></i>
+      </div>
+
+      <div class="statusbar" id="statusbar" aria-hidden="true">
+        <span class="sb-time" data-clock="t"></span>
+        <span class="island"></span>
+        <span class="sb-right" id="sbRight"></span>
+      </div>
+
+      <!-- 衔接示意桌面（与正式桌面同一套图标和布局） -->
+      <section class="desk" id="desk" aria-label="桌面示意" inert>
+        <div class="desk-veil"></div>
+        <div class="desk-grid">
+          <div class="widget wk-clockWide" style="--i:0">
+            <div class="w-time" data-clock="t"></div>
+            <div class="w-side"><div class="w-week" data-clock="w"></div><div class="w-date" data-clock="md"></div></div>
+          </div>
+          <button class="app" style="--i:1" data-app="Char 馆"><span class="app-icon ai-light" data-icon="char"></span><span class="app-label">Char 馆</span></button>
+        </div>
+        <nav class="dock" style="--i:2" aria-label="常用应用">
+          <button class="app" data-app="聊天"><span class="app-icon ai-dark" data-icon="chat"></span></button>
+          <button class="app" data-app="设置"><span class="app-icon ai-gray" data-icon="settings"></span></button>
+        </nav>
+      </section>
+
+      <!-- 锁屏 -->
+      <section class="lock" id="lock" aria-label="锁屏，上滑或轻点空白处解锁" tabindex="0">
+        <div class="lock-top">
+          <svg class="lock-glyph" viewBox="0 0 20 22" aria-hidden="true">
+            <path class="shackle" d="M5.5 10V7a4.5 4.5 0 0 1 9 0v3"/>
+            <rect x="3" y="10" width="14" height="10.5" rx="3"/>
+          </svg>
+          <div class="lock-date"><span data-clock="md"></span><span class="sep"></span><span data-clock="w"></span></div>
+          <div class="lock-time" data-clock="big"></div>
+        </div>
+
+        <!-- 通知：内容由 proto.js 按演示数据渲染（demo-notes.js），正式接入时改读统一通知状态 -->
+        <div class="notes" id="notes" aria-label="通知"></div>
+
+        <p class="unlock-hint">上滑解锁</p>
+      </section>
+
+      <div class="homebar" aria-hidden="true"></div>
+      <div class="toast" id="toast" role="status"></div>
+
+      <!-- 启动画面 -->
+      <section class="boot" id="boot" aria-label="LinH Pocket YI，正在启动">
+        <canvas class="boot-stars" id="bootStars" aria-hidden="true"></canvas>
+        <div class="boot-center">
+          <div class="boot-mark">
+            <img src="../../icons/icon-512.png" alt="" width="512" height="512" draggable="false">
+          </div>
+          <svg class="boot-name" id="bootName" role="img" aria-label="LinH Pocket YI"><path/></svg>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <aside class="panel" aria-label="预览控制">
+    <button class="panel-toggle" data-act="toggle" aria-expanded="false">预览</button>
+    <p class="panel-title">画面</p>
+    <button data-act="boot">重播启动</button>
+    <button data-act="lock">回到锁屏</button>
+    <button data-act="hold">启动画面：自动进入锁屏</button>
+    <button data-act="theme">切换深色</button>
+    <button data-act="motion">减少动效：关</button>
+    <p class="panel-title">通知 · 演示数据</p>
+    <button data-act="count">通知条数：2</button>
+    <button data-act="fold">多条通知：展开</button>
+    <button data-act="privacy">锁屏预览：显示内容</button>
+    <a class="panel-link" href="font-compare.html">字体对比 →</a>
+    <p class="panel-note">通知内容是演示数据，未接入任何应用；正式版从统一通知状态读取。<br>启动画面：轻点空白处星点会闪一下，轻点图标跳过<br>锁屏：上滑或轻点空白处解锁；多条通知可展开 / 收起<br>桌面：轻点状态栏回到锁屏<br>键盘：空格解锁 · L 锁屏 · R 重播</p>
+  </aside>
+</main>
+<script src="../../js/icons.js"></script>
+<script src="brand-name.js"></script>
+<script src="demo-notes.js"></script>
+<script src="proto.js"></script>
+</body>
+</html>
