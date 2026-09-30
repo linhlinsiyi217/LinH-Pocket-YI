@@ -2,15 +2,16 @@
    独立的 <audio> 元素，和聊天语音（XS 内其它播放逻辑）完全分离，互不占通道
    开关存在 XS.settings 的 keepAlive，设置页通过 window.toggleKeepAlive() 控制 */
 (function(){
-  // 同站的 10 秒静音 WAV（8kHz 8 位单声道，约 80KB），循环播放；仓库是私有的，不能走 jsDelivr
-  const KEEPALIVE_AUDIO_URL = 'audio/silence.wav';
+  // 同站静音音频：优先 10 分钟 WebM；浏览器不支持 WebM（如较旧的 iOS）时改用 10 秒 WAV 循环。
+  // 仓库是私有的，不能走 jsDelivr
+  const SOURCES = ['silence-10min-48k-mono.webm', 'audio/silence.wav'];
 
   let audio = null, enabled = false, intentionalPause = false;
 
   function ensure(){
     if (audio) return audio;
     audio = document.createElement('audio');
-    audio.src = KEEPALIVE_AUDIO_URL;
+    SOURCES.forEach(src => { const el = document.createElement('source'); el.src = src; el.type = src.endsWith('.webm') ? 'audio/webm' : 'audio/wav'; audio.append(el); });
     audio.autoplay = true;
     audio.loop = true;
     audio.preload = 'auto';
