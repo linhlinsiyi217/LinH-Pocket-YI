@@ -1,0 +1,120 @@
+/* ============================================================
+   LinH Pocket YI · 登录 / 注册 / 设置密码 / 无权限 共享样式
+   iOS 液态玻璃：柔和的蓝紫 + 薄荷光斑背景，面板是半透明磨砂玻璃
+   深色直接用需求给定的玻璃参数；浅色背景上同一组数值几乎看不见，改用更实的白玻璃
+   ============================================================ */
+:root{
+  --font:-apple-system,BlinkMacSystemFont,"SF Pro Text","PingFang SC","HarmonyOS Sans SC","MiSans","Microsoft YaHei",sans-serif;
+  --ease:cubic-bezier(.32,.72,0,1);
+  --bg:#EEF0F6;
+  --text:#1C1C1E; --text-2:rgba(60,60,67,.64); --text-3:rgba(60,60,67,.38);
+  --glass:rgba(255,255,255,.46); --glass-line:rgba(255,255,255,.72);
+  --glass-shadow:inset 0 1px 1px rgba(255,255,255,.9),0 4px 12px rgba(0,0,0,.06),0 24px 60px rgba(80,90,140,.12);
+  --field:rgba(255,255,255,.55); --field-line:rgba(60,60,67,.12);
+  --glow:rgba(138,148,226,.7); --glow-soft:rgba(150,160,235,.22);
+  --btn-bg:#1C1C1E; --btn-text:#FFFFFF;
+  --orb-1:#C7CCF4; --orb-2:#BDE7D8; --orb-3:#DDD3F3;
+  --danger:#FF3B30; --danger-soft:rgba(255,59,48,.14);
+  color-scheme:light;
+}
+:root[data-theme="dark"]{
+  --bg:#0B0C12;
+  --text:#F5F5F7; --text-2:rgba(235,235,245,.62); --text-3:rgba(235,235,245,.34);
+  --glass:rgba(255,255,255,.08); --glass-line:rgba(255,255,255,.12);
+  --glass-shadow:inset 0 1px 1px rgba(255,255,255,.15),0 4px 12px rgba(0,0,0,.1);
+  --field:rgba(255,255,255,.06); --field-line:rgba(255,255,255,.12);
+  --glow:rgba(170,178,255,.6); --glow-soft:rgba(160,170,255,.18);
+  --btn-bg:#F5F5F7; --btn-text:#1C1C1E;
+  --orb-1:#373C7A; --orb-2:#1C5747; --orb-3:#46376C;
+  --danger:#FF453A; --danger-soft:rgba(255,69,58,.18);
+  color-scheme:dark;
+}
+
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+[hidden]{display:none !important}
+html,body{min-height:100%;background:var(--bg)}
+body{font-family:var(--font);color:var(--text);-webkit-font-smoothing:antialiased;overflow-x:hidden}
+
+/* —— 背景：三团很淡的光斑，缓慢漂移 —— */
+.bg{position:fixed;inset:0;overflow:hidden;pointer-events:none;z-index:0}
+.orb{position:absolute;border-radius:50%;filter:blur(64px);opacity:.9;animation:drift 26s ease-in-out infinite alternate}
+.o1{width:320px;height:320px;left:-90px;top:-60px;background:var(--orb-1)}
+.o2{width:300px;height:300px;right:-110px;top:38%;background:var(--orb-2);animation-duration:32s;animation-delay:-8s}
+.o3{width:260px;height:260px;left:10%;bottom:-100px;background:var(--orb-3);animation-duration:29s;animation-delay:-14s}
+@keyframes drift{to{transform:translate3d(40px,30px,0) scale(1.08)}}
+
+/* —— 版面：手机上居中一张面板，375px 宽时左右各留 20px —— */
+.wrap{position:relative;z-index:1;min-height:100vh;min-height:100dvh;display:grid;place-items:center;
+  padding:max(28px,env(safe-area-inset-top)) 20px max(28px,env(safe-area-inset-bottom));
+  animation:page-in .46s var(--ease) both}
+body.is-leaving .wrap{opacity:0;transform:scale(.985);transition:opacity .24s ease,transform .24s ease}
+@keyframes page-in{from{opacity:0;transform:translateY(10px) scale(.99)}}
+
+.panel{position:relative;width:100%;max-width:380px;padding:32px 24px 24px;border-radius:24px;
+  background:var(--glass);border:1px solid var(--glass-line);box-shadow:var(--glass-shadow);
+  -webkit-backdrop-filter:blur(20px) saturate(180%);backdrop-filter:blur(20px) saturate(180%)}
+/* 顶部一道很细的高光，像玻璃边缘反光 */
+.panel::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;
+  background:linear-gradient(180deg,rgba(255,255,255,.28),rgba(255,255,255,0) 38%)}
+:root[data-theme="dark"] .panel::before{background:linear-gradient(180deg,rgba(255,255,255,.07),rgba(255,255,255,0) 38%)}
+@supports not ((backdrop-filter:blur(1px)) or (-webkit-backdrop-filter:blur(1px))){
+  .panel{background:rgba(255,255,255,.86)}
+  :root[data-theme="dark"] .panel{background:rgba(28,28,32,.92)}
+}
+
+/* —— 标题区 —— */
+.brand{position:relative;text-align:center;margin-bottom:26px}
+.brand img{display:block;width:60px;height:60px;margin:0 auto 14px;border-radius:14px;box-shadow:0 6px 18px rgba(0,0,0,.12)}
+.brand h1{font-size:24px;font-weight:650;letter-spacing:-.02em;line-height:1.25}
+.brand .sub{margin-top:6px;font-size:15px;color:var(--text-2);line-height:1.5}
+
+/* —— 输入框 —— */
+form{position:relative}
+.field{margin-bottom:6px}
+.field label{display:block;margin:0 0 6px 4px;font-size:13px;font-weight:500;color:var(--text-2)}
+.field input{width:100%;height:48px;padding:0 14px;border-radius:14px;border:1px solid var(--field-line);
+  background:var(--field);color:var(--text);font:400 16px/1.2 var(--font);   /* 16px：iOS 聚焦时不会自动放大页面 */
+  transition:border-color .2s ease,box-shadow .25s ease,background-color .2s ease}
+.field input::placeholder{color:var(--text-3)}
+.field input:focus{outline:none;border-color:var(--glow);background:var(--glass);
+  box-shadow:0 0 0 3px var(--glow-soft),0 0 22px var(--glow-soft)}
+.field.is-error input{border-color:var(--danger);box-shadow:0 0 0 3px var(--danger-soft)}
+.err{min-height:18px;margin:5px 0 0 4px;font-size:12.5px;line-height:18px;color:var(--danger)}
+.hint{margin:5px 0 0 4px;font-size:12.5px;line-height:1.5;color:var(--text-3)}
+
+.form-msg{min-height:20px;margin:4px 0 10px;font-size:13px;line-height:20px;text-align:center;color:var(--text-2)}
+.form-msg[data-kind="error"]{color:var(--danger)}
+
+/* —— 按钮：悬停更实、轻微上移；按下缩小 —— */
+.btn{display:flex;align-items:center;justify-content:center;width:100%;height:50px;border:0;border-radius:999px;
+  background:var(--btn-bg);color:var(--btn-text);font:600 16px/1 var(--font);text-decoration:none;cursor:pointer;
+  opacity:.86;box-shadow:0 8px 20px rgba(0,0,0,.12);
+  transition:opacity .2s ease,transform .22s var(--ease),box-shadow .22s ease}
+@media (hover:hover){.btn:hover:not(:disabled){opacity:1;transform:translateY(-1px);box-shadow:0 12px 26px rgba(0,0,0,.16)}}
+.btn:active:not(:disabled){opacity:1;transform:scale(.97);transition-duration:.08s}
+.btn:disabled{opacity:.48;cursor:default}
+.btn:focus-visible{outline:2px solid var(--glow);outline-offset:3px}
+.btn-glass{margin-top:10px;background:var(--field);color:var(--text);border:1px solid var(--glass-line);box-shadow:none;opacity:.9}
+
+.alt{position:relative;margin-top:18px;text-align:center;font-size:14px;color:var(--text-2)}
+.alt a,.link{color:var(--text);font-weight:600;text-decoration:underline;text-underline-offset:3px;
+  text-decoration-color:var(--text-3);padding:6px 2px;border-radius:6px}
+.alt a:focus-visible,.link:focus-visible{outline:2px solid var(--glow);outline-offset:2px}
+.link{background:none;border:0;font:inherit;font-size:14px;cursor:pointer}
+
+/* —— 状态块：邮件已发送、链接失效、无权限 —— */
+.state{position:relative;text-align:center}
+.state .glyph{display:grid;place-items:center;width:64px;height:64px;margin:4px auto 18px;border-radius:50%;
+  background:var(--field);border:1px solid var(--glass-line);box-shadow:var(--glass-shadow)}
+.state .glyph svg{width:28px;height:28px;fill:none;stroke:var(--text);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.state h1{font-size:22px;font-weight:650;letter-spacing:-.02em}
+.state p{margin:10px 0 24px;font-size:15px;line-height:1.6;color:var(--text-2)}
+.state b{color:var(--text);font-weight:600;word-break:break-all}
+
+@media (prefers-reduced-motion:reduce){
+  .orb,.wrap{animation:none}
+  body.is-leaving .wrap{transition:none}
+  .btn{transition:opacity .2s ease}
+  @media (hover:hover){.btn:hover:not(:disabled){transform:none}}
+  .btn:active:not(:disabled){transform:none}
+}
