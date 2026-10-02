@@ -8,14 +8,18 @@
   const fmt = text => esc(text).split('\n').map(line =>
     /^\s*（[^（）]*）\s*$/.test(line) ? `<span class="act">${line}</span>` : line.replace(/\*([^*\n]+)\*/g, '<span class="act">$1</span>')).join('\n');
 
-  // 使用 lifelike-core.js 构建完整的六层提示词系统
+  // 使用 lifelike-core.js 组装完整提示词：行为指令 + 角色卡 + 用户资料 + 世界书 + 记忆 + 最近对话
   function buildPrompt(c, msgs, userInput){
     const me = XS.profile.get();
 
-    // 构建角色设定（支持字符串或五层对象格式）
-    const characterProfile = c.persona || c.name;
+    // 角色卡：名字、人设、说话习惯、关系阶段、禁忌等，按字段交给 lifelike 组装
+    const characterProfile = {
+      name: c.name, persona: c.persona, speaking: c.speaking,
+      relation: c.relation, taboos: c.taboos,
+      gender: c.gender, birthday: c.birthday, hometown: c.hometown
+    };
 
-    // 构建用户资料
+    // 用户资料：只送用户自己在「我」里填过的那一份，不猜
     const userProfile = me.name ? `用户名字：${me.name}${me.persona ? '\n用户设定：' + me.persona : ''}` : '';
 
     // 构建历史消息（转换为 lifelike 需要的格式）
@@ -42,11 +46,11 @@
     const ctx = XS.lifelike.buildPromptContext({
       characterProfile,
       userProfile,
-      worldbookEntries: [],     // 未来可扩展世界书功能
-      activePresets: [],         // 未来可扩展预设功能
-      calibrations: [],          // 未来可扩展校准功能
-      rollingSummary: '',        // 未来可扩展摘要功能
-      relevantMemories: [],      // 未来可扩展记忆功能
+      worldbookEntries: data.worldbook(),   // 世界书：按本轮话题挑相关的少量条目
+      activePresets: [],                     // 预设功能暂未开放
+      calibrations: [],                      // 角色纠错（C4）暂未开放
+      rollingSummary: '',                    // 摘要功能暂未开放
+      relevantMemories: data.memories(c.id), // 长期记忆：没有就传空，不臆造共同经历
       history,
       userInput,
       now: new Date(),
@@ -62,6 +66,12 @@
   async function request(cid, msgId){
     const c = data.contact(cid);
     if (!c || data.pending[cid]) return;
+    // 真人联系人和关掉 AI 的角色不发请求：消息照常留下，绝不会生成假的对方回复
+    if (c.type === 'person' || c.aiEnabled === false){
+      const list = data.msgs(cid), m = list.find(x => x.id === msgId);
+      if (m){ m.status = 'ok'; data.saveMsgs(cid, list); }
+      return;
+    }
     data.pending[cid] = true;
     const mark = (status, err) => {
       const list = data.msgs(cid), m = list.find(x => x.id === msgId);
@@ -95,7 +105,11 @@
       delete data.pending[cid];
       const list = mark('ok');
       if (list && data.contact(cid)) {
-        list.push({ id: XS.uid('m'), role: 'other', text: reply, ts: Date.now() });
+        // 需要连发几条时用单独一行 --- 明确分隔；只有 2~3 段才拆，否则原样当一条。
+        // 一次全部落库，不做定时逐条刷屏，旧回复不会在新话题里继续冒出来。
+        const parts = XS.lifelike.splitBubbles(reply);
+        const base = Date.now();
+        parts.forEach((part, i) => list.push({ id: XS.uid('m'), role: 'other', text: part, ts: base + i }));
         data.saveMsgs(cid, list);
       }
     } catch (e) {
@@ -300,6 +314,7 @@
       if (a.dataset.a === 'unquote'){ setQuote(null); return; }
       if (a.dataset.a === 'goset') XS.nav.push(XS.settingsPages.api());
       if (a.dataset.a === 'more') XS.ui.menu(a, [
+        { label: '角色记忆', icon: 'note', onClick: () => XS.nav.push(data.openMemories(cid)) },
         { label: '搜索消息', icon: 'search', onClick: () => { searchBox.hidden = false; v.classList.add('searching'); searchInput.focus(); } },
         { label: '编辑联系人', icon: 'edit', onClick: () => data.editContact(cont, n => { cont = n; p.setTitle(data.name(n)); render(); }) },
         { label: '清空聊天记录', icon: 'trash', danger: true, onClick: async () => {

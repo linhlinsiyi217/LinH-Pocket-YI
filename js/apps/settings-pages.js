@@ -31,7 +31,11 @@
         ${inline('密钥', 'apiKey', a.apiKey, { type: 'password', ph: 'sk-...' })}
         ${inline('模型', 'model', a.model, { ph: '例如 gpt-4o-mini' })}
       </div><div class="group-foot">自动保存。密钥以明文保存在这台设备的浏览器里，只会发送到你填写的地址。</div></div>
-      <div class="group-block"><div class="group">${XS.sui.row({ id: 'test', title: '测试连接', cls: 'link center' })}</div></div>
+      <div class="group-block"><div class="group">
+        ${XS.sui.row({ id: 'test', title: '测试连接', cls: 'link center' })}
+        ${XS.sui.row({ id: 'testsys', title: '检测系统指令', cls: 'link center' })}
+      </div><div class="group-foot">AI 角色的行为指令是按 system 消息发的。有些中转会丢掉 system，
+        角色就会变得不像本人。这里点一下能测出来：让人设指令要求只回两个字，模型照做才算通。</div></div>
       <div class="set-status" role="status" aria-live="polite"></div>`);
     const st = p.body.querySelector('.set-status');
     const show = (cls, icon, text) => { st.className = 'set-status ' + cls; st.innerHTML = (icon ? XS.icon(icon) : '') + `<span>${esc(text)}</span>`; };
@@ -42,6 +46,16 @@
       testing = true; show('busy', '', '正在测试…');
       try { const r = await XS.api.test(); show('ok', 'check', '连接成功，模型回复：' + r.slice(0, 40)); }
       catch (e) { show('err', 'alert', XS.api.configured() ? e.message : '请先填写上面的地址和模型'); }
+      testing = false;
+    });
+    p.body.querySelector('[data-id="testsys"]').addEventListener('click', async () => {
+      if (testing) return;
+      testing = true; show('busy', '', '正在检测系统指令…');
+      try {
+        const r = await XS.api.testSystem();
+        if (r.ok) show('ok', 'check', '接口会把 system 指令传给模型，角色的行为指令能生效');
+        else show('err', 'alert', '这个接口没有照 system 指令做（它回了「' + r.reply.slice(0, 20) + '」）。角色的人设和行为指令可能被中转丢掉，建议换个接口。');
+      } catch (e) { show('err', 'alert', XS.api.configured() ? e.message : '请先填写上面的地址和模型'); }
       testing = false;
     });
     return p.view;

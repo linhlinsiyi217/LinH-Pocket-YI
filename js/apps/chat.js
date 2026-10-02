@@ -30,7 +30,13 @@
       if (list.some(x => x.cid === f.cid && x.msgId === f.msgId)) return false;
       list.unshift(f); XS.store.set('favs', list); XS.emit('chat:change'); return true;
     },
-    removeFav(id){ XS.store.set('favs', data.favs().filter(x => x.id !== id)); XS.emit('chat:change'); }
+    removeFav(id){ XS.store.set('favs', data.favs().filter(x => x.id !== id)); XS.emit('chat:change'); },
+    // 长期记忆：按联系人分开存，用户可查看 / 编辑 / 删除；没有就不往请求里塞
+    memories: id => XS.store.get('mem.' + id, []),
+    saveMemories(id, list){ XS.store.set('mem.' + id, list); XS.emit('chat:change'); },
+    // 世界书：AI 可按关键词检索的设定条目，和角色卡分开，不是一个文本框
+    worldbook: () => XS.store.get('worldbook', []),
+    saveWorldbook(list){ XS.store.set('worldbook', list); XS.emit('chat:change'); }
   };
   // 显示名：有备注就用备注，没有才用名字
   data.name = c => ((c && (c.remark || c.name)) || '').trim();
@@ -68,6 +74,9 @@
       <label class="field"><span>籍贯</span><input name="hometown" maxlength="30" value="${esc(base.hometown || '')}" placeholder="例如：深圳"></label>
       <label class="field"><span>人设</span><textarea name="persona" rows="3" placeholder="性格、说话方式、和你的关系……">${esc(base.persona || '')}</textarea></label>
       <label class="field"><span>禁忌</span><textarea name="taboos" rows="2" placeholder="不能说的话、不能碰的话题（可选）">${esc(base.taboos || '')}</textarea></label>
+      <label class="field"><span>说话习惯</span><textarea name="speaking" rows="2" placeholder="用词、语气、标点、幽默感（可选）">${esc(base.speaking || '')}</textarea></label>
+      <label class="field"><span>关系阶段</span><input name="relation" maxlength="30" value="${esc(base.relation || '')}" placeholder="例如：刚认识、老朋友"></label>
+      <div class="cf-row"><span class="cf-label">用 AI 回复</span><span class="switch" data-sw="ai" role="switch" aria-checked="${base.aiEnabled !== false}" aria-label="用 AI 回复"></span></div>
       <input type="file" accept="image/*" hidden></div>`);
     // 类型 / 性别分段
     ['type', 'gender'].forEach(key => {
@@ -77,6 +86,7 @@
     });
     // 置顶开关：点整行都能切
     const pinSw = form.querySelector('[data-sw="pin"]');
+    form.querySelector('[data-sw=ai]').parentElement.addEventListener('click', function(){ const sw = this.querySelector('[data-sw=ai]'); sw.setAttribute('aria-checked', String(sw.getAttribute('aria-checked') !== 'true')); });
     pinSw.parentElement.addEventListener('click', () => {
       const on = pinSw.getAttribute('aria-checked') !== 'true';
       pinSw.setAttribute('aria-checked', String(on));
@@ -97,7 +107,10 @@
         birthday: form.querySelector('[name=birthday]').value, hometown: form.querySelector('[name=hometown]').value.trim(),
         persona: form.querySelector('[name=persona]').value.trim(), taboos: form.querySelector('[name=taboos]').value.trim(),
         remark: form.querySelector('[name=remark]').value.trim(), group: form.querySelector('[name=group]').value.trim(),
-        pinned: form.querySelector('[data-sw=pin]').getAttribute('aria-checked') === 'true' };
+        pinned: form.querySelector('[data-sw=pin]').getAttribute('aria-checked') === 'true',
+        speaking: form.querySelector('[name=speaking]').value.trim(),
+        relation: form.querySelector('[name=relation]').value.trim(),
+        aiEnabled: form.querySelector('[data-sw=ai]').getAttribute('aria-checked') === 'true' };
       data.saveContact(next);
       after && after(next);
     }});
@@ -206,7 +219,8 @@
           <div class="field-inline"><label for="me-name">名字</label><input id="me-name" name="name" value="${esc(pr.name)}" placeholder="对方怎么称呼你"></div>
           <div class="field-inline top"><label for="me-persona">人设</label><textarea id="me-persona" name="persona" placeholder="可不填">${esc(pr.persona)}</textarea></div>
         </div><div class="group-foot">自动保存，和「设置」里的资料是同一份。</div></div>
-        <div class="group-block"><div class="group">${XS.sui.row({ id: 'favs', icon: 'folder', title: '收藏', value: (data.favs().length ? data.favs().length + ' 条' : '暂无'), chev: true })}
+        <div class="group-block"><div class="group">${XS.sui.row({ id: 'worldbook', icon: 'library', title: '世界书', sub: 'AI 可以检索的设定条目', value: (data.worldbook().length ? data.worldbook().length + ' 条' : '暂无'), chev: true })}
+          ${XS.sui.row({ id: 'favs', icon: 'folder', title: '收藏', value: (data.favs().length ? data.favs().length + ' 条' : '暂无'), chev: true })}
           ${XS.sui.row({ id: 'appearance', icon: 'sun', title: '外观与插件', value: '主题 · 气泡 · 背景', chev: true })}
           ${XS.sui.row({ id: 'api', icon: 'plug', title: 'API 连接', value: ok ? '已配置' : '未配置', chev: true })}</div>
         <div class="group-foot">${XS.settings.get('flightMode') ? '飞行模式已开启，AI 暂时不会回复。' : '聊天回复来自你在设置里填写的 AI 接口。'}</div></div></div>`;
@@ -234,6 +248,7 @@
       else if (t.dataset.c) openProfile(data.contact(t.dataset.c));
       else if (t.dataset.id === 'api') XS.nav.push(XS.settingsPages.api());
       else if (t.dataset.id === 'favs') XS.nav.push(data.openFavs());
+      else if (t.dataset.id === 'worldbook') XS.nav.push(data.openWorldbook());
       else if (t.dataset.id === 'appearance') XS.nav.push(XS.appearancePages.open());
     });
     p.body.addEventListener('input', e => { if (e.target.name) XS.profile.set({ [e.target.name]: e.target.value }); });

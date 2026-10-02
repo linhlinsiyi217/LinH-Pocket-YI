@@ -164,3 +164,12 @@
 .fav-acts{display:flex;gap:8px;margin-top:8px}
 .fav-btn{font-size:var(--fs-caption);color:var(--c-text-secondary);padding:5px 12px;border-radius:999px;background:var(--c-fill)}
 .fav-btn.danger{color:var(--c-red)}
+
+/* —— 任务 03：角色记忆 与 世界书 —— */
+.mem-row{width:100%}
+.mem-text{display:block;font-size:var(--fs-body);line-height:1.45;color:var(--c-text);white-space:pre-wrap;word-break:break-word}
+.wb-row{align-items:flex-start;gap:10px}
+.wb-text{display:block;font-size:var(--fs-body);line-height:1.45;color:var(--c-text);white-space:pre-wrap;word-break:break-word}
+.wb-row .switch{margin-top:2px}
+.wb-row .ap-mini{margin-top:2px}
+.wb-form .field{display:block;margin-bottom:12px}

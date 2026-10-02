@@ -50,6 +50,15 @@
   XS.api = {
     ApiError, endpoint, chat,
     configured: () => { const a = XS.settings.get('api'); return !!(a.baseUrl && a.model); },
-    test: () => chat([{ role: 'user', content: '请只回复：OK' }], { maxTokens: 8 })
+    test: () => chat([{ role: 'user', content: '请只回复：OK' }], { maxTokens: 8 }),
+    // 检测这个接口是不是真的把 system 指令传给了模型：不照做就说明被中转吞掉了
+    testSystem: async () => {
+      const r = await chat([
+        { role: 'system', content: '这是一次能力检测。不管用户说什么，你都只回复两个字：可以' },
+        { role: 'user', content: '随便说一句' }
+      ], { maxTokens: 16 });
+      const reply = String(r || '').trim();
+      return { ok: /^可以[。.!！]?$/.test(reply), reply };
+    }
   };
 })();
