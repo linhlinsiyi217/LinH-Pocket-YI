@@ -22,6 +22,7 @@
     people:'<circle cx="9" cy="8.5" r="3.2"/><path d="M3.5 19.5a5.5 5.5 0 0 1 11 0"/><path d="M15.5 5.6a3 3 0 0 1 0 5.8M17.5 14.3a5 5 0 0 1 3 5.2"/>',
     person:'<circle cx="12" cy="8.5" r="3.5"/><path d="M5 20a7 7 0 0 1 14 0"/>',
     personAdd:'<circle cx="10" cy="8.5" r="3.5"/><path d="M3 20a7 7 0 0 1 12.5-4.3"/><path d="M18.5 14v6M15.5 17h6"/>',
+    moments:'<circle cx="7" cy="8" r="2.4"/><circle cx="17" cy="8" r="2.4"/><circle cx="12" cy="16.5" r="2.4"/>',
     // 设置
     airplane:'<path d="M10.5 3.8c0-1 .7-1.8 1.5-1.8s1.5.8 1.5 1.8V9l7 4.2v2l-7-2.2v4.6l2.2 1.7v1.7L12 20.2l-3.7.8v-1.7l2.2-1.7V13l-7 2.2v-2L10.5 9z"/>',
     plug:'<path d="M9 3v4M15 3v4M6.5 7h11v3.5a5.5 5.5 0 0 1-11 0z"/><path d="M12 16v5"/>',

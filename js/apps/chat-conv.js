@@ -106,6 +106,7 @@
 
   data.openConv = cid => {
     const c = data.contact(cid);
+    if (data.markRead) data.markRead(cid);   // 打开会话即清除未读
     const p = XS.nav.page({ title: c.name, back: true, cls: 'conv',
       right: `<button class="nav-btn tap" data-a="more" aria-label="更多">${XS.icon('more')}</button>` });
     const v = p.view;
