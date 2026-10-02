@@ -13,7 +13,7 @@
 
   /* —— 我们可能写上去的变量：每次 apply 前先全部清掉，避免残留 —— */
   const VARS = [
-    '--c-bg', '--c-bg-grouped', '--c-surface', '--c-text', '--c-text-secondary', '--c-primary',
+    '--c-bg', '--c-bg-grouped', '--c-surface', '--c-text', '--c-text-secondary', '--c-primary', '--c-on-primary',
     '--home-wall', '--wallpaper', '--chat-bg', '--chat-nav',
     '--bb-other-bg', '--bb-other-img', '--bb-other-text', '--bb-other-ring', '--bb-other-shadow', '--bb-other-radius', '--bb-other-pad', '--bb-other-bw',
     '--bb-self-bg', '--bb-self-img', '--bb-self-text', '--bb-self-ring', '--bb-self-shadow', '--bb-self-radius', '--bb-self-pad', '--bb-self-bw',
@@ -83,12 +83,39 @@
 
   function write(path, value){
     const keys = path.split('.');
-    let o = activePreset().data;
+    const d = activePreset().data;
+    // 动到某一段里的任何一项就顺手把这一段打开 —— 否则用户改了颜色却看不到变化
+    if (keys.length >= 2 && keys[1] !== 'on' && isObj(d[keys[0]]) && 'on' in d[keys[0]]) d[keys[0]].on = true;
+    let o = d;
     keys.slice(0, -1).forEach(k => { if (!isObj(o[k])) o[k] = {}; o = o[k]; });
     o[keys[keys.length - 1]] = value;
   }
   function set(path, value){ write(path, value); persist(); }
   function setMany(pairs){ pairs.forEach(([p, v]) => write(p, v)); persist(); }
+
+  /* —— 颜色工具：借浏览器把任意写法（hex / rgb / hsl / 名字）统一成 rgb —— */
+  let probeEl = null;
+  function toRgb(css){
+    if (!css) return null;
+    if (!probeEl){ probeEl = document.createElement('span'); probeEl.style.display = 'none'; document.body.appendChild(probeEl); }
+    probeEl.style.color = '';
+    probeEl.style.color = css;
+    if (!probeEl.style.color) return null;
+    // 借浏览器把任意写法统一成 rgb(...) / rgba(...)，再手工切开，不依赖正则
+    const text = getComputedStyle(probeEl).color;
+    const open = text.indexOf('('), close = text.lastIndexOf(')');
+    if (open < 0 || close < open) return null;
+    const parts = text.slice(open + 1, close).split(',').map(v => Number(v.trim()));
+    if (parts.length < 3 || parts.slice(0, 3).some(Number.isNaN)) return null;
+    return { r: parts[0], g: parts[1], b: parts[2], a: parts.length > 3 ? parts[3] : 1 };
+  }
+  // 相对亮度（0 黑 ~ 1 白），用来决定按钮上的字用黑还是白
+  function luminance(css){
+    const c = toRgb(css);
+    if (!c) return 0;
+    const f = v => { v /= 255; return v <= .03928 ? v / 12.92 : Math.pow((v + .055) / 1.055, 2.4); };
+    return .2126 * f(c.r) + .7152 * f(c.g) + .0722 * f(c.b);
+  }
 
   /* —— 高级 CSS 的安全检查：括号配平、不能出现标签或 </style> —— */
   function cssSafe(s){
@@ -120,6 +147,8 @@
       put('--c-text', d.theme.text);
       put('--c-text-secondary', d.theme.secondary);
       put('--c-primary', d.theme.primary);
+      // 主按钮允许选高饱和色，按钮上的字按亮度自动取黑或白
+      if (d.theme.primary) put('--c-on-primary', luminance(d.theme.primary) > .6 ? '#000000' : '#FFFFFF');
       // 桌面壁纸：有图用图，没图用色
       const wall = d.theme.wallImg ? `url("${d.theme.wallImg}")` : d.theme.wall;
       put('--home-wall', wall);
@@ -303,7 +332,7 @@
     blank, apply, get, val, set, setMany,
     presets, current, usePreset, addPreset, duplicatePreset, renamePreset, removePreset,
     resetSection, resetAll, exportText, importText,
-    cssSafe, cssBroken, safeParam, safe, DEFAULT_ID, cssBlocks: () => blocks.slice(), syncVideos,
+    cssSafe, cssBroken, safeParam, safe, DEFAULT_ID, cssBlocks: () => blocks.slice(), syncVideos, toRgb, luminance,
     on: fn => { listeners.push(fn); return () => { const i = listeners.indexOf(fn); if (i >= 0) listeners.splice(i, 1); }; }
   };
   apply();

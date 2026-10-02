@@ -1,4 +1,4 @@
-/* 外观与插件：入口页、各分组、实时预览、高级 CSS 编辑器 */
+/* 外观与插件：入口页、各分类页、常驻预览、取色面板、高级 CSS 编辑器 */
 
 /* —— 通用行：左边标签，右边控件 —— */
 .ap-page .ap-row{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:48px;padding:8px 16px;position:relative}
@@ -12,13 +12,16 @@
   background:var(--c-fill);color:var(--c-text);font-size:var(--fs-sub)}
 .ap-input::placeholder{color:var(--c-text-tertiary)}
 
-/* 颜色：色块 + 可手填的色值 + 清除 */
-.ap-color{display:flex;align-items:center;gap:8px;flex:none;max-width:66%}
-.ap-color input[type=color]{width:34px;height:34px;padding:0;border:0;border-radius:9px;background:transparent;flex:none;
+/* 颜色：色块 + 色值 + 清除 */
+.ap-color{display:flex;align-items:center;gap:8px;flex:none;max-width:68%}
+.ap-swatch{position:relative;width:34px;height:34px;flex:none;border-radius:9px;background:var(--sw,#fff);
   box-shadow:inset 0 0 0 .5px var(--c-border);overflow:hidden}
-.ap-color input[type=color]::-webkit-color-swatch-wrapper{padding:2px}
-.ap-color input[type=color]::-webkit-color-swatch{border:0;border-radius:7px}
-.ap-hex{width:104px;text-align:center}
+/* 没设过值时：色块画一道斜线并显示「默认」字样 */
+.ap-swatch.is-default{background:var(--c-fill)}
+.ap-swatch.is-default::after{content:"";position:absolute;left:-6px;right:-6px;top:50%;height:1.5px;
+  background:var(--c-text-tertiary);transform:rotate(-45deg)}
+.ap-cval{max-width:104px;font-size:var(--fs-caption);color:var(--c-text-secondary);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .ap-mini{width:26px;height:26px;flex:none;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;
   color:var(--c-text-secondary);background:var(--c-fill)}
 .ap-mini svg{width:12px;height:12px}
@@ -40,33 +43,70 @@
 .ap-now svg{width:14px;height:14px}
 
 /* ============================================================
-   实时预览：用真实的 .msg / .bubble 结构，所以变量和自定义 CSS 都能看到
+   常驻预览：吸在标题栏下面，滚设置的时候一直看得见；可收起
    ============================================================ */
-.ap-prev{margin:0 16px 18px;border-radius:var(--r-lg);overflow:hidden;background:var(--c-surface-2)}
+/* 外观页整体改成纵向排列：标题栏、常驻预览、滚动内容各占一段。
+   预览一直在标题栏下面，内容一定不会被压住，也不需要 JS 量高度。 */
+.ap-page{display:flex;flex-direction:column}
+.ap-page .navbar{position:static;flex:none;padding-top:var(--status-h)}
+.ap-page .ap-prev-host{position:static;flex:none;padding:8px 0 10px;background:var(--page-bg,var(--c-bg))}
+.ap-page .scroll{position:static;flex:1 1 auto;min-height:0;padding-top:8px;
+  padding-bottom:calc(var(--safe-bottom) + 40px)}
+.ap-prev{margin:0 16px;border-radius:var(--r-lg);overflow:hidden;background:var(--c-surface-2)}
 [data-theme="light"] .ap-prev{background:#F6F6F8}
-.ap-prev-head{display:flex;align-items:baseline;justify-content:space-between;gap:8px;padding:10px 14px 6px}
+.ap-prev-head{display:flex;align-items:center;gap:8px;padding:8px 12px 6px}
 .ap-prev-head>span:first-child{font-size:var(--fs-sub);font-weight:600;color:var(--c-text)}
-.ap-prev-tip{font-size:var(--fs-caption);color:var(--c-text-secondary)}
+.ap-prev-tip{flex:1;min-width:0;font-size:var(--fs-caption);color:var(--c-text-secondary);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ap-prev-toggle{flex:none;font-size:var(--fs-caption);color:var(--c-text-secondary);
+  padding:4px 10px;border-radius:999px;background:var(--c-fill)}
 .ap-scope{position:relative}
-.ap-chat{position:relative;padding:4px 0 14px;min-height:150px;
-  background:var(--chat-bg,var(--c-bg));background-size:cover;background-position:center;background-repeat:no-repeat}
+.ap-chat{position:relative;padding:2px 0 10px;background:var(--chat-bg,var(--c-bg));
+  background-size:cover;background-position:center;background-repeat:no-repeat}
 .ap-chat .msg{padding:0 10px}
 .ap-chat .bubble{font-size:var(--fs-body)}
-.ap-chat .msg-time{margin:8px 0 4px}
+.ap-chat .msg-time{margin:6px 0 3px}
 .ap-quote{display:block;font-size:.8em;line-height:1.35;color:var(--c-text-secondary);
   border-left:2px solid var(--c-text-tertiary);padding-left:6px;margin-bottom:4px}
-.ap-chat .msg-state{padding:4px 12px 0}
+.ap-chat .msg-state{padding:3px 12px 0}
 .ap-fail{display:inline-flex;align-items:center;gap:4px;font-size:var(--fs-caption);color:var(--c-red)}
 .ap-fail svg{width:12px;height:12px}
-
-/* 预览里的迷你底栏：只示意样式，不参与真实交互 */
 .ap-tabbar{display:flex;align-items:center;justify-content:space-around;height:var(--tabbar-h,var(--tab-h));
   border-radius:var(--tabbar-radius,calc(var(--tab-h) / 2));background:var(--tabbar-bg,var(--c-surface));opacity:var(--tabbar-alpha,1);
-  box-shadow:0 4px 16px rgba(0,0,0,.06),inset 0 0 0 .5px var(--c-border);margin:8px 12px 12px}
-.ap-tabbar>span{font-size:var(--fs-caption);color:var(--c-text-secondary);padding:6px 10px;border-radius:14px}
+  box-shadow:0 4px 16px rgba(0,0,0,.06),inset 0 0 0 .5px var(--c-border);margin:6px 10px 8px}
+.ap-tabbar>span{font-size:var(--fs-caption);color:var(--c-text-secondary);padding:5px 10px;border-radius:14px}
 .ap-tabbar>span.on{color:var(--c-on-primary);background:var(--c-primary);font-weight:600}
-[data-tab-style="flat"] .ap-tabbar{border-radius:0;margin:8px 0 0;box-shadow:none;border-top:.5px solid var(--c-separator)}
+[data-tab-style="flat"] .ap-tabbar{border-radius:0;margin:6px 0 0;box-shadow:none;border-top:.5px solid var(--c-separator)}
 [data-tab-style="flat"] .ap-tabbar>span{border-radius:12px}
+
+/* ============================================================
+   取色面板：色相 / 饱和度 / 明度 / 透明度
+   ============================================================ */
+.ap-pick{padding:2px 0 6px}
+.ap-pick-top{display:flex;align-items:center;gap:14px;margin-bottom:16px}
+.ap-pick-chip{position:relative;width:58px;height:58px;flex:none;border-radius:14px;overflow:hidden;
+  box-shadow:inset 0 0 0 .5px var(--c-border);
+  background-image:linear-gradient(45deg,#E3E3E6 25%,transparent 25%,transparent 75%,#E3E3E6 75%),
+                   linear-gradient(45deg,#E3E3E6 25%,transparent 25%,transparent 75%,#E3E3E6 75%);
+  background-size:14px 14px;background-position:0 0,7px 7px}
+.ap-pick-chip i{position:absolute;inset:0;display:block}
+.ap-pick-val{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.8125rem;
+  color:var(--c-text);word-break:break-all}
+.ap-pick-sliders{display:flex;flex-direction:column;gap:12px}
+.ap-pick-row{display:flex;align-items:center;gap:10px}
+.ap-pick-row>span{width:56px;flex:none;font-size:var(--fs-sub);color:var(--c-text-secondary)}
+.ap-pick-row>b{width:48px;flex:none;text-align:right;font-size:var(--fs-caption);color:var(--c-text-secondary)}
+.ap-pick-row input[type=range]{-webkit-appearance:none;appearance:none;flex:1;min-width:0;height:24px;background:transparent;margin:0}
+.ap-pick-row input[type=range]::-webkit-slider-runnable-track{height:12px;border-radius:6px;background:var(--track,#ddd);
+  box-shadow:inset 0 0 0 .5px rgba(0,0,0,.14)}
+.ap-pick-row input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;margin-top:-5px;border-radius:50%;
+  background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.32),inset 0 0 0 .5px rgba(0,0,0,.12)}
+.ap-pick-row input[type=range]::-moz-range-track{height:12px;border-radius:6px;background:var(--track,#ddd)}
+.ap-pick-row input[type=range]::-moz-range-thumb{width:22px;height:22px;border:0;border-radius:50%;background:#fff;
+  box-shadow:0 1px 3px rgba(0,0,0,.32)}
+.ap-pick-quick{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px}
+.ap-q{width:34px;height:34px;flex:none;border-radius:50%;background:var(--q);box-shadow:inset 0 0 0 .5px rgba(0,0,0,.14)}
+.ap-pick-tip{margin:14px 0 0;font-size:var(--fs-caption);line-height:1.55;color:var(--c-text-secondary)}
 
 /* ============================================================
    高级 CSS 编辑器
