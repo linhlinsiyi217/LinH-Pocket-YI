@@ -1,0 +1,254 @@
+/* 桌面小组件模板 + 添加面板 + 编辑面板 + 裁切 / 照片预览；外壳（.widget 玻璃面、抖动、拖动）在 surfaces.css */
+.widget{overflow:hidden;--w-ph:#F5F5F5;--w-ph-line:rgba(0,0,0,.06)}
+/* 没放图片的位置：极淡的平色 + 细边线，不用灰色渐变 */
+[data-theme="dark"] .widget{--w-ph:#1C1C1E;--w-ph-line:rgba(255,255,255,.08)}
+.widget .w-fill{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;pointer-events:none;-webkit-user-drag:none}
+.widget .w-empty,.widget .w-chat-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;color:var(--c-text-secondary);font-size:.75rem}
+.widget .w-empty svg,.widget .w-chat-empty svg{width:24px;height:24px}
+
+/* 1. 人物卡：有封面是横幅英雄图（头像骑在下沿）；没封面就居中字标/头像 + 名字 + 一句简介 */
+.wk-profile{padding:0;--av:54px;--cover:48%}
+/* 没封面：头像 + 名字 + 简介作为一个整体垂直居中，别用空封面撑版面 */
+.wk-profile .w-p{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:16px;text-align:center}
+.wk-profile .w-p .w-avatar{position:relative;flex:none;width:var(--av);height:var(--av);border-radius:50%;overflow:hidden;
+  display:flex;align-items:center;justify-content:center;background:var(--c-primary);color:var(--c-on-primary);font-size:calc(var(--av) * .42);font-weight:600;
+  transition:transform .4s var(--ease-spring)}
+.wk-profile .w-p-body{display:flex;flex-direction:column;align-items:center;gap:3px;max-width:100%;min-width:0;margin-top:10px}
+/* 有封面：封面占上段，头像跨线下沿，名字简介落在下半并居中 */
+.wk-profile .w-p-cover{display:block;padding:0}
+.wk-profile .w-p-cover .w-cover{position:absolute;left:0;right:0;top:0;height:var(--cover);overflow:hidden;background:var(--w-ph)}
+.wk-profile .w-p-cover .w-avatar{position:absolute;left:50%;margin-left:calc(var(--av) / -2);top:calc(var(--cover) - var(--av) / 2);
+  box-shadow:0 0 0 3px rgb(var(--hg-rgb)),0 2px 8px rgba(0,0,0,.1)}
+.wk-profile .w-p-cover .w-p-body{position:absolute;left:16px;right:16px;top:calc(var(--cover) + var(--av) / 2);bottom:0;
+  justify-content:center;margin-top:0;padding-top:4px;padding-bottom:6px}
+.wk-profile .w-name{font-size:1rem;font-weight:600;letter-spacing:.2px;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.wk-profile .w-acct{font-size:.75rem;color:var(--c-text-secondary);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.wk-profile .w-bio{font-size:.75rem;color:var(--c-text-secondary);line-height:1.4;max-width:100%;
+  display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:1;overflow:hidden;word-break:break-word}
+.wk-profile .w-bio-hint{color:var(--c-text-tertiary)}
+.wk-profile.ws-2x2{--av:44px;--cover:42%}
+.wk-profile.ws-2x2 .w-p{padding:12px 10px}
+.wk-profile.ws-2x2 .w-name{font-size:.875rem}
+.wk-profile.ws-2x2 .w-acct{display:none}
+.wk-profile.ws-2x2 .w-p-body{margin-top:8px}
+.wk-profile.ws-2x2 .w-p-cover .w-p-body{top:calc(var(--cover) + var(--av) / 2 + 4px)}
+.wk-profile.ws-4x4{--av:88px;--cover:46%}
+.wk-profile.ws-4x4 .w-name{font-size:1.3rem}
+.wk-profile.ws-4x4 .w-acct{font-size:.875rem}
+.wk-profile.ws-4x4 .w-bio{font-size:.875rem}
+.wk-profile.ws-4x4 .w-p-body{gap:5px;margin-top:16px}
+.wk-profile.ws-4x4 .w-p-cover .w-p-body{top:calc(var(--cover) + var(--av) / 2 + 10px)}
+
+/* 2. 照片卡：有照片整卡铺满，照片是主角，标题浮在左下角；没照片克制地邀请添加 */
+.wk-polaroid{padding:0;background:#FFFFFF;color:#111111}
+[data-theme="dark"] .wk-polaroid{background:#1C1C1E;color:#F5F5F7}
+[data-theme="dark"] .wk-polaroid,[data-theme="dark"] .wk-memory{--w-ph:#2C2C2E}
+.wk-polaroid .w-photo{position:absolute;inset:0;overflow:hidden}
+.wk-polaroid .w-slide{opacity:0;transition:opacity .7s var(--ease-out)}
+.wk-polaroid .w-slide.on{opacity:1}
+.wk-polaroid .w-count{position:absolute;right:8px;top:8px;min-width:20px;height:20px;padding:0 6px;border-radius:10px;font-size:.6875rem;font-weight:600;
+  display:flex;align-items:center;justify-content:center;color:#fff;background:rgba(0,0,0,.42);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
+.wk-polaroid .w-cap{position:absolute;left:10px;bottom:10px;height:26px;padding:0 10px;border-radius:13px;display:flex;align-items:center;
+  font-size:.72rem;font-weight:500;letter-spacing:.2px;color:#fff;background:rgba(0,0,0,.4);-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:calc(100% - 20px)}
+/* 空状态：不画灰色上传框，就用一个虚线圆 + “轻点添加照片” 邀请 */
+.wk-polaroid .w-add{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:9px;color:var(--c-text-secondary)}
+.wk-polaroid .w-add-ring{width:40px;height:40px;border-radius:50%;border:1.5px dashed var(--c-text-tertiary);display:flex;align-items:center;justify-content:center;color:var(--c-text-tertiary)}
+.wk-polaroid .w-add-ring svg{width:18px;height:18px}
+.wk-polaroid .w-add>span:not(.w-add-ring){font-size:.75rem}
+
+/* 3. 双格回忆：两张照片错位，细线分隔，角落日期和一句话 */
+.wk-memory{padding:0;background:#FFFFFF;color:#111111}
+[data-theme="dark"] .wk-memory{background:#1C1C1E;color:#F5F5F7}
+.wk-memory .w-slot{position:absolute;overflow:hidden;border-radius:6px;background:var(--w-ph);display:flex;align-items:center;justify-content:center;color:var(--c-text-tertiary);
+  box-shadow:inset 0 0 0 .5px var(--w-ph-line)}
+.wk-memory .w-slot svg{width:22px;height:22px}
+.wk-memory .w-slot1{left:12px;top:12px;width:30%;height:calc(100% - 36px)}
+.wk-memory .w-slot2{left:calc(30% + 20px);top:24px;width:28%;height:calc(100% - 36px)}
+.wk-memory .w-mtext{position:absolute;right:14px;top:14px;bottom:14px;width:calc(42% - 44px);padding-left:12px;border-left:.5px solid currentColor;border-left-color:rgba(128,128,128,.35);
+  display:flex;flex-direction:column;justify-content:space-between}
+.wk-memory .w-mdate{font-size:.6875rem;letter-spacing:.6px;opacity:.6;font-variant-numeric:tabular-nums}
+.wk-memory .w-mline{font-size:.8125rem;line-height:1.45;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:4;overflow:hidden;word-break:break-word}
+
+/* 4. 音乐：封面是缓慢旋转的唱片，曲名/歌手 + 播放键在底部一行；没歌时也保持完整卡面，只是播放键变暗 */
+.wk-music{padding:14px 12px 12px;gap:0;align-items:center}
+.wk-music .w-cover-sq{position:relative;flex:none;width:84px;height:84px;border-radius:50%;overflow:hidden;background:var(--w-ph);
+  display:flex;align-items:center;justify-content:center;color:var(--c-text-secondary);
+  box-shadow:inset 0 0 0 .5px var(--w-ph-line),0 4px 14px rgba(0,0,0,.12)}
+.wk-music .w-cover-sq.is-on{animation:wk-spin 22s linear infinite}
+.wk-music .w-cover-sq svg{width:26px;height:26px}
+.wk-music .w-foot{display:flex;align-items:center;gap:10px;margin-top:10px;width:100%}
+.wk-music .w-minfo{flex:1;min-width:0}
+.wk-music .w-title{font-size:.9375rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wk-music .w-artist{font-size:.75rem;color:var(--c-text-secondary);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wk-music .w-play{flex:none;width:34px;height:34px;border-radius:50%;transition:transform .4s var(--ease-spring);
+  display:flex;align-items:center;justify-content:center;background:var(--c-primary);color:var(--c-on-primary)}
+.wk-music .w-play svg{width:14px;height:14px;fill:currentColor;margin-left:2px}
+.wk-music .w-play.is-off{background:var(--c-fill);color:var(--c-text-secondary)}
+.wk-music .w-bar{position:relative;width:100%;height:3px;border-radius:2px;background:var(--c-fill);margin-top:8px;overflow:hidden}
+.wk-music .w-bar i{position:absolute;left:0;top:0;bottom:0;border-radius:2px;background:var(--c-primary);width:0;transition:width .6s var(--ease-out)}
+.wk-music.ws-4x1{flex-direction:row;align-items:center;gap:12px;padding:10px 14px}
+.wk-music.ws-4x1 .w-cover-sq{width:52px;height:52px}
+.wk-music.ws-4x1 .w-foot{flex:1;margin-top:0;gap:12px;width:auto}
+.wk-music.ws-4x1 .w-bar{display:none}
+@keyframes wk-spin{to{transform:rotate(360deg)}}
+[data-motion="reduce"] .wk-music .w-cover-sq{animation:none!important}
+
+/* 5. 便签：左边小图标 + 日期，右边最多两行 */
+.wk-note{flex-direction:row;align-items:center;gap:12px;padding:12px 16px}
+.wk-note .w-nside{flex:none;display:flex;flex-direction:column;align-items:center;gap:3px;color:var(--c-text-secondary);font-size:.6875rem;min-width:40px}
+.wk-note .w-nside svg{width:20px;height:20px}
+.wk-note .w-ntext{flex:1;min-width:0;padding-left:12px;border-left:.5px solid var(--c-separator);font-size:.875rem;line-height:1.45;
+  display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;word-break:break-word}
+.wk-note .w-ntext.is-ph{color:var(--c-text-secondary)}
+.wk-note.ws-2x2{flex-direction:column;align-items:stretch;padding:14px 16px}
+.wk-note.ws-2x2 .w-nside{flex-direction:row;justify-content:flex-start;gap:6px}
+.wk-note.ws-2x2 .w-ntext{padding:8px 0 0;border:0;border-top:.5px solid var(--c-separator);-webkit-line-clamp:5}
+
+/* 6. 日期时间：直接排在壁纸上，没有卡面 */
+.wk-time{flex-direction:row;align-items:center;gap:14px;padding:0 6px;background:none;box-shadow:none;-webkit-backdrop-filter:none;backdrop-filter:none;
+  color:var(--c-text);text-shadow:0 1px 8px rgba(var(--hg-rgb),.5)}
+/* 时间是排版例外：轻字重大数字；安卓后备字体 200 太淡，统一用 300 */
+.wk-time .w-t{font-size:clamp(28px,9vw,42px);font-weight:300;letter-spacing:-.03em;line-height:1;font-variant-numeric:tabular-nums}
+.wk-time .w-tside{display:flex;flex-direction:column;gap:2px;min-width:0}
+.wk-time .w-g{font-size:var(--t3-fs);line-height:var(--t3-lh);font-weight:500}
+.wk-time .w-d{font-size:.8125rem;color:var(--c-text-2);white-space:nowrap}
+.wk-time.ws-2x1 .w-t{font-size:clamp(28px,8.5vw,40px)}
+.wk-time.ws-2x1 .w-tside{display:none}
+.wk-time.wt-time{justify-content:center}
+
+/* 7. 聊天入口 */
+.wk-chat{padding:14px 16px;gap:8px}
+.wk-chat .w-chead{display:flex;align-items:center;gap:8px;min-width:0}
+.wk-chat .w-cav{flex:none;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.875rem;font-weight:600;
+  background:var(--c-primary);color:var(--c-on-primary)}
+.wk-chat .w-cname{flex:1;min-width:0;font-size:.9375rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wk-chat .w-ctime{flex:none;font-size:.6875rem;color:var(--c-text-secondary)}
+.wk-chat .w-cline{font-size:.8125rem;color:var(--c-text-2);line-height:1.45;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:3;overflow:hidden;word-break:break-word}
+.wk-chat .w-chat-empty{flex:1}
+.wk-chat.ws-4x1{flex-direction:row;align-items:center;gap:12px}
+.wk-chat.ws-4x1 .w-chead{flex:none;max-width:40%}
+.wk-chat.ws-4x1 .w-ctime{display:none}
+.wk-chat.ws-4x1 .w-cline{flex:1;-webkit-line-clamp:2}
+.wk-chat.ws-4x1 .w-chat-empty{flex-direction:row}
+
+/* —— 添加小组件：每种一张真实缩略预览 + 可选尺寸 —— */
+.wpick{display:flex;flex-direction:column;gap:6px}
+.wpick-item{display:flex;align-items:center;gap:14px;padding:10px 4px;border-bottom:.5px solid var(--c-separator)}
+.wpick-item:last-of-type{border-bottom:0}
+.wpick-pv{flex:none;width:132px;height:92px;display:flex;align-items:center;justify-content:center}
+.wpick-host{position:relative;flex:none}
+.wpick-host>.widget{position:absolute;left:0;top:0;animation:none;pointer-events:none}
+.wpick-text{flex:1;min-width:0;display:flex;flex-direction:column}
+.wpick-name{font-size:var(--fs-body);font-weight:600}
+.wpick-sub{font-size:var(--fs-sub);color:var(--c-text-secondary);margin-top:2px;line-height:1.4}
+.wpick-sizes{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.wpick-size{height:28px;padding:0 12px;border-radius:14px;font-size:.8125rem;font-weight:600;background:var(--c-fill);color:var(--c-text);font-variant-numeric:tabular-nums}
+.wpick-hint{font-size:var(--fs-sub);color:var(--c-text-secondary);line-height:1.5;padding:10px 4px 4px}
+
+/* —— 编辑小组件：实时预览 + 图片 / 文字 / 点按 / CSS —— */
+.wedit{display:flex;flex-direction:column;gap:4px;padding-bottom:12px}
+.wedit-stage{display:flex;justify-content:center;align-items:center;min-height:120px;margin:6px 0 14px;padding:12px;border-radius:var(--r-lg);background:var(--home-wall);background-size:cover}
+.wedit-host{position:relative;flex:none}
+.wedit-host>.widget{position:absolute;left:0;top:0;animation:none;pointer-events:none}
+.wedit-imgs{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:0 4px}
+.wedit-thumb{width:56px;height:56px;border-radius:10px;object-fit:cover;background:var(--c-fill);box-shadow:inset 0 0 0 .5px var(--c-border)}
+.wedit-slot{position:relative;display:inline-flex}
+.wedit-mini{position:absolute;top:-6px;width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+  background:var(--c-surface);color:var(--c-text);box-shadow:var(--sh-raise-1),inset 0 0 0 .5px var(--c-border)}
+.wedit-mini svg{width:12px;height:12px;stroke-width:2.4}
+.wedit-mini[data-rm]{right:-6px}
+.wedit-mini[data-mv]{left:-6px}
+.wedit-add{width:56px;height:56px;border-radius:10px;display:flex;align-items:center;justify-content:center;border:1.5px dashed var(--c-text-tertiary);color:var(--c-text-secondary)}
+.wedit-add svg{width:20px;height:20px}
+.wedit-note{flex-basis:100%;font-size:.75rem;color:var(--c-text-secondary)}
+.wedit .field-inline select{flex:1;min-width:0;height:44px;border:0;outline:none;background:transparent;font:inherit;font-size:var(--fs-body);color:var(--c-text);text-align:right;text-align-last:right}
+.wedit .field-inline textarea{min-height:64px}
+.wedit-css textarea{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.8125rem;min-height:120px}
+.wedit-css .hint.bad{color:var(--c-red)}
+.wedit .btn-danger{margin-top:8px}
+
+/* —— 裁切：全屏深色，取景框固定比例，图片可拖动缩放 —— */
+.crop,.pview{position:absolute;inset:0;z-index:5;display:flex;flex-direction:column;background:#000;color:#fff;opacity:0;transition:opacity var(--dur-mid) var(--ease-out)}
+.crop.show,.pview.show{opacity:1}
+.crop-head{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:calc(var(--status-h,44px) + 4px) 8px 8px}
+.crop-head h3{font-size:var(--fs-title);font-weight:600}
+.crop-head .nav-btn{color:#fff}
+.crop-head .nav-btn:last-child{justify-self:end;font-weight:600}
+.crop-stage{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;padding:16px}
+.crop-frame{position:relative;width:100%;max-height:100%;overflow:hidden;border-radius:6px;touch-action:none;cursor:grab;
+  box-shadow:0 0 0 1px rgba(255,255,255,.6),0 0 0 9999px rgba(0,0,0,.5)}
+.crop-frame img{position:absolute;left:0;top:0;max-width:none;transform-origin:0 0;user-select:none;-webkit-user-select:none;pointer-events:none}
+.crop-zoom{display:flex;align-items:center;gap:10px;padding:8px 28px}
+.crop-zoom svg{width:18px;height:18px;flex:none;opacity:.7}
+.crop-zoom input{flex:1;accent-color:#fff}
+.crop-tip{text-align:center;font-size:.75rem;opacity:.6;padding:4px 16px calc(var(--safe-bottom,0px) + 20px)}
+
+/* —— 照片预览：左右滑动 —— */
+.pview-track{flex:1;min-height:0;display:flex;overflow-x:auto;overflow-y:hidden;scroll-snap-type:x mandatory;scrollbar-width:none;overscroll-behavior:contain}
+.pview-track::-webkit-scrollbar{display:none}
+.pview-slide{flex:none;width:100%;height:100%;margin:0;display:flex;align-items:center;justify-content:center;scroll-snap-align:center}
+.pview-slide img{max-width:100%;max-height:100%;object-fit:contain}
+.pview-bar{position:absolute;left:0;right:0;top:0;display:flex;align-items:center;justify-content:space-between;padding:calc(var(--status-h,44px) + 4px) 14px 10px;
+  background:linear-gradient(rgba(0,0,0,.45),transparent)}
+.pview-cap{font-size:.875rem;font-variant-numeric:tabular-nums}
+.pview-close{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.16);color:#fff;
+  -webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px)}
+.pview-close svg{width:16px;height:16px;stroke-width:2.2}
+
+/* —— 小组件统一交互：按下 0.96 缩进，松手 spring 回弹（:where 低优先级，不干扰拖拽 ghost 的过渡） —— */
+:where(.widget){transition:transform .42s var(--ease-spring), box-shadow var(--dur-fast) var(--ease-out)}
+.widget.is-pressed{transform:scale(.96);transition:transform var(--dur-press) var(--ease-out)}
+.widget.is-pressed .w-avatar{transform:scale(1.06)}
+.widget.is-pressed .w-play{transform:scale(.85)}
+[data-motion="reduce"] :where(.widget){transition-duration:.01s}
+
+/* —— 新预设小组件（数据来自 provider） —— */
+/* 8. 极简时钟：真实时间，大数字 + 小日期 */
+.wk-clockMin{justify-content:center;padding:16px 18px}
+.wk-clockMin .wcm-t{font-size:clamp(30px,9vw,44px);font-weight:300;letter-spacing:-.03em;line-height:1;font-variant-numeric:tabular-nums}
+.wk-clockMin .wcm-d{display:flex;gap:8px;margin-top:8px;font-size:.8125rem;color:var(--c-text-secondary);letter-spacing:.3px}
+.wk-clockMin.ws-2x2{padding:14px}
+.wk-clockMin.ws-2x2 .wcm-t{font-size:2.05rem}
+.wk-clockMin.ws-2x2 .wcm-d{flex-direction:column;gap:2px;align-items:flex-start}
+
+/* 9. 天气：温度 + 天气 + 高低 */
+.wk-weather{padding:16px;justify-content:center}
+.wk-weather .wv-temp{font-size:2.6rem;font-weight:300;line-height:1;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.wk-weather .wv-temp i{font-size:1.4rem;font-style:normal;margin-left:1px}
+.wk-weather .wv-cond{display:flex;align-items:baseline;gap:6px;margin-top:8px;font-size:1rem;font-weight:600}
+.wk-weather .wv-loc{font-size:.8125rem;font-weight:400;color:var(--c-text-secondary)}
+.wk-weather .wv-range{margin-top:4px;font-size:.8125rem;color:var(--c-text-secondary)}
+.wk-weather.ws-4x2{flex-direction:row;align-items:center;gap:20px;padding:18px 22px}
+.wk-weather.ws-4x2 .wv-temp{font-size:3.4rem}
+.wk-weather.ws-4x2 .wv-cond{margin-top:0}
+
+/* 10. 日历：本月日历，今天高亮并轻轻弹出 */
+.wk-calendar{padding:12px 14px}
+.wk-calendar .wcal-head{font-size:.8125rem;font-weight:600;color:var(--c-text-secondary);letter-spacing:.4px;margin-bottom:7px}
+.wk-calendar .wcal-row{display:grid;grid-template-columns:repeat(7,1fr);gap:1px;text-align:center}
+.wk-calendar .wcal-row b,.wk-calendar .wcal-row i{display:flex;align-items:center;justify-content:center;height:20px;font-size:.6875rem;font-style:normal;font-weight:400;border-radius:10px;font-variant-numeric:tabular-nums}
+.wk-calendar .wcal-row i{visibility:hidden}
+.wk-calendar .wcal-row b.on{background:var(--c-primary);color:var(--c-on-primary);font-weight:600;animation:wk-pop .42s var(--ease-spring)}
+@keyframes wk-pop{from{transform:scale(.4);opacity:.3}to{transform:scale(1);opacity:1}}
+.wk-calendar.ws-4x2 .wcal-head{font-size:.9375rem}
+.wk-calendar.ws-4x2 .wcal-row b,.wk-calendar.ws-4x2 .wcal-row i{height:26px;font-size:.8125rem}
+
+/* 12. 电量：数字 + 电量条 */
+.wk-battery{padding:16px;justify-content:center}
+.wk-battery .wbt-num{font-size:2.2rem;font-weight:300;line-height:1;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.wk-battery .wbt-num i{font-size:1.1rem;font-style:normal;color:var(--c-text-secondary);margin-left:2px}
+.wk-battery .wbt-bar{height:6px;border-radius:3px;background:var(--c-fill);margin-top:12px;overflow:hidden}
+.wk-battery .wbt-bar i{display:block;height:100%;border-radius:3px;background:var(--c-primary);transition:width .6s var(--ease-out)}
+.wk-battery .wbt-ch{margin-top:8px;font-size:.75rem;color:var(--c-green)}
+.wk-battery.ws-4x1{flex-direction:row;align-items:center;gap:16px;padding:14px 16px}
+.wk-battery.ws-4x1 .wbt-bar{flex:1;margin-top:0}
+
+/* 13. 照片墙：多张照片拼网格 */
+.wk-photowall{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr;gap:4px;padding:10px}
+.wk-photowall .wpw-cell{position:relative;overflow:hidden;border-radius:8px;background:var(--w-ph)}
+.wk-photowall .wpw-1-0{grid-column:1/3;grid-row:1/3}
+.wk-photowall .wpw-2-0,.wk-photowall .wpw-2-1{grid-row:1/3}
+.wk-photowall .wpw-3-0{grid-row:1/3}
+.wk-photowall.ws-4x2{gap:6px;padding:12px}
+.wk-photowall.ws-4x2 .wpw-cell{border-radius:10px}

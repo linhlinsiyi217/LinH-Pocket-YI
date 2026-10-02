@@ -7,6 +7,8 @@
     chev:'<path d="M9 5l7 7-7 7"/>',
     search:'<circle cx="11" cy="11" r="6.5"/><path d="M16 16l4 4"/>',
     plus:'<path d="M12 5v14M5 12h14"/>',
+    resize:'<path d="M19 11v8h-8M19 19l-7-7"/>',
+    folder:'<path d="M3.5 7.5A2 2 0 0 1 5.5 5.5h4l2 2h7a2 2 0 0 1 2 2v7.5a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2z"/>',
     close:'<path d="M6 6l12 12M18 6L6 18"/>',
     check:'<path d="M5 12.5l4.5 4.5L19 7.5"/>',
     send:'<path d="M12 19V6M6.5 11.5L12 6l5.5 5.5"/>',
@@ -41,7 +43,11 @@
     motion:'<path d="M3.5 12h3M3.5 8h5M3.5 16h5"/><circle cx="15.5" cy="12" r="5"/>',
     textsize:'<path d="M3 18l4.5-11L12 18M4.6 14h5.8M14 18l3-7.5 3 7.5M15 15.5h4"/>',
     gear:'<path d="M18.60 10.36L20.88 10.52L20.88 13.48L18.60 13.64L17.83 15.51L19.32 17.23L17.23 19.32L15.51 17.83L13.64 18.60L13.48 20.88L10.52 20.88L10.36 18.60L8.49 17.83L6.77 19.32L4.68 17.23L6.17 15.51L5.40 13.64L3.12 13.48L3.12 10.52L5.40 10.36L6.17 8.49L4.68 6.77L6.77 4.68L8.49 6.17L10.36 5.40L10.52 3.12L13.48 3.12L13.64 5.40L15.51 6.17L17.23 4.68L19.32 6.77L17.83 8.49z"/><circle cx="12" cy="12" r="2.8"/>',
-    user:'<circle cx="12" cy="9" r="3.6"/><path d="M5.5 19.5a7 7 0 0 1 13 0"/><circle cx="12" cy="12" r="9"/>'
+    user:'<circle cx="12" cy="9" r="3.6"/><path d="M5.5 19.5a7 7 0 0 1 13 0"/><circle cx="12" cy="12" r="9"/>',
+    // 桌面小组件
+    music:'<path d="M9 17.5V6l10-2v11.5"/><circle cx="6.5" cy="17.5" r="2.5"/><circle cx="16.5" cy="15.5" r="2.5"/>',
+    note:'<rect x="5" y="3.5" width="14" height="17" rx="2.5"/><path d="M8.5 8.5h7M8.5 12h7M8.5 15.5h4"/>',
+    expand:'<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>'
   };
   const ic = (name, cls='') => `<svg class="ic ${cls}" viewBox="0 0 24 24" aria-hidden="true">${P[name]||''}</svg>`;
 
@@ -70,7 +76,7 @@
     photos:`<svg viewBox="0 0 60 60" aria-hidden="true">
       <rect x="13" y="15" width="34" height="30" rx="6" fill="none" stroke="#1C1C1E" stroke-width="3.2"/>
       <circle cx="23" cy="25" r="3.5" fill="#1C1C1E"/>
-      <path d="M14 40l8-8 6 6 5-5 12 12v-1.5a4.5 4.5 0 0 0-4.5-4.5h-27A4.5 4.5 0 0 0 9 43.5V45z" fill="#1C1C1E"/></svg>`,
+      <path d="M14 41l8-8 5 5 4-4 9 9" fill="none" stroke="#1C1C1E" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
     camera:`<svg viewBox="0 0 60 60" aria-hidden="true">
       <rect x="12" y="19" width="36" height="28" rx="6" fill="none" stroke="#fff" stroke-width="3.2"/>
       <path d="M22 19l3-6h10l3 6" fill="none" stroke="#fff" stroke-width="3.2" stroke-linejoin="round"/>

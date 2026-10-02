@@ -22,10 +22,18 @@
 
   /* 顶部提示 */
   let toastTimer;
-  ui.toast = (text, ms=2000) => {
+  // action = { text, run }：提示右边带一个按钮（比如“撤销”），点一下执行并收起
+  ui.toast = (text, ms=2000, action) => {
     let t = $('.toast', overlay());
     if (!t) { t = ui.h('<div class="toast" role="status" aria-live="polite"></div>'); overlay().appendChild(t); }
     t.textContent = text;
+    t.classList.toggle('has-act', !!action);
+    if (action) {
+      const b = ui.h(`<button class="toast-act tap"></button>`);
+      b.textContent = action.text;
+      b.addEventListener('click', () => { clearTimeout(toastTimer); t.classList.remove('show'); action.run(); }, { once: true });
+      t.appendChild(b);
+    }
     requestAnimationFrame(() => t.classList.add('show'));
     clearTimeout(toastTimer);
     toastTimer = setTimeout(() => t.classList.remove('show'), ms);

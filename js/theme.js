@@ -14,9 +14,10 @@
     root.style.setProperty('--font-scale', s.textScale);
     // 高级自定义（预留）：只有设置了才覆盖默认
     const c = s.custom || {};
-    c.wallpaper ? root.style.setProperty('--wallpaper', c.wallpaper) : root.style.removeProperty('--wallpaper');
+    ['--wallpaper', '--home-wall'].forEach(v => c.wallpaper ? root.style.setProperty(v, c.wallpaper) : root.style.removeProperty(v));
     c.font ? root.style.setProperty('--font', c.font) : root.style.removeProperty('--font');
     const meta = document.querySelector('meta[name="theme-color"]');
+    // 和桌面壁纸顶部同色，全屏 / 安装后系统状态栏不会出现一条色差
     if (meta) meta.content = dark ? '#000000' : '#FFFFFF';
   }
 

@@ -134,8 +134,10 @@
     const p = page('主屏幕与 App 资源库', '<div data-hs></div>');
     const box = p.body.querySelector('[data-hs]');
     const render = () => {
+      const pv = `<div class="group-block"><div class="group"><button class="row tap" data-pvlayout><span class="row-main"><span class="row-title">预览推荐布局</span></span></button></div>
+        <div class="group-foot">先在桌面上看效果，选“保留”才替换当前排列，选“取消”原样恢复。</div></div>`;
       const ids = [...XS.homeApi.getRemovedApps()].filter(id => XS.apps[id]);
-      box.innerHTML = ids.length
+      box.innerHTML = pv + (ids.length
         ? `<div class="group-block"><div class="group-label">已从主屏幕移除</div><div class="group">
             ${ids.map(id => { const a = XS.apps[id];
               return `<div class="row"><span class="perm-app"><span class="app-icon ${a.variant}">${XS.appIcons[a.icon]}</span></span>
@@ -144,10 +146,11 @@
             }).join('')}
           </div><div class="group-foot">在主屏幕长按图标、点 × 可以移除；这里可以随时放回，会放在桌面第一个空位。</div></div>`
         : `<div class="group-block"><div class="group">${XS.sui.row({ title: '没有被移除的应用', muted: true })}</div>
-            <div class="group-foot">在主屏幕长按图标、点 × 可以把应用从桌面和 Dock 移除，移除后会出现在这里。</div></div>`;
+            <div class="group-foot">在主屏幕长按图标、点 × 可以把应用从桌面和 Dock 移除，移除后会出现在这里。</div></div>`);
     };
     render();
     box.addEventListener('click', e => {
+      if (e.target.closest('[data-pvlayout]')) { XS.nav.home(); setTimeout(XS.homeApi.previewDefault, 380); return; }
       const b = e.target.closest('[data-restore]');
       if (!b) return;
       const id = b.dataset.restore, name = XS.apps[id] ? XS.apps[id].name : '';

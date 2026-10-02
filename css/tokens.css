@@ -6,7 +6,7 @@
 :root{
   /* —— 颜色：纯白为主，黑灰做文字与主要按钮 —— */
   --c-bg:#FFFFFF;                 /* 页面主背景 */
-  --c-bg-grouped:#F2F2F7;         /* 分组列表页底色（设置页） */
+  --c-bg-grouped:#FFFFFF;         /* 分组列表页底色（设置页）：纯白，分组卡靠细边线区分 */
   --c-surface:#FFFFFF;            /* 卡片、列表组 */
   --c-surface-2:#F2F2F4;          /* 次级面：输入框、我方气泡 */
   --c-fill:rgba(120,120,128,.12); /* 搜索框、次按钮、按下高亮 */
@@ -34,16 +34,31 @@
 
   /* —— 壁纸（以后可自定义成图片） —— */
   --wallpaper:#FFFFFF;
+  /* 桌面默认壁纸：纯白，不做灰底或渐变；用户上传壁纸时由 theme.js 覆盖 */
+  --home-wall:#FFFFFF;
+  /* 桌面卡面（小组件、Dock、文件夹缩略）：实心白 + 极淡描边 + 很轻的阴影，不做玻璃雾 */
+  --hs-bg:#FFFFFF; --hs-line:rgba(0,0,0,.06); --hs-shadow:0 1px 2px rgba(0,0,0,.04),0 4px 14px rgba(0,0,0,.05);
+  --hg-rgb:255,255,255; --hg-a:1; --hg-edge:transparent; --hg-line:rgba(0,0,0,.08);
+  --hg-shadow:0 1px 2px rgba(0,0,0,.04),0 4px 14px rgba(0,0,0,.05);
 
   /* —— 字体 —— */
-  --font:-apple-system,BlinkMacSystemFont,"SF Pro Text","PingFang SC","HarmonyOS Sans SC","MiSans","Microsoft YaHei",sans-serif;
+  /* 设备有什么系统字体就用什么：苹果设备是 SF / 苹方，安卓回落到系统无衬线（不会自动变成 SF Pro） */
+  --font:-apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display","PingFang SC","HarmonyOS Sans SC","MiSans","OPPO Sans","Roboto","Noto Sans SC",Arial,sans-serif;
   --font-scale:1;                 /* 文字大小，设置里可调 */
-  --fs-large-title:2.125rem;      /* 34px */
-  --fs-title:1.0625rem;           /* 17px 导航标题 */
-  --fs-body:1.0625rem;            /* 17px 列表正文 */
-  --fs-callout:1rem;              /* 16px 聊天正文 */
-  --fs-sub:.8125rem;              /* 13px 副标题 */
-  --fs-caption:.6875rem;          /* 11px 最小字号，安卓上仍清楚 */
+  /* 六档层级（字号 / 行高 / 字重），用 rem 跟随系统字体放大 */
+  --t1-fs:1.375rem;  --t1-lh:1.75rem;  --t1-fw:600;  /* 页面标题 22/28/600 */
+  --t2-fs:1.125rem;  --t2-lh:1.5rem;   --t2-fw:600;  /* 模块标题 18/24/600 */
+  --t3-fs:1rem;      --t3-lh:1.375rem; --t3-fw:500;  /* 按钮、二级标题 16/22/500 */
+  --t4-fs:.9375rem;  --t4-lh:1.375rem; --t4-fw:400;  /* 正文 15/22/400 */
+  --t5-fs:.8125rem;  --t5-lh:1.125rem; --t5-fw:400;  /* 辅助 13/18/400 */
+  --t6-fs:.6875rem;  --t6-lh:1rem;     --t6-fw:400;  /* 角标 11/16/400 */
+  /* 旧变量名映射到六档，已有页面不用逐个改 */
+  --fs-large-title:var(--t1-fs);
+  --fs-title:var(--t3-fs);        /* 导航标题 */
+  --fs-body:var(--t4-fs);         /* 列表正文 */
+  --fs-callout:var(--t4-fs);      /* 聊天正文 */
+  --fs-sub:var(--t5-fs);          /* 副标题 */
+  --fs-caption:var(--t6-fs);      /* 最小字号，安卓上仍清楚 */
 
   /* —— 圆角 —— */
   --r-xs:6px; --r-sm:10px; --r-md:12px; --r-lg:16px; --r-xl:22px; --r-pill:999px;
@@ -89,7 +104,7 @@
 /* 玻璃强度：设置 › 显示与亮度 */
 [data-glass="soft"]  {--glass-alpha:.86;--glass-blur:14px;--glass-sat:130%}
 [data-glass="clear"] {--glass-alpha:.56;--glass-blur:24px;--glass-sat:180%}
-[data-glass="off"]   {--glass-alpha:1;--glass-blur:0px;--glass-sat:100%}
+[data-glass="off"]   {--glass-alpha:1;--glass-blur:0px;--glass-sat:100%;--hg-a:1}
 
 /* 深色外观 */
 [data-theme="dark"]{
@@ -101,12 +116,18 @@
   --c-blue:#0A84FF; --c-green:#30D158; --c-red:#FF453A;
   --c-bubble-other:#1C1C1E; --c-bubble-other-border:rgba(255,255,255,.12); --c-bubble-self:#2C2C2E; --c-bubble-text:#FFFFFF;
   --wallpaper:#000000;
+  --home-wall:#000000;
+  --hs-bg:#1C1C1E; --hs-line:rgba(255,255,255,.08); --hs-shadow:0 1px 2px rgba(0,0,0,.4);
+  --hg-rgb:28,28,30; --hg-a:1; --hg-edge:transparent; --hg-line:rgba(255,255,255,.1);
+  --hg-shadow:0 1px 2px rgba(0,0,0,.4);
   --sh-raise-1:0 1px 2px rgba(0,0,0,.4),0 2px 8px rgba(0,0,0,.35);
   --sh-raise-2:0 10px 30px rgba(0,0,0,.5),0 2px 6px rgba(0,0,0,.4);
   --sh-raise-3:0 18px 50px rgba(0,0,0,.6);
   --sh-icon:0 4px 10px rgba(0,0,0,.5);
   --glass-rgb:30,30,32; --glass-edge:rgba(255,255,255,.08); --glass-highlight:rgba(255,255,255,.1);
 }
+
+[data-theme="dark"][data-glass="off"]{--hg-a:1;--hg-rgb:28,28,30}
 
 /* 减少动态效果：动画几乎瞬间完成，去掉回弹和缩放 */
 [data-motion="reduce"]{

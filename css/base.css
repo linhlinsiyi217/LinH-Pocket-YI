@@ -5,6 +5,7 @@
 html{font-size:calc(16px * var(--font-scale));-webkit-text-size-adjust:100%;text-size-adjust:100%}
 html,body{height:100%;background:#E9E9EE;font-family:var(--font);color:var(--c-text);
   -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;text-rendering:optimizeLegibility;overscroll-behavior:none}
+body{font-size:var(--t4-fs);line-height:var(--t4-lh);font-weight:400}
 [data-theme="dark"] body{background:#111}
 button,input,textarea{font:inherit;color:inherit}
 button{background:none;border:0;cursor:pointer;touch-action:manipulation}
@@ -17,8 +18,9 @@ svg{display:block;flex:none}
   box-shadow:0 30px 70px rgba(0,0,0,.22),inset 0 0 0 1.5px #2A2A2C;transform:translate(-50%,-50%)}
 .screen{position:relative;width:100%;height:100%;border-radius:50px;overflow:hidden;background:var(--wallpaper);isolation:isolate}
 [data-frame="device"]{--status-h:54px;--safe-bottom:0px}
-[data-frame="full"] .device{position:fixed;inset:0;left:0;top:0;width:auto;height:auto;padding:0;border-radius:0;box-shadow:none;background:var(--wallpaper);transform:none}
-[data-frame="full"] .screen{border-radius:0}
+[data-frame="full"] .device{position:fixed;inset:0;left:0;top:0;width:auto;height:auto;padding:0;border-radius:0;box-shadow:none;background:var(--home-wall);transform:none}
+[data-frame="full"] .screen{border-radius:0;background:var(--home-wall)}
+[data-frame="full"],[data-frame="full"] body{background:var(--home-wall)}
 /* 手机上 JS 生效前也先按全屏渲染（条件与 js/theme.js 的判定一致），
    避免先闪出 410px 小外框和四周灰底 */
 @media (max-width:500px),(pointer:coarse){
@@ -43,7 +45,8 @@ svg{display:block;flex:none}
 /* —— 安装成 PWA 且以 standalone 显示时：系统状态栏已由安卓画好，
    页面里这条假状态栏收起，只留出间距；fullscreen 模式（见 manifest display_override）
    系统栏全部隐藏，假状态栏就是唯一一层，保持显示 —— */
-[data-frame="full"][data-dm="standalone"]{--status-h:0px}
+/* 安卓 standalone 下安全区为 0；iOS 主屏打开（black-translucent）内容会伸到状态栏下，按安全区让开 */
+[data-frame="full"][data-dm="standalone"]{--status-h:env(safe-area-inset-top,0px)}
 [data-frame="full"][data-dm="standalone"] .statusbar{display:none}
 /* 手机浏览器里打开时：顶部已有系统状态栏和地址栏，假状态栏同样收起，避免时间电量显示两遍 */
 [data-frame="full"][data-dm="browser"]{--status-h:0px}

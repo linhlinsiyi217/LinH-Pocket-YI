@@ -28,131 +28,6 @@
     clear(){ notes = []; XS.emit('notes'); }
   };
 
-  /* —— 启动画面：手写项目名（矢量路径）+ 画布星点 ——
-     星点：少量、大小不一、很淡，缓慢往下飘并轻微左右摆；位置用固定种子生成
-     轻点空白处：附近星点亮一下、往外散开并淡出，再从顶上慢慢补回来；中心有一小圈柔光和几粒碎光
-     手指移动：附近星点被极轻地带一下，松手后自己回去
-     减少动态效果：只画一帧静止的星点，不飘、不闪 */
-  const nameSvg = boot.querySelector('.boot-name');
-  nameSvg.setAttribute('viewBox', BRAND_NAME.viewBox);
-  nameSvg.querySelector('path').setAttribute('d', BRAND_NAME.d);
-  const sky = (function(){
-    const cv = boot.querySelector('.boot-stars'), g = cv.getContext('2d');
-    let W = 0, H = 0, dpr = 1, tones = [], raf = 0, last = 0, T = 0, finger = null;
-    let seed = 11; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
-    const N = 30, stars = [], bursts = [];
-    for (let i = 0; i < N; i++) {
-      const tier = i % 10 === 3 ? 2 : i % 3 === 0 ? 1 : 0;           // 0 = 细点（大多数）1 = 小光点 2 = 四角星（只有 3 颗）
-      stars.push({
-        x: rnd(), y: rnd(), tier,
-        r: tier === 2 ? 3.2 + rnd() * 1.2 : tier === 1 ? 1.3 + rnd() * .7 : .6 + rnd() * .6,
-        a: tier === 2 ? .34 + rnd() * .12 : .16 + rnd() * .22,        // 透明度很低
-        v: 5 + rnd() * 9,                                             // 往下飘，像素/秒
-        sw: 3 + rnd() * 7, sp: .12 + rnd() * .2, ph: rnd() * 6.28,    // 左右摆的幅度、速度、相位
-        tw: .5 + rnd() * .7, tp: rnd() * 6.28,                        // 亮度起伏
-        tone: i % 4, dx: 0, dy: 0, vx: 0, vy: 0, fx: 0, fy: 0, flash: 0, fade: 1, gone: false
-      });
-    }
-    const readTones = () => { const cs = getComputedStyle(boot); tones = [1, 2, 3, 4].map(k => cs.getPropertyValue('--star-' + k).trim()); };
-    function size(){
-      const r = cv.parentElement; W = r.offsetWidth; H = r.offsetHeight; dpr = Math.min(3, devicePixelRatio || 1);
-      cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
-      readTones(); if (!raf) draw();
-    }
-    // 图标和名字所在的区域：星点经过时再压暗，保证不抢画面
-    const calm = (x, y) => { const cx = W / 2, cy = H / 2 - 30, ex = (x - cx) / 130, ey = (y - cy) / 150, d = ex * ex + ey * ey; return d < 1 ? .25 + .75 * d : 1; };
-    function pos(s){
-      const span = H + 20;
-      const y = ((s.y * span + T * s.v) % span) - 10;
-      const x = s.x * W + Math.sin(T * s.sp + s.ph) * s.sw;
-      return [x + s.dx + s.fx, y + s.dy + s.fy];
-    }
-    function starPath(x, y, r){
-      g.beginPath();
-      for (let k = 0; k < 8; k++) {
-        const ang = k * Math.PI / 4 - Math.PI / 2, rr = k % 2 ? r * .28 : r;
-        g.lineTo(x + Math.cos(ang) * rr, y + Math.sin(ang) * rr);
-      }
-      g.closePath();
-    }
-    function draw(){
-      g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, W, H);
-      for (const s of stars) {
-        const [x, y] = pos(s);
-        const tw = reduced() ? 1 : .72 + .28 * Math.sin(T * s.tw + s.tp);
-        const al = Math.min(1, s.a * tw * s.fade * calm(x, y) + s.flash * .55);
-        if (al < .01) continue;
-        const r = s.r * (1 + s.flash * .9);
-        g.fillStyle = tones[s.tone];
-        // 柔光晕
-        g.globalAlpha = al * .35;
-        g.beginPath(); g.arc(x, y, r * (s.tier === 2 ? 2.2 : 3.2), 0, 6.283); g.fill();
-        g.globalAlpha = al;
-        if (s.tier === 2) { starPath(x, y, r * 1.6); g.fill(); }
-        else { g.beginPath(); g.arc(x, y, r, 0, 6.283); g.fill(); }
-      }
-      // 轻点：一圈很淡的柔光 + 几粒往外散开的碎光
-      for (const b of bursts) {
-        const k = b.t / b.life, e = 1 - Math.pow(1 - k, 3);
-        g.globalAlpha = (1 - k) * .22;
-        g.fillStyle = tones[b.tone];
-        g.beginPath(); g.arc(b.x, b.y, 8 + e * 34, 0, 6.283); g.fill();
-        for (const p of b.bits) {
-          g.globalAlpha = (1 - k) * .6;
-          g.beginPath(); g.arc(b.x + Math.cos(p.a) * p.d * e, b.y + Math.sin(p.a) * p.d * e, p.r * (1 - k * .6), 0, 6.283); g.fill();
-        }
-      }
-      g.globalAlpha = 1;
-    }
-    function step(now){
-      const dt = Math.min(.05, (now - (last || now)) / 1000); last = now; T += dt;
-      for (const s of stars) {
-        // 被散开的星点：带初速度往外飘，阻尼减速，同时淡出；淡完后从顶上重新飘下来
-        s.dx += s.vx * dt; s.dy += s.vy * dt; s.vx *= Math.pow(.08, dt); s.vy *= Math.pow(.08, dt);
-        s.flash = Math.max(0, s.flash - dt * 2.4);
-        if (s.gone) {
-          s.fade = Math.max(0, s.fade - dt * 1.3);
-          if (!s.fade) { s.gone = false; s.dx = s.dy = s.vx = s.vy = 0; s.y = (1 - (T * s.v) / (H + 20) % 1) % 1; s.x = .04 + rnd() * .92; s.fade = .001; }
-        } else if (s.fade < 1) s.fade = Math.min(1, s.fade + dt * .5);
-        // 跟随手指：只挪很小的距离，弹簧回位
-        let tx = 0, ty = 0;
-        if (finger) {
-          const [x, y] = pos(s), ddx = finger.x - x, ddy = finger.y - y, d = Math.hypot(ddx, ddy);
-          if (d < 110 && d > 1) { const f = (1 - d / 110) * 14; tx = s.fx + ddx / d * f; ty = s.fy + ddy / d * f; }
-        }
-        s.fx += (tx - s.fx) * Math.min(1, dt * 3); s.fy += (ty - s.fy) * Math.min(1, dt * 3);
-      }
-      for (let i = bursts.length - 1; i >= 0; i--) if ((bursts[i].t += dt) >= bursts[i].life) bursts.splice(i, 1);
-      draw();
-      raf = requestAnimationFrame(step);
-    }
-    function tap(x, y){
-      if (reduced()) return;
-      let n = 0;
-      for (const s of stars) {
-        if (s.gone) continue;
-        const [sx, sy] = pos(s), ddx = sx - x, ddy = sy - y, d = Math.hypot(ddx, ddy);
-        if (d > 120) continue;
-        const f = 1 - d / 120, ux = d > 1 ? ddx / d : Math.cos(n), uy = d > 1 ? ddy / d : Math.sin(n);
-        s.flash = Math.max(s.flash, .5 + f * .5);
-        s.vx += ux * (30 + 60 * f); s.vy += uy * (30 + 60 * f);
-        if (d < 70) s.gone = true;                                   // 离得近的散开后消失
-        n++;
-      }
-      const bits = [];
-      for (let k = 0; k < 7; k++) bits.push({ a: k / 7 * 6.283 + rnd() * .6, d: 22 + rnd() * 26, r: .8 + rnd() * .9 });
-      bursts.push({ x, y, t: 0, life: .95, tone: Math.floor(rnd() * 4), bits });
-      if (bursts.length > 4) bursts.shift();
-    }
-    const start = () => { size(); if (raf || reduced()) { draw(); return; } last = 0; raf = requestAnimationFrame(step); };
-    const stop = () => { cancelAnimationFrame(raf); raf = 0; };
-    const local = e => { const r = cv.getBoundingClientRect(), k = r.width / W || 1; return { x: (e.clientX - r.left) / k, y: (e.clientY - r.top) / k }; };
-    addEventListener('resize', size);
-    new MutationObserver(() => { readTones(); stop(); if (state === 'boot') start(); }).observe(root, { attributes: true, attributeFilter: ['data-theme', 'data-motion'] });
-    size();
-    return { start, stop, tap, local, draw, follow: p => { finger = p; }, get count(){ return stars.filter(s => !s.gone).length; } };
-  })();
-
   /* —— 锁屏时间：每秒检查，分钟变了才更新；通知的“几分钟前”跟着刷新 —— */
   const WEEK = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
   let lastMin = '';
@@ -172,7 +47,7 @@
      轻点某条 = 解锁后打开对应应用；收起时轻点那一张 = 展开 */
   let open = true;
   const ago = at => { const m = Math.floor((Date.now() - at) / 60000); return m <= 0 ? '现在' : m < 60 ? `${m} 分钟前` : `${Math.floor(m / 60)} 小时前`; };
-  const AV_TONES = [['#F4D6E2', '#E3D9F4'], ['#D8E6F3', '#DCEFE8'], ['#F3E3D2', '#F4D6E2'], ['#E3D9F4', '#D8E6F3']];
+  const AV_TONES = [['#F2F2F4', '#DCDCE0'], ['#E8E8EB', '#D2D2D6'], ['#F5F5F6', '#E2E2E5'], ['#EDEDF0', '#D8D8DC']];
   const avatar = c => {
     let h = 0; for (const ch of String(c.id || c.name)) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
     const [a, b] = AV_TONES[h % AV_TONES.length];
@@ -248,7 +123,7 @@
   /* —— 启动 → 锁屏 —— */
   // 启动画面停留约 2.8 秒；手指在屏上玩星点时不自动走，松手后再等一会儿
   const BOOT_MS = 2800;
-  let bootT = 0, bootAt = 0, bootG = null;
+  let bootT = 0, bootAt = 0;
   const armBoot = ms => { clearTimeout(bootT); if (state === 'boot') bootT = setTimeout(showLock, reduced() ? Math.min(ms, 600) : ms); };
   function playBoot(){
     clearTimers(); cancelAnimationFrame(anim); clearTimeout(bootT);
@@ -257,7 +132,6 @@
     boot.hidden = false; boot.className = 'boot';
     void boot.offsetWidth;                      // 重新触发动画
     boot.classList.add('play');
-    sky.start();
     armBoot(BOOT_MS);
   }
   function showLock(){
@@ -265,35 +139,17 @@
     clearTimers(); clearTimeout(bootT); setState('lock');
     boot.classList.add('leave');
     screen.classList.add('lock-enter');
-    later(() => { boot.hidden = true; boot.className = 'boot'; sky.stop(); sky.follow(null); }, 900);
+    later(() => { boot.hidden = true; boot.className = 'boot'; }, 900);
     later(() => screen.classList.remove('lock-enter'), 1150);
     lock.focus({ preventScroll: true });
   }
-  // 启动画面：轻点空白处 = 星点闪一下；手指移动 = 星点极轻地跟一下；轻点图标或名字 = 跳过（至少先让图标出现）
+    // 启动画面：轻点任意处 = 跳过（至少先让品牌名出现）
   boot.addEventListener('pointerdown', e => {
     if (state !== 'boot') return;
-    if (e.target.closest('.boot-mark,.boot-name')) { if (performance.now() - bootAt > 500) showLock(); return; }
-    clearTimeout(bootT);
-    bootG = { id: e.pointerId, p: sky.local(e), moved: false };
-    try { boot.setPointerCapture(e.pointerId); } catch (_) {}
+    if (performance.now() - bootAt > 500) showLock();
   });
-  boot.addEventListener('pointermove', e => {
-    if (state !== 'boot') return;
-    const pt = sky.local(e);
-    if (bootG && e.pointerId === bootG.id) { if (Math.hypot(pt.x - bootG.p.x, pt.y - bootG.p.y) > 8) bootG.moved = true; sky.follow(pt); }
-    else if (e.pointerType === 'mouse') sky.follow(pt);
-  });
-  const bootUp = e => {
-    if (!bootG || e.pointerId !== bootG.id) return;
-    if (!bootG.moved && e.type === 'pointerup') sky.tap(bootG.p.x, bootG.p.y);
-    bootG = null; if (e.pointerType !== 'mouse') sky.follow(null);
-    armBoot(1600);
-  };
-  boot.addEventListener('pointerup', bootUp);
-  boot.addEventListener('pointercancel', bootUp);
-  boot.addEventListener('pointerleave', e => { if (e.pointerType === 'mouse') sky.follow(null); });
 
-  /* —— 锁屏密码（js/passcode.js）——
+/* —— 锁屏密码（js/passcode.js）——
      开了密码时，所有解锁入口（上滑、轻点、回车、通知、XS.lock.unlock）都先到这里输密码；
      只有验证通过（passed）才真正执行 unlock。锁着时桌面不跟手露出，只有壁纸和键盘。 */
   let passed = false, codeEl = null, codePad = null, pending = null;
