@@ -89,3 +89,10 @@
   border-radius:var(--r-sm);background:var(--c-fill);color:var(--c-text);
   font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.75rem;line-height:1.5;word-break:break-all}
 .ap-io-copy{width:100%;margin-top:10px}
+
+/* ============================================================
+   背景视频：铺满容器、按比例裁切不拉伸；放在最前面当底衬，
+   后面的页面内容按文档顺序自然盖在它上面
+   ============================================================ */
+.home > video.ap-video-home,.conv > video.ap-video-chat{position:absolute;inset:0;width:100%;height:100%;
+  object-fit:cover;pointer-events:none}

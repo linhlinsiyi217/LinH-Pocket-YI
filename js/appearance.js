@@ -24,8 +24,8 @@
 
   /* —— 默认值（空 / false = 不覆盖，走现有默认） —— */
   const blank = () => ({
-    theme:   { on:false, mode:'', bg:'', surface:'', text:'', secondary:'', primary:'', wall:'', wallImg:'' },
-    chat:    { on:false, type:'color', color:'', media:'' },
+    theme:   { on:false, mode:'', bg:'', surface:'', text:'', secondary:'', primary:'', wall:'', wallImg:'', wallVideo:'' },
+    chat:    { on:false, type:'color', color:'', media:'', video:'' },
     bubble:  { on:false,
       other: { bg:'', img:'', text:'', radius:'', border:'', borderColor:'', shadow:'', pad:'', tail:false },
       self:  { bg:'', img:'', text:'', radius:'', border:'', borderColor:'', shadow:'', pad:'', tail:false } },
@@ -188,6 +188,38 @@
       if (bad) XS.ui.toast('有一段自定义 CSS 括号不配平，已跳过那一段');
     }
     el.textContent = out;
+    syncVideos();
+  }
+
+  /* —— 背景视频 ——
+     视频按 URL 引用（https 地址或项目内相对路径），不转成 dataURL——本地存储放不下。
+     桌面和聊天各插一个 <video>，放在最前面当底衬，别的元素自然盖在上面。 */
+  const videoUrl = () => {
+    const d = data();
+    return { home: d.theme.on ? d.theme.wallVideo : '', chat: d.chat.on ? d.chat.video : '' };
+  };
+  const reducedMotion = () => document.documentElement.dataset.motion === 'reduce';
+  function ensureVideo(host, url, cls){
+    if (!host) return;
+    let v = host.querySelector(':scope > video.' + cls);
+    if (!url){ if (v) v.remove(); return; }
+    if (!v){
+      v = document.createElement('video');
+      v.className = cls; v.muted = true; v.loop = true; v.playsInline = true;
+      v.setAttribute('muted', ''); v.setAttribute('playsinline', '');
+      v.autoplay = !reducedMotion();
+      host.insertBefore(v, host.firstChild);
+    }
+    if (v.getAttribute('src') !== url) v.setAttribute('src', url);
+    v.style.background = 'var(--c-bg)';
+    // 减少动态效果时不自动播，只留第一帧
+    if (reducedMotion()) v.pause(); else { const p = v.play(); if (p && p.catch) p.catch(() => {}); }
+  }
+  function syncVideos(){
+    const u = videoUrl();
+    ensureVideo(document.querySelector('.home'), u.home, 'ap-video-home');
+    const conv = document.querySelector('.layer-apps .view.conv');
+    ensureVideo(conv, u.chat, 'ap-video-chat');
   }
 
   /* —— 方案管理 —— */
@@ -271,8 +303,14 @@
     blank, apply, get, val, set, setMany,
     presets, current, usePreset, addPreset, duplicatePreset, renamePreset, removePreset,
     resetSection, resetAll, exportText, importText,
-    cssSafe, cssBroken, safeParam, safe, DEFAULT_ID, cssBlocks: () => blocks.slice(),
+    cssSafe, cssBroken, safeParam, safe, DEFAULT_ID, cssBlocks: () => blocks.slice(), syncVideos,
     on: fn => { listeners.push(fn); return () => { const i = listeners.indexOf(fn); if (i >= 0) listeners.splice(i, 1); }; }
   };
   apply();
+  // 桌面和对话页是随时重建的，DOM 一变就把视频层补回去
+  const mo = new MutationObserver(() => { if (!mo._t){ mo._t = 1; requestAnimationFrame(() => { mo._t = 0; syncVideos(); }); } });
+  const startObserve = () => {
+    ['.layer-home', '.layer-apps'].forEach(sel => { const n = document.querySelector(sel); if (n) mo.observe(n, { childList: true, subtree: true }); });
+  };
+  document.readyState === 'loading' ? addEventListener('DOMContentLoaded', startObserve) : startObserve();
 })();

@@ -270,13 +270,15 @@
           ${colorRow('主按钮', 'theme.primary')}
         </div><div class="group-foot">深色模式下这些颜色同样生效，请自己在深色下确认对比度。</div></div>
         <div class="group-block"><div class="group-label">桌面背景</div><div class="group">
+          ${textRow('背景视频地址', 'theme.wallVideo', 'https://… 或项目内文件名')}
           ${imgRow('背景图', 'theme.wallImg', 1.9)}
           ${colorRow('背景色', 'theme.wall')}
-        </div><div class="group-foot">有图时以图为准，颜色当作没图时的兜底；都留空就是现在的纯白 / 纯黑桌面。</div></div>`;
+        </div><div class="group-foot">优先级：视频 &gt; 图片 &gt; 纯色。视频按地址引用，不转成数据存进本地——本地存储放不下视频。都留空就是现在的纯白 / 纯黑桌面。</div></div>`;
       mountPreview(p.body.querySelector('.ap-prev-host'));
       bindSw(p.body, 'theme.on', tick);
       bindSeg(p.body, 'theme.mode', () => { const m = A.get('theme.mode'); if (m) XS.settings.set('theme', m); tick(); });
       ['bg','surface','text','secondary','primary','wall'].forEach(k => bindColor(p.body, 'theme.' + k, tick));
+      bindText(p.body, 'theme.wallVideo', tick);
       bindImg(p.body, 'theme.wallImg', 1.9, render);
     };
     render();
@@ -345,11 +347,13 @@
         <div class="group-block"><div class="group">${swRow('启用聊天背景', 'chat.on')}</div>
           <div class="group-foot">只影响聊天对话页，其他页面不受影响。</div></div>
         <div class="group-block"><div class="group">
+          ${textRow('背景视频地址', 'chat.video', 'https://… 或项目内文件名')}
           ${imgRow('背景图', 'chat.media', 1.0)}
           ${colorRow('背景色', 'chat.color')}
-        </div><div class="group-foot">有图时以图为准，颜色当作没图时的兜底。图铺满对话区并裁切，不会被拉变形。</div></div>`;
+        </div><div class="group-foot">优先级：视频 &gt; 图片 &gt; 纯色。视频按地址引用，不转成数据存进本地。图和视频都铺满对话区并裁切，不会被拉变形；开启「减少动态效果」时视频只停在第一帧。</div></div>`;
       mountPreview(p.body.querySelector('.ap-prev-host'));
       bindSw(p.body, 'chat.on', tick);
+      bindText(p.body, 'chat.video', tick);
       bindColor(p.body, 'chat.color', tick);
       bindImg(p.body, 'chat.media', 1.0, render);
     };
