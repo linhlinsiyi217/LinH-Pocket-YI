@@ -21,8 +21,19 @@
     pending: {},   // 正在等回复的联系人
     // 未读：对方最后一条消息晚于「最后已读时间」就算未读；打开会话时清零
     unread: id => data.msgs(id).filter(m => m.role === 'other' && m.ts > (XS.store.get('read.' + id, 0))).length,
-    markRead(id){ XS.store.set('read.' + id, Date.now()); XS.emit('chat:change', id); }
+    markRead(id){ XS.store.set('read.' + id, Date.now()); XS.emit('chat:change', id); },
+    // 收藏：跨刷新保留，记下当时的原文和来自哪个联系人
+    favs: () => XS.store.get('favs', []),
+    isFav: (cid, msgId) => data.favs().some(f => f.cid === cid && f.msgId === msgId),
+    addFav(f){
+      const list = data.favs();
+      if (list.some(x => x.cid === f.cid && x.msgId === f.msgId)) return false;
+      list.unshift(f); XS.store.set('favs', list); XS.emit('chat:change'); return true;
+    },
+    removeFav(id){ XS.store.set('favs', data.favs().filter(x => x.id !== id)); XS.emit('chat:change'); }
   };
+  // 显示名：有备注就用备注，没有才用名字
+  data.name = c => ((c && (c.remark || c.name)) || '').trim();
 
   const initial = name => esc((name || '?').trim().slice(0, 1).toUpperCase());
   // 头像：有上传的图片用图片，否则用名字首字
@@ -38,7 +49,7 @@
   /* 新建 / 编辑联系人：头像、名字、类型、性别、生日、籍贯、人设、禁忌 */
   data.editContact = (c, after) => {
     const isNew = !c;
-    const base = c || { id: XS.uid('c'), type: 'ai', avatar: null, gender: '', birthday: '', hometown: '', name: '', persona: '', taboos: '', createdAt: Date.now() };
+    const base = c || { id: XS.uid('c'), type: 'ai', avatar: null, gender: '', birthday: '', hometown: '', name: '', persona: '', taboos: '', remark: '', group: '', pinned: false, createdAt: Date.now() };
     const state = { type: base.type || 'ai', gender: base.gender || '', avatar: base.avatar || null };
     const form = XS.ui.h(`<div class="contact-form">
       <div class="cf-row"><span class="cf-label">类型</span>
@@ -48,6 +59,9 @@
         <button class="btn btn-sm btn-plain tap" data-a="pick" type="button">${state.avatar ? '更换头像' : '添加头像'}</button>
       </div>
       <label class="field"><span>名字（必填）</span><input name="name" maxlength="20" value="${esc(base.name || '')}" placeholder="例如：小林"></label>
+      <label class="field"><span>备注</span><input name="remark" maxlength="20" value="${esc(base.remark || '')}" placeholder="列表里显示的名字，留空就用名字"></label>
+      <label class="field"><span>分组</span><input name="group" maxlength="12" value="${esc(base.group || '')}" placeholder="例如：朋友、同事，留空为未分组"></label>
+      <div class="cf-row"><span class="cf-label">置顶</span><span class="switch" data-sw="pin" role="switch" aria-checked="${!!base.pinned}" aria-label="置顶联系人"></span></div>
       <div class="cf-row"><span class="cf-label">性别</span>
         <span class="segmented" data-seg="gender"><button class="seg" data-v="">不填</button><button class="seg" data-v="male">男</button><button class="seg" data-v="female">女</button></span></div>
       <label class="field"><span>生日</span><input name="birthday" type="date" value="${esc(base.birthday || '')}"></label>
@@ -60,6 +74,12 @@
       const bar = form.querySelector(`[data-seg="${key}"]`);
       const btns = [...bar.querySelectorAll('.seg')];
       XS.ui.pillTabs(bar, { itemSel: '.seg', attr: 'aria-checked', index: Math.max(0, btns.findIndex(b => b.dataset.v === state[key])), onChange: i => { state[key] = btns[i].dataset.v; } });
+    });
+    // 置顶开关：点整行都能切
+    const pinSw = form.querySelector('[data-sw="pin"]');
+    pinSw.parentElement.addEventListener('click', () => {
+      const on = pinSw.getAttribute('aria-checked') !== 'true';
+      pinSw.setAttribute('aria-checked', String(on));
     });
     // 头像上传 → 裁切
     const av = form.querySelector('[data-av]'), pick = form.querySelector('[data-a="pick"]'), file = form.querySelector('input[type=file]');
@@ -75,7 +95,9 @@
       if (!name) { XS.ui.toast('请填写名字'); return false; }
       const next = { ...base, name, type: state.type, avatar: state.avatar, gender: state.gender,
         birthday: form.querySelector('[name=birthday]').value, hometown: form.querySelector('[name=hometown]').value.trim(),
-        persona: form.querySelector('[name=persona]').value.trim(), taboos: form.querySelector('[name=taboos]').value.trim() };
+        persona: form.querySelector('[name=persona]').value.trim(), taboos: form.querySelector('[name=taboos]').value.trim(),
+        remark: form.querySelector('[name=remark]').value.trim(), group: form.querySelector('[name=group]').value.trim(),
+        pinned: form.querySelector('[data-sw=pin]').getAttribute('aria-checked') === 'true' };
       data.saveContact(next);
       after && after(next);
     }});
@@ -146,22 +168,36 @@
       const rows = data.contacts().map(c => ({ c, list: data.msgs(c.id) })).filter(x => x.list.length)
         .sort((a, b) => b.list[b.list.length - 1].ts - a.list[a.list.length - 1].ts);
       if (!rows.length) return `<div class="empty">${XS.icon('chat')}<h3>还没有聊天</h3><p>先添加一个联系人，再开始对话。</p><button class="btn btn-primary tap" data-a="add">新建联系人</button></div>`;
-      const filtered = q ? rows.filter(x => x.c.name.toLowerCase().includes(q) || String(x.list[x.list.length - 1].text).toLowerCase().includes(q)) : rows;
+      const filtered = q ? rows.filter(x => x.data.name(c).toLowerCase().includes(q) || String(x.list[x.list.length - 1].text).toLowerCase().includes(q)) : rows;
       if (!filtered.length) return `<div class="empty">${XS.icon('search')}<h3>没有匹配的聊天</h3></div>`;
       return `<div class="chat-list">${filtered.map(({ c, list }) => {
         const last = list[list.length - 1], fail = last.status === 'failed', un = data.unread(c.id);
         const text = data.pending[c.id] ? '对方正在输入…' : fail ? '发送失败：' + last.text : last.text;
-        return `<button class="chat-item tap-row" data-conv="${c.id}">${data.avatar(c)}<span class="ci-main"><span class="ci-top"><span class="ci-name">${esc(c.name)}</span>
+        return `<button class="chat-item tap-row" data-conv="${c.id}">${data.avatar(c)}<span class="ci-main"><span class="ci-top"><span class="ci-name">${esc(data.name(c))}</span>
           ${un ? `<span class="ci-badge">${un}</span>` : ''}<span class="ci-time">${data.fmtTime(last.ts)}</span></span><span class="ci-last${fail ? ' err' : ''}">${esc(text)}</span></span></button>`;
       }).join('')}</div>`;
     };
     const renderContacts = q => {
       const list = data.contacts();
-      const filtered = q ? list.filter(c => c.name.toLowerCase().includes(q)) : list;
-      return `<div class="chat-list"><button class="chat-add tap-row" data-a="add"><span class="avatar">${XS.icon('personAdd')}</span>新建联系人</button>
-        ${filtered.map(c => `<button class="chat-item sm tap-row" data-c="${c.id}">${data.avatar(c)}<span class="ci-main"><span class="ci-top"><span class="ci-name">${esc(c.name)}</span><span class="ci-type">${c.type === 'person' ? '真人' : 'AI'}</span></span>
-          <span class="ci-sub">${esc(c.persona || '未填写人设')}</span></span></button>`).join('')}</div>
-        ${list.length ? '' : '<div class="group-foot" style="text-align:center">还没有联系人，点上面新建</div>'}`;
+      const hit = c => !q || data.name(c).toLowerCase().includes(q) || (c.name || '').toLowerCase().includes(q) || (c.group || '').toLowerCase().includes(q);
+      const shown = list.filter(hit);
+      const pinned = shown.filter(c => c.pinned);
+      const rest = shown.filter(c => !c.pinned);
+      // 有分组的排前面并按名字排，未分组统一放最后
+      const names = [...new Set(rest.map(c => (c.group || '').trim()))]
+        .sort((a, b) => (a ? 0 : 1) - (b ? 0 : 1) || a.localeCompare(b, 'zh'));
+      const row = c => '<button class="chat-item sm tap-row" data-c="' + c.id + '">' + data.avatar(c)
+        + '<span class="ci-main"><span class="ci-top">'
+        + '<span class="ci-name">' + esc(data.name(c)) + '</span>'
+        + (c.pinned ? '<span class="ci-pin" aria-label="已置顶">' + XS.icon('arrowUp') + '</span>' : '')
+        + '<span class="ci-type">' + (c.type === 'person' ? '真人' : 'AI') + '</span></span>'
+        + '<span class="ci-sub">' + esc(c.persona || (c.remark && c.name ? c.name : '') || '未填写人设') + '</span></span></button>';
+      return `<div class="chat-list"><button class="chat-add tap-row" data-a="add"><span class="avatar">${XS.icon('personAdd')}</span>新建联系人</button>`
+        + (pinned.length ? `<div class="ci-sec">置顶</div>${pinned.map(row).join('')}` : '')
+        + names.map(g => (g ? `<div class="ci-sec">${esc(g)}</div>` : '')
+            + rest.filter(c => (c.group || '').trim() === g).map(row).join('')).join('')
+        + '</div>'
+        + (list.length ? '' : '<div class="group-foot" style="text-align:center">还没有联系人，点上面新建</div>');
     };
     const renderMoments = () => `<div class="empty">${XS.icon('moments')}<h3>还没有动态</h3><p>动态的发布和个人主页会在之后的版本开放。</p></div>`;
     const renderMe = () => {
@@ -170,7 +206,8 @@
           <div class="field-inline"><label for="me-name">名字</label><input id="me-name" name="name" value="${esc(pr.name)}" placeholder="对方怎么称呼你"></div>
           <div class="field-inline top"><label for="me-persona">人设</label><textarea id="me-persona" name="persona" placeholder="可不填">${esc(pr.persona)}</textarea></div>
         </div><div class="group-foot">自动保存，和「设置」里的资料是同一份。</div></div>
-        <div class="group-block"><div class="group">${XS.sui.row({ id: 'appearance', icon: 'sun', title: '外观与插件', value: '主题 · 气泡 · 背景', chev: true })}
+        <div class="group-block"><div class="group">${XS.sui.row({ id: 'favs', icon: 'folder', title: '收藏', value: (data.favs().length ? data.favs().length + ' 条' : '暂无'), chev: true })}
+          ${XS.sui.row({ id: 'appearance', icon: 'sun', title: '外观与插件', value: '主题 · 气泡 · 背景', chev: true })}
           ${XS.sui.row({ id: 'api', icon: 'plug', title: 'API 连接', value: ok ? '已配置' : '未配置', chev: true })}</div>
         <div class="group-foot">${XS.settings.get('flightMode') ? '飞行模式已开启，AI 暂时不会回复。' : '聊天回复来自你在设置里填写的 AI 接口。'}</div></div></div>`;
     };
@@ -196,6 +233,7 @@
       else if (t.dataset.conv) openConv(data.contact(t.dataset.conv));
       else if (t.dataset.c) openProfile(data.contact(t.dataset.c));
       else if (t.dataset.id === 'api') XS.nav.push(XS.settingsPages.api());
+      else if (t.dataset.id === 'favs') XS.nav.push(data.openFavs());
       else if (t.dataset.id === 'appearance') XS.nav.push(XS.appearancePages.open());
     });
     p.body.addEventListener('input', e => { if (e.target.name) XS.profile.set({ [e.target.name]: e.target.value }); });

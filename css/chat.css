@@ -111,3 +111,56 @@
 .contact-profile .pf-text{font-size:var(--fs-body);line-height:1.55;color:var(--c-text);padding:12px 16px;white-space:pre-wrap;word-break:break-word}
 .contact-profile .group-block{margin-left:16px;margin-right:16px}
 .contact-profile .row.danger .row-title{color:var(--c-red)}
+
+/* —— 任务 03：消息工具、会话内搜索、联系人分组与收藏 —— */
+/* 连续消息的分组已经由 .msg.first / .last 处理；下面只加新东西 */
+
+/* 引用块：贴在气泡里的上方，原消息被删掉时明确写出来 */
+.q-quote{display:block;font-size:.8125rem;line-height:1.4;color:var(--c-text-secondary);
+  border-left:2px solid var(--c-text-tertiary);padding:1px 0 1px 7px;margin-bottom:5px;
+  white-space:pre-wrap;word-break:break-word;opacity:.9}
+.q-quote.gone{color:var(--c-red);border-left-color:var(--c-red);font-style:italic}
+
+/* 长按后的按下反馈：整条气泡轻轻缩一下，松手回弹 */
+.msg.pressed .bubble{transform:scale(.97);transition:transform var(--dur-press) var(--ease-out)}
+
+/* 会话内搜索 */
+.conv-search{position:absolute;left:12px;right:12px;top:calc(var(--status-h) + var(--nav-h) + 4px);z-index:21;
+  margin:0;height:40px;padding:0 8px 0 12px;background:var(--c-surface);
+  box-shadow:0 4px 16px rgba(0,0,0,.06),inset 0 0 0 .5px var(--c-border)}
+.conv.searching .scroll{padding-top:calc(var(--status-h) + var(--nav-h) + 56px)}
+.cs-count{flex:none;font-size:var(--fs-caption);color:var(--c-text-secondary);padding:0 4px;cursor:pointer}
+.cs-x{width:26px;height:26px;flex:none;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;
+  background:var(--c-fill);color:var(--c-text-secondary)}
+.cs-x svg{width:12px;height:12px}
+.msg.hit .bubble{box-shadow:0 0 0 1.5px var(--c-blue)}
+.msg.hit-now .bubble{box-shadow:0 0 0 2px var(--c-blue),0 4px 14px rgba(0,10,255,.14)}
+
+/* 输入框上方的引用条：占满一整行，取消键在右 */
+.composer{flex-wrap:wrap}
+.composer .q-bar{flex:0 0 100%;order:-1;display:flex;align-items:flex-start;gap:8px;
+  padding:6px 4px 6px 0;margin-bottom:4px;border-bottom:.5px solid var(--c-separator)}
+.composer .q-bar[hidden]{display:none}
+.composer .q-bar-text{flex:1;min-width:0;font-size:var(--fs-caption);line-height:1.4;color:var(--c-text-secondary);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.composer .q-bar-x{width:22px;height:22px;flex:none;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;
+  background:var(--c-fill);color:var(--c-text-secondary)}
+.composer .q-bar-x svg{width:11px;height:11px}
+
+/* 联系人列表：置顶标记与小分组标题 */
+.ci-pin{flex:none;display:inline-flex;align-items:center;color:var(--c-text-secondary)}
+.ci-pin svg{width:13px;height:13px}
+.ci-sec{padding:14px 16px 4px;font-size:var(--fs-sub);color:var(--c-text-secondary)}
+
+/* 收藏页 */
+.fav-list{padding:4px 0 8px}
+.fav-item{padding:12px 16px;position:relative}
+.fav-item+.fav-item::before{content:"";position:absolute;top:0;left:16px;right:0;height:.5px;background:var(--c-separator)}
+.fav-head{display:flex;align-items:baseline;gap:8px;margin-bottom:4px}
+.fav-who{flex:1;min-width:0;font-size:var(--fs-sub);font-weight:600;color:var(--c-text);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fav-time{flex:none;font-size:var(--fs-caption);color:var(--c-text-secondary)}
+.fav-text{font-size:var(--fs-body);line-height:1.5;color:var(--c-text);white-space:pre-wrap;word-break:break-word}
+.fav-acts{display:flex;gap:8px;margin-top:8px}
+.fav-btn{font-size:var(--fs-caption);color:var(--c-text-secondary);padding:5px 12px;border-radius:999px;background:var(--c-fill)}
+.fav-btn.danger{color:var(--c-red)}
