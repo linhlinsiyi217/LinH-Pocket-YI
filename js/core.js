@@ -59,7 +59,11 @@
     motion: 'system',    // system | reduce | full
     textScale: 1,        // 0.9 ~ 1.2
     flightMode: false,   // 开启后暂停所有 AI 请求
-    api: { baseUrl: '', apiKey: '', model: '' },
+    api: { baseUrl: '', apiKey: '', model: '', temperature: '', maxHistory: '', timeout: 60 },
+    // 语音：STT 和 TTS 各自一份，不和聊天 API 混用密钥
+    voice: { stt: { baseUrl: '', apiKey: '', model: '' }, tts: { baseUrl: '', apiKey: '', model: '', voice: '' }, lang: 'zh-CN', autoplay: false },
+    // 图片生成：独立一份配置
+    image: { baseUrl: '', apiKey: '', model: '', size: '1024x1024', count: 1, style: '', negative: '', steps: '', cfg: '', seed: '' },
     custom: { wallpaper: null, icons: null, font: null, accent: null } // 高级自定义（预留）
   };
   let settings = merge(DEFAULTS, XS.store.get('settings', {}));

@@ -83,8 +83,19 @@
     const close = layer(panel);
     panel.previousElementSibling.style.background = 'transparent';
     const scr = $('.screen').getBoundingClientRect(), r = anchor.getBoundingClientRect(), k = XS.frameScale || 1;
-    panel.style.top = ((r.bottom - scr.top) / k + 6) + 'px';
-    panel.style.right = Math.max(10, (scr.right - r.right) / k) + 'px';
+    // 先放到屏内量一次真实尺寸，再决定往哪边展开：左右都不越出安全区，
+    // 下方放不下就翻到气泡上方，超高时面板自己滚，不会盖住输入栏和手势区。
+    panel.style.left = '0px'; panel.style.right = 'auto'; panel.style.top = '0px';
+    const w = panel.offsetWidth, h = panel.offsetHeight;
+    const vw = scr.width / k, vh = scr.height / k, gap = 10;
+    let left = (r.right - scr.left) / k - w;
+    if (left < gap) left = (r.left - scr.left) / k;
+    left = Math.max(gap, Math.min(vw - w - gap, left));
+    let top = (r.bottom - scr.top) / k + 6;
+    if (top + h > vh - gap) top = (r.top - scr.top) / k - h - 6;
+    panel.style.left = Math.round(left) + 'px';
+    panel.style.top = Math.round(Math.max(gap, Math.min(vh - h - gap, top))) + 'px';
+    panel.style.maxHeight = Math.round(vh - gap * 2) + 'px';
     setTimeout(() => { const f = $('.menu-item', panel); f && f.focus({ preventScroll: true }); }, 50);
     return close;
   };

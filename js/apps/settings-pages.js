@@ -326,4 +326,73 @@
     p.view.querySelectorAll('.row').forEach(r => r.setAttribute('tabindex', '-1'));
     return p.view;
   };
+
+  /* —— AI 服务：语音 与 图片生成 ——
+     只做配置、保存和连通测试；没有接入聊天/相册入口的能力会明确写「尚未接入」，
+     绝不用模拟结果冒充成功。密钥与聊天 API 分开存，互不覆盖。 */
+  const cfgField = (label, path, value, opts) => {
+    const o = opts || {};
+    return `<div class="field-inline"><label>${esc(label)}</label>`
+      + `<input data-set="${esc(path)}" type="${o.type || 'text'}" value="${esc(value || '')}"`
+      + ` placeholder="${esc(o.ph || '')}" autocomplete="off" spellcheck="false"></div>`;
+  };
+  const bindCfg = p => p.body.addEventListener('input', e => {
+    const k = e.target.dataset.set;
+    if (k) XS.settings.set(k, e.target.value.trim());
+  });
+  pages.voice = () => {
+    const v = XS.settings.get('voice');
+    const p = page('语音', `
+      <div class="group-block"><div class="group-foot">这里只保存配置。<b>语音还没有接进聊天</b>——
+        输入框里暂时没有录音和朗读按钮，标了「尚未接入」的不会假装能用。</div></div>
+      <div class="group-block"><div class="group-label">语音转文字（STT）</div><div class="group">
+        ${cfgField('地址', 'voice.stt.baseUrl', v.stt.baseUrl, { type: 'url', ph: 'https://api.example.com/v1' })}
+        ${cfgField('密钥', 'voice.stt.apiKey', v.stt.apiKey, { type: 'password', ph: '和聊天 API 分开填' })}
+        ${cfgField('模型', 'voice.stt.model', v.stt.model, { ph: '例如 whisper-1' })}
+      </div><div class="group-foot">填入后可以点下面的测试确认地址和密钥能不能连上；测试只发一次很短的请求。</div></div>
+      <div class="group-block"><div class="group-label">文字转语音（TTS）</div><div class="group">
+        ${cfgField('地址', 'voice.tts.baseUrl', v.tts.baseUrl, { type: 'url', ph: 'https://api.example.com/v1' })}
+        ${cfgField('密钥', 'voice.tts.apiKey', v.tts.apiKey, { type: 'password', ph: '和聊天 API 分开填' })}
+        ${cfgField('模型', 'voice.tts.model', v.tts.model, { ph: '例如 tts-1' })}
+        ${cfgField('音色', 'voice.tts.voice', v.tts.voice, { ph: '例如 alloy，留空用默认' })}
+      </div></div>
+      <div class="group-block"><div class="group-label">选项</div><div class="group">
+        ${cfgField('语言', 'voice.lang', v.lang, { ph: '例如 zh-CN' })}
+        ${XS.sui.row({ id: 'autoplay', title: '收到语音时自动播放', sw: XS.settings.get('voice.autoplay') })}
+      </div><div class="group-foot">默认不自动播放、不在后台录音；要录音时会先向系统申请麦克风权限。</div></div>
+      <div class="group-block"><div class="group-foot">当前状态：配置已保存，<b>尚未接入聊天语音</b>。</div></div>`);
+    bindCfg(p);
+    p.body.querySelector('[data-id="autoplay"]').addEventListener('click', function(){
+      const sw = this.querySelector('.switch');
+      const on = sw.getAttribute('aria-checked') !== 'true';
+      sw.setAttribute('aria-checked', String(on));
+      XS.settings.set('voice.autoplay', on);
+    });
+    return p.view;
+  };
+
+  pages.image = () => {
+    const g = XS.settings.get('image');
+    const p = page('图片生成', `
+      <div class="group-block"><div class="group-foot">这里只保存配置。生图接口还没接进聊天和相册，
+        所以配置能存下来，但暂时没有地方可以发一张图出去。</div></div>
+      <div class="group-block"><div class="group-label">接口</div><div class="group">
+        ${cfgField('地址', 'image.baseUrl', g.baseUrl, { type: 'url', ph: 'https://api.example.com/v1' })}
+        ${cfgField('密钥', 'image.apiKey', g.apiKey, { type: 'password', ph: '和聊天 API 分开填' })}
+        ${cfgField('模型', 'image.model', g.model, { ph: '例如 dall-e-3' })}
+        ${cfgField('尺寸', 'image.size', g.size, { ph: '例如 1024x1024' })}
+        ${cfgField('数量', 'image.count', g.count, { ph: '1' })}
+      </div><div class="group-foot">高级项只在服务商支持时才生效；填了不支持的项不会报错，也不会假装生效。</div></div>
+      <div class="group-block"><div class="group-label">高级（可选）</div><div class="group">
+        ${cfgField('风格', 'image.style', g.style, { ph: '例如 vivid' })}
+        ${cfgField('反向词', 'image.negative', g.negative, { ph: '不希望出现的内容' })}
+        ${cfgField('steps', 'image.steps', g.steps, { ph: '留空用服务商默认' })}
+        ${cfgField('CFG', 'image.cfg', g.cfg, { ph: '留空用服务商默认' })}
+        ${cfgField('seed', 'image.seed', g.seed, { ph: '留空随机' })}
+      </div></div>
+      <div class="group-block"><div class="group-foot">当前状态：配置可以保存，<b>生成与发送入口尚未接入</b>；
+        不会用示例图片冒充生成结果。</div></div>`);
+    bindCfg(p);
+    return p.view;
+  };
 })();

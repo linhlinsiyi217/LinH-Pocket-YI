@@ -32,16 +32,16 @@
 
 /* 对话页 */
 .conv .scroll{padding-bottom:calc(var(--safe-bottom) + 96px);display:flex;flex-direction:column}
-.conv .page-body{flex:1;display:flex;flex-direction:column;justify-content:flex-end;padding:8px 0 6px}
-.msg-time{align-self:center;font-size:.75rem;color:var(--c-text-secondary);margin:14px 0 8px}
-.msg-notice{align-self:center;max-width:80%;text-align:center;font-size:.75rem;color:var(--c-text-secondary);background:var(--c-fill);border-radius:10px;padding:6px 12px;margin:8px 0;line-height:1.45}
+.conv .page-body{flex:1;display:flex;flex-direction:column;justify-content:flex-start;padding:4px 0 6px}
+.msg-time{align-self:center;font-size:.75rem;color:var(--c-text-secondary);margin:9px 0 3px}
+.msg-notice{align-self:center;max-width:80%;text-align:center;font-size:.75rem;color:var(--c-text-secondary);background:var(--c-fill);border-radius:10px;padding:5px 11px;margin:6px 0;line-height:1.45}
 .msg-notice button{color:var(--c-blue);font-size:inherit;padding:0 2px}
-.msg{display:flex;align-items:flex-end;gap:8px;padding:0 14px;margin-top:3px}
-.msg.first{margin-top:10px}
+.msg{display:flex;align-items:flex-end;gap:8px;padding:0 14px;margin-top:2px}
+.msg.first{margin-top:8px}
 .msg .avatar{--av:32px}
 .msg .av-space{width:32px;flex:none}
 .msg.self{flex-direction:row-reverse}
-.bubble{position:relative;max-width:72%;padding:9px 13px;border-radius:19px;font-size:1rem;line-height:1.45;color:var(--c-bubble-text);white-space:pre-wrap;word-break:break-word;
+.bubble{position:relative;max-width:72%;padding:8px 12px;border-radius:19px;font-size:1rem;line-height:1.42;color:var(--c-bubble-text);white-space:pre-wrap;word-break:break-word;
   user-select:text;-webkit-user-select:text}
 /* 左右两侧各自成段：颜色、圆角、内边距、描边（内圈阴影，不改盒子尺寸）、阴影、图片九宫格 */
 .msg.other .bubble{background:var(--bb-other-bg,var(--c-bubble-other));color:var(--bb-other-text,var(--c-bubble-text));
@@ -139,10 +139,10 @@
 /* 输入框上方的引用条：占满一整行，取消键在右 */
 .composer{flex-wrap:wrap}
 .composer .q-bar{flex:0 0 100%;order:-1;display:flex;align-items:flex-start;gap:8px;
-  padding:6px 4px 6px 0;margin-bottom:4px;border-bottom:.5px solid var(--c-separator)}
+  max-height:42px;overflow:hidden;padding:5px 4px 5px 0;margin-bottom:3px;border-bottom:.5px solid var(--c-separator)}
 .composer .q-bar[hidden]{display:none}
 .composer .q-bar-text{flex:1;min-width:0;font-size:var(--fs-caption);line-height:1.4;color:var(--c-text-secondary);
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;word-break:break-word}
 .composer .q-bar-x{width:22px;height:22px;flex:none;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;
   background:var(--c-fill);color:var(--c-text-secondary)}
 .composer .q-bar-x svg{width:11px;height:11px}

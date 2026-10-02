@@ -214,16 +214,15 @@
     };
     const renderMoments = () => `<div class="empty">${XS.icon('moments')}<h3>还没有动态</h3><p>动态的发布和个人主页会在之后的版本开放。</p></div>`;
     const renderMe = () => {
-      const pr = XS.profile.get(), ok = XS.api.configured();
+      const pr = XS.profile.get();
       return `<div class="chat-me"><div class="group-block"><div class="group-label">我的资料</div><div class="group">
           <div class="field-inline"><label for="me-name">名字</label><input id="me-name" name="name" value="${esc(pr.name)}" placeholder="对方怎么称呼你"></div>
           <div class="field-inline top"><label for="me-persona">人设</label><textarea id="me-persona" name="persona" placeholder="可不填">${esc(pr.persona)}</textarea></div>
         </div><div class="group-foot">自动保存，和「设置」里的资料是同一份。</div></div>
-        <div class="group-block"><div class="group">${XS.sui.row({ id: 'worldbook', icon: 'library', title: '世界书', sub: 'AI 可以检索的设定条目', value: (data.worldbook().length ? data.worldbook().length + ' 条' : '暂无'), chev: true })}
+        <div class="group-block"><div class="group">
           ${XS.sui.row({ id: 'favs', icon: 'folder', title: '收藏', value: (data.favs().length ? data.favs().length + ' 条' : '暂无'), chev: true })}
-          ${XS.sui.row({ id: 'appearance', icon: 'sun', title: '外观与插件', value: '主题 · 气泡 · 背景', chev: true })}
-          ${XS.sui.row({ id: 'api', icon: 'plug', title: 'API 连接', value: ok ? '已配置' : '未配置', chev: true })}</div>
-        <div class="group-foot">${XS.settings.get('flightMode') ? '飞行模式已开启，AI 暂时不会回复。' : '聊天回复来自你在设置里填写的 AI 接口。'}</div></div></div>`;
+          ${XS.sui.row({ id: 'appearance', icon: 'sun', title: '外观与插件', value: '主题 · 气泡 · 背景', chev: true })}</div>
+        <div class="group-foot">${XS.settings.get('flightMode') ? '飞行模式已开启，AI 暂时不会回复。' : 'AI 接口、语音和生图都在「设置 › AI 服务」；世界书在「设置 › 世界书」。'}</div></div></div>`;
     };
 
     const render = () => {
@@ -246,9 +245,7 @@
       if (t.dataset.a === 'add') add();
       else if (t.dataset.conv) openConv(data.contact(t.dataset.conv));
       else if (t.dataset.c) openProfile(data.contact(t.dataset.c));
-      else if (t.dataset.id === 'api') XS.nav.push(XS.settingsPages.api());
       else if (t.dataset.id === 'favs') XS.nav.push(data.openFavs());
-      else if (t.dataset.id === 'worldbook') XS.nav.push(data.openWorldbook());
       else if (t.dataset.id === 'appearance') XS.nav.push(XS.appearancePages.open());
     });
     p.body.addEventListener('input', e => { if (e.target.name) XS.profile.set({ [e.target.name]: e.target.value }); });

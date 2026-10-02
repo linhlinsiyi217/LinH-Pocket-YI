@@ -69,6 +69,8 @@ svg{display:block;flex:none}
   display:flex;align-items:center;justify-content:center;touch-action:none}
 .home-bar::before{content:"";width:134px;height:5px;border-radius:3px;background:var(--c-text);opacity:.85}
 .home-bar[hidden]{display:none}
+/* 手机浏览器和已安装模式下底部已有系统手势条，不再叠一条模拟的 */
+[data-frame="full"][data-dm="browser"] .home-bar,[data-frame="full"][data-dm="standalone"] .home-bar{display:none}
 
 /* —— 页面（应用里的每一屏） —— */
 .view{position:absolute;inset:0;background:var(--page-bg,var(--c-bg));overflow:hidden;contain:strict}

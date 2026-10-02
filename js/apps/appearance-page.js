@@ -202,7 +202,7 @@
   }
 
   /* ============================ 常驻预览 ============================ */
-  let prevOpen = true;   // 预览展开 / 收起，只在本次会话里记住
+  let prevOpen = false;  // 预览默认收起：首页主要是分类入口，别占掉大半屏
   const previewHtml = () => `<div class="ap-prev">
       <div class="ap-prev-head">
         <span>预览</span><span class="ap-prev-tip">示例消息，不是真实聊天</span>

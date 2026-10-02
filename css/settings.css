@@ -1,10 +1,12 @@
 /* ============================================================
    设置：沿用已认可的设置页版式（大标题、灰色搜索、白色分组）
    ============================================================ */
-.set-root .search{margin-bottom:22px}
+.set-root .search{margin-bottom:16px}
+/* 设置首页的标题：不做聊天页那种大粗标题，按 iOS 设置页的层级来 */
+.set-root .large-title{font-size:1.25rem;font-weight:600;line-height:1.625rem;padding:0 16px 6px}
 .set-root .search input{-webkit-appearance:none;appearance:none}
 .set-root .search input::-webkit-search-cancel-button{display:none}
-.set-root .group{margin-bottom:35px}
+.set-root .group{margin-bottom:28px}
 .user-card{display:flex;align-items:center;gap:14px;padding:10px 16px;min-height:80px;width:100%;text-align:left}
 .user-card .avatar{width:60px;height:60px;border-radius:50%;background:#E5E5EA;color:#8E8E93;display:flex;align-items:center;justify-content:center;flex:none;
   font-size:1.5rem;font-weight:500}

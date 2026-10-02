@@ -5,7 +5,9 @@
   const GAP = 5 * 60 * 1000; // 相隔 5 分钟显示时间
 
   // 动作描写：*……* 或整行（……）显示为灰色斜体
-  const fmt = text => esc(text).split('\n').map(line =>
+  // 连续空行收成一个：长文里不会出现巨大段间距（只动换行，不动用户自己写的括号文字）
+  const tidy = t => String(t == null ? '' : t).replace(/[ 	]+\n/g, '\n').replace(/\n{3,}/g, '\n\n');
+  const fmt = text => esc(tidy(text)).split('\n').map(line =>
     /^\s*（[^（）]*）\s*$/.test(line) ? `<span class="act">${line}</span>` : line.replace(/\*([^*\n]+)\*/g, '<span class="act">$1</span>')).join('\n');
 
   // 使用 lifelike-core.js 组装完整提示词：行为指令 + 角色卡 + 用户资料 + 世界书 + 记忆 + 最近对话
@@ -234,6 +236,7 @@
       if (quoting) m.quote = { id: quoting.id };       // 只记 ID，显示时回查原文
       const list = data.msgs(cid); list.push(m); data.saveMsgs(cid, list);
       ta.value = ''; grow(); setQuote(null);
+      pendingFollow = true;   // 自己发的消息一定要滚到眼前
       request(cid, m.id);
     }
 
@@ -327,11 +330,24 @@
     });
 
     // 数据变化（发送、收到回复、失败）时刷新；离开页面后自动解绑
+    // 只有本来就贴在底部时才跟着新消息走；往上翻历史时不强行拉回，也不把位置弄丢
+    let pendingFollow = false;   // 刚发完消息时置位，强制滚到眼前
+    // 每次变化时现算「现在是不是贴着底部」：本来在底部就跟着走，
+    // 用户往上翻历史时保持原位不动（渲染前后把滚动位置原样还回去）。
+    const nearBottom = () => p.scroll.scrollHeight - p.scroll.scrollTop - p.scroll.clientHeight < 120;
     const off = XS.on('chat:change', id => {
       if (!v.isConnected) return off();
-      if (id === cid || id === undefined) { const near = p.scroll.scrollHeight - p.scroll.scrollTop - p.scroll.clientHeight < 120; if (data.contact(cid)) { render(); if (near || id === cid) toBottom(); } }
+      if (id === cid || id === undefined) {
+        if (!data.contact(cid)) return;
+        const follow = pendingFollow || nearBottom();
+        pendingFollow = false;
+        const keep = follow ? null : p.scroll.scrollTop;
+        render();
+        if (follow) toBottom();
+        else if (keep != null) p.scroll.scrollTop = keep;
+      }
     });
-    v.addEventListener('shown', () => { render(); toBottom(); });
+    v.addEventListener('shown', () => { pendingFollow = true; render(); toBottom(); });
     render(); requestAnimationFrame(toBottom);
     return v;
   };
