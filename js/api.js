@@ -11,6 +11,9 @@
     return u;
   };
 
+  // 温度合法值：0~2 的数字
+  const tempOk = v => v !== '' && v != null && !Number.isNaN(Number(v)) && Number(v) >= 0 && Number(v) <= 2;
+
   async function chat(messages, { signal, maxTokens } = {}){
     const s = XS.settings.all();
     if (s.flightMode) throw new ApiError('flight', '飞行模式已开启，AI 请求已暂停');
@@ -19,14 +22,19 @@
     if (!/^https?:\/\//i.test(baseUrl)) throw new ApiError('config', 'API 地址需要以 http:// 或 https:// 开头');
 
     const ctrl = new AbortController();
-    const timer = setTimeout(() => ctrl.abort('timeout'), 60000);
+    const secs = Math.min(300, Math.max(5, Number(s.api.timeout) || 60));
+    const timer = setTimeout(() => ctrl.abort('timeout'), secs * 1000);
     if (signal) signal.addEventListener('abort', () => ctrl.abort('user'));
     let res;
     try {
       res = await fetch(endpoint(baseUrl), {
         method: 'POST', signal: ctrl.signal,
         headers: { 'Content-Type': 'application/json', ...(apiKey ? { Authorization: 'Bearer ' + apiKey } : {}) },
-        body: JSON.stringify({ model, messages, stream: false, ...(maxTokens ? { max_tokens: maxTokens } : {}) })
+        body: JSON.stringify(Object.assign(
+          { model, messages, stream: false },
+          maxTokens ? { max_tokens: maxTokens } : null,
+          // 温度只在填了合法值时带上，留空就用服务商默认，不硬塞
+          tempOk(s.api.temperature) ? { temperature: Number(s.api.temperature) } : null))
       });
     } catch (e) {
       if (ctrl.signal.aborted) throw new ApiError('timeout', ctrl.signal.reason === 'user' ? '已取消' : '等待超过 60 秒，请求已停止');

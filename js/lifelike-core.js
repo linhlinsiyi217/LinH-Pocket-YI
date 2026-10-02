@@ -16,8 +16,7 @@
     '你正在以角色身份在手机里聊天。根据角色卡、当前语境和真实发生过的事自然回复。',
     '保持角色自己的措辞、节奏和情绪；用户说得短，回应也简短；复杂话题要讲完整。',
     '不要替对方编造心理、行动或经历；不要声称发送了尚未真正发送的图片或语音。',
-    '只输出要呈现在聊天气泡里的文字，不输出分析、规则清单、旁白或思维链。',
-    '确实需要连发几条时，用单独一行三个短横线 --- 分隔，最多三条；不需要就正常写一条。'
+    '只输出要呈现在聊天气泡里的文字，不输出分析、规则清单、旁白或思维链。'
   ].join('\n');
 
   const asText = (value) => String(value == null ? '' : value).trim();
@@ -138,15 +137,15 @@
     return { ok: true, text };
   }
 
-  /* 把一条回复拆成多条气泡：只认「单独一行 ---」这种明确分隔，最多三条；
-     普通换行一律不切。拆不出来就原样当一条，绝不硬拆。 */
-  function splitBubbles(reply, max = 3) {
+  /* 把一条回复拆成多条气泡：只有用户自己设了分段标记才拆，且最多三条。
+     没设标记时永远只当一条——普通换行原样保留，模型不会自己拆。 */
+  function splitBubbles(reply, delimiter, max = 3) {
     const text = asText(reply);
     if (!text) return [];
-    if (!/\n\s*-{3,}\s*\n/.test(text)) return [text];
-    const parts = text.split(/\n\s*-{3,}\s*\n/).map((p) => p.trim()).filter(Boolean);
-    if (parts.length < 2 || parts.length > max) return [text];
-    return parts;
+    const d = asText(delimiter);
+    if (!d) return [text];
+    const parts = text.split(d).map((p) => p.trim()).filter(Boolean);
+    return (parts.length < 2 || parts.length > max) ? [text] : parts;
   }
 
   // 给现有请求函数的接线示例：只在可判定错误时最多补发一次，不丢失修正原因。

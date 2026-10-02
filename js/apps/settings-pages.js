@@ -41,6 +41,10 @@
         ${inline('历史条数', 'maxHistory', a.maxHistory, { ph: '留空用默认 20' })}
         ${inline('超时秒数', 'timeout', a.timeout, { ph: '默认 60' })}
       </div><div class="group-foot">只在当前接口确实支持时才生效；留空即用服务商默认值，不做假效果。</div></div>
+      <div class="group-block"><div class="group-label">分段</div><div class="group">
+        ${inline('分段标记', 'replySplit', a.replySplit, { ph: '留空 = 整条一条气泡' })}
+      </div><div class="group-foot">默认一条气泡。想让角色连发几条时，在这里填一个标记（例如三个短横线），
+        模型用它分段才会拆，最多三条；没填时就算回复里有换行也原样保留成一条。</div></div>
       <div class="group-block"><div class="group">
         ${XS.sui.row({ id: 'test', title: '测试连接', cls: 'link center' })}
         ${XS.sui.row({ id: 'testsys', title: '检测系统指令', cls: 'link center' })}

@@ -58,6 +58,7 @@
       now: new Date(),
       timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
       activationText,
+      maxHistoryMessages: Math.min(60, Math.max(4, Number(XS.settings.get('api.maxHistory')) || 20)),
       styleInFirstUserMessage: false  // 使用 system 字段方式
     });
 
@@ -109,7 +110,7 @@
       if (list && data.contact(cid)) {
         // 需要连发几条时用单独一行 --- 明确分隔；只有 2~3 段才拆，否则原样当一条。
         // 一次全部落库，不做定时逐条刷屏，旧回复不会在新话题里继续冒出来。
-        const parts = XS.lifelike.splitBubbles(reply);
+        const parts = XS.lifelike.splitBubbles(reply, XS.settings.get('api.replySplit'));
         const base = Date.now();
         parts.forEach((part, i) => list.push({ id: XS.uid('m'), role: 'other', text: part, ts: base + i }));
         data.saveMsgs(cid, list);
