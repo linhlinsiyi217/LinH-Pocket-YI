@@ -36,9 +36,29 @@
     dev.style.transform = `translate(-50%, -50%) scale(${k})`;
   }
 
-  XS.theme = { apply, frame };
+  /* 键盘与真实视口高度：
+     .device 用 position:fixed;inset:0，高度跟「布局视口」走；iOS 上键盘弹出时布局视口不变，
+     输入框会被键盘盖住。这里把 visualViewport 的实际高度写进 --vv-h，让整台手机跟着收。
+     双指放大时不跟着改（否则缩放会把界面也缩掉）。 */
+  function viewport(){
+    const vv = window.visualViewport;
+    if (vv && vv.scale > 1.01) return;
+    const h = vv ? vv.height : innerHeight;
+    root.style.setProperty('--vv-h', Math.round(h) + 'px');
+    // iOS：键盘弹出时布局视口不缩，两者差值很大；安卓会一起缩，差值接近 0
+    const kb = !!(vv && innerHeight - vv.height > 120);
+    if (kb) root.dataset.kb = 'on'; else delete root.dataset.kb;
+  }
+
+  XS.theme = { apply, frame, viewport };
   XS.on('settings', apply);
   mqDark.addEventListener('change', apply);
   mqReduce.addEventListener('change', apply);
   addEventListener('resize', frame);
+  addEventListener('resize', viewport);
+  if (window.visualViewport){
+    visualViewport.addEventListener('resize', viewport);
+    visualViewport.addEventListener('scroll', viewport);
+  }
+  viewport();
 })();

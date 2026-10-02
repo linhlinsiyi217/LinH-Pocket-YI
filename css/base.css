@@ -18,7 +18,11 @@ svg{display:block;flex:none}
   box-shadow:0 30px 70px rgba(0,0,0,.22),inset 0 0 0 1.5px #2A2A2C;transform:translate(-50%,-50%)}
 .screen{position:relative;width:100%;height:100%;border-radius:50px;overflow:hidden;background:var(--wallpaper);isolation:isolate}
 [data-frame="device"]{--status-h:54px;--safe-bottom:0px}
-[data-frame="full"] .device{position:fixed;inset:0;left:0;top:0;width:auto;height:auto;padding:0;border-radius:0;box-shadow:none;background:var(--home-wall);transform:none}
+/* 高度用动态视口（--vv-h 由 JS 按 visualViewport 实时写入，取不到时退回 100dvh）：
+   键盘弹出时整台手机跟着收，底部输入框和按钮不会被键盘盖住；
+   键盘期间底部安全区归零，免得输入框和键盘之间多出一条手势区的空隙 */
+[data-frame="full"] .device{position:fixed;inset:0;left:0;top:0;width:auto;height:var(--vv-h,100dvh);padding:0;border-radius:0;box-shadow:none;background:var(--home-wall);transform:none}
+[data-frame="full"][data-kb="on"]{--safe-bottom:0px}
 [data-frame="full"] .screen{border-radius:0;background:var(--home-wall)}
 [data-frame="full"],[data-frame="full"] body{background:var(--home-wall)}
 /* 手机上 JS 生效前也先按全屏渲染（条件与 js/theme.js 的判定一致），
