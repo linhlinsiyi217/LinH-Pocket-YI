@@ -273,9 +273,20 @@
     L = clone(base);
     normalize();
     const p = Math.max(0, Math.min(L.pages.length - 1, page == null ? curPage() : page));
+    // Dock 外框按真实图标数量收缩：先量出内容的自然宽度，再写成显式像素——
+    // 只有显式宽度才能做过渡（max-content 不能动画），之后图标进出就是平滑的收缩 / 展开
+    const k = scale(), sized = dockEl.classList.contains('sized'), dockW0 = parseFloat(dockEl.style.width) || 0;
+    if (sized) dockEl.classList.remove('sized');   // 量宽度时先关掉过渡，避免量到一半的中间值
     pagesEl.innerHTML = L.pages.map(pageHtml).join('');
     dockEl.innerHTML = L.dock.map(id => appBtn(XS.apps[id], 'dock:' + id)).join('');
     dockEl.classList.toggle('is-empty', !L.dock.length);
+    dockEl.style.width = '';                       // 回到 max-content 才能量准
+    const dockW = dockEl.getBoundingClientRect().width / k;
+    const grow = sized && !reduced() && dockW0 > 0 && Math.abs(dockW - dockW0) > .5;
+    dockEl.style.width = (grow ? dockW0 : dockW) + 'px';
+    void dockEl.offsetWidth;                          // 让起止宽度各自落到显式像素
+    if (grow) { dockEl.classList.add('sized'); void dockEl.offsetWidth; dockEl.style.width = dockW + 'px'; }
+    else dockEl.classList.add('sized');
     L.pages.flat().forEach(it => { if (it.t === 'w' && it.cfg) fillLines(pagesEl.querySelector(`[data-w="${CSS.escape(it.id)}"]`), it.cfg); });
     applyWidgetCss();
     cur = p; pageW = pagesEl.clientWidth;

@@ -103,18 +103,24 @@
 [data-theme="dark"] .ai-gray{background:#48484A}
 .app-dot{position:absolute;top:-3px;right:-3px;min-width:18px;height:18px;border-radius:9px;background:var(--c-red);color:#fff;font-size:11px;font-weight:600;display:none;align-items:center;justify-content:center;padding:0 5px}
 
-/* —— Dock：干净的白色底托（极淡描边 + 很轻的影子），图标平均分布 ——
+/* —— Dock：干净的白色底托（极淡描边 + 很轻的影子）——
+   外框按真实图标数量收缩并水平居中：图标固定间距 gap，左右内边距一致；空 Dock 只留一小段
    托盘里的图标不再各自套一层凸起方块：浅色图标直接是线条图案，深色图标（聊天）是紧凑的黑色块 */
-.dock{position:absolute;left:max(14px,env(safe-area-inset-left,0px));right:max(14px,env(safe-area-inset-right,0px));bottom:var(--dock-bottom,calc(var(--safe-bottom) + 26px));height:var(--dock-h,88px);border-radius:28px;
-  display:flex;align-items:center;justify-content:space-evenly;padding:0 8px;
+.dock{position:absolute;left:50%;transform:translateX(-50%);width:max-content;max-width:calc(100% - 2 * max(14px,env(safe-area-inset-left,0px),env(safe-area-inset-right,0px)));bottom:var(--dock-bottom,calc(var(--safe-bottom) + 26px));height:var(--dock-h,88px);border-radius:28px;
+  display:flex;align-items:center;justify-content:center;gap:22px;padding:0 14px;
   background:rgb(var(--hg-rgb));box-shadow:0 4px 16px rgba(0,0,0,.06),inset 0 0 0 .5px var(--hg-line)}
+.dock.sized{transition:width .3s var(--ease-page)}
 .dock .app-label{display:none}
+/* Dock 里没有名字，图标格子宽度就按图标来（桌面用 --app-cell 是为了给名字留位） */
+.dock .app{width:var(--app-icon);gap:0}
+/* 编辑态的移除键跟图标左上角对齐（上面的 left 是按 --app-cell 算的，Dock 里格子已收窄） */
+.dock .app-del{left:-6px}
 .home .dock .app-icon.ai-light,.home .dock .app-icon.ai-gray{background:transparent;box-shadow:none}
 .home .dock .app-icon.ai-dark{background:#111111;box-shadow:none}
 [data-theme="dark"] .home .dock .app-icon.ai-light svg,[data-theme="dark"] .home .dock .app-icon.ai-gray svg{filter:invert(1) hue-rotate(180deg)}
 [data-theme="dark"] .home .dock .app-icon.ai-dark{background:#3A3A3C;box-shadow:none}
 /* Dock 里没有应用：平时隐藏；编辑 / 拖动时显示出来，方便把应用拖回去 */
-.dock.is-empty{transition:opacity var(--dur-fast)}
+.dock.is-empty{min-width:120px;transition:opacity var(--dur-fast)}
 .home:not(.editing) .dock.is-empty{opacity:0;pointer-events:none}
 
 /* —— 遮罩 —— */

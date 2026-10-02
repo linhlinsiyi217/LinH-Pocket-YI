@@ -46,7 +46,7 @@
   --font:-apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro Display","PingFang SC","HarmonyOS Sans SC","MiSans","OPPO Sans","Roboto","Noto Sans SC",Arial,sans-serif;
   --font-scale:1;                 /* 文字大小，设置里可调 */
   /* 六档层级（字号 / 行高 / 字重），用 rem 跟随系统字体放大 */
-  --t1-fs:1.375rem;  --t1-lh:1.75rem;  --t1-fw:600;  /* 页面标题 22/28/600 */
+  --t1-fs:1.375rem;  --t1-lh:1.75rem;  --t1-fw:700;  /* 页面标题 22/28/700 */
   --t2-fs:1.125rem;  --t2-lh:1.5rem;   --t2-fw:600;  /* 模块标题 18/24/600 */
   --t3-fs:1rem;      --t3-lh:1.375rem; --t3-fw:500;  /* 按钮、二级标题 16/22/500 */
   --t4-fs:.9375rem;  --t4-lh:1.375rem; --t4-fw:400;  /* 正文 15/22/400 */

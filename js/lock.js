@@ -121,13 +121,19 @@
   }
 
   /* —— 启动 → 锁屏 —— */
-  // 启动画面停留约 2.8 秒；手指在屏上玩星点时不自动走，松手后再等一会儿
-  const BOOT_MS = 2800;
-  let bootT = 0, bootAt = 0;
-  const armBoot = ms => { clearTimeout(bootT); if (state === 'boot') bootT = setTimeout(showLock, reduced() ? Math.min(ms, 600) : ms); };
+  // 不点「进入」时，到 BOOT_MS 自动进桌面；提前点控件 / 空白 / 回车都能随时进
+  const BOOT_MS = 2600;
+  let bootT = 0, bootAt = 0, entered = false;
+  const armBoot = ms => { clearTimeout(bootT); if (state === 'boot') bootT = setTimeout(enter, reduced() ? Math.min(ms, 600) : ms); };
+  // 进入桌面：点控件、点空白、按回车都走这里，只触发一次
+  function enter(){
+    if (entered || state !== 'boot') return;
+    entered = true;
+    showLock();
+  }
   function playBoot(){
     clearTimers(); cancelAnimationFrame(anim); clearTimeout(bootT);
-    setState('boot'); setP(0); bootAt = performance.now();
+    setState('boot'); setP(0); bootAt = performance.now(); entered = false;
     screen.classList.remove('lock-enter'); lock.classList.remove('opened');
     boot.hidden = false; boot.className = 'boot';
     void boot.offsetWidth;                      // 重新触发动画
@@ -143,11 +149,28 @@
     later(() => screen.classList.remove('lock-enter'), 1150);
     lock.focus({ preventScroll: true });
   }
-    // 启动画面：轻点任意处 = 跳过（至少先让品牌名出现）
+    // 启动画面：点空白 = 跳过（至少先让品牌名出现）；点「进入」控件交给控件自己处理，松开才进
   boot.addEventListener('pointerdown', e => {
-    if (state !== 'boot') return;
-    if (performance.now() - bootAt > 500) showLock();
+    if (state !== 'boot' || e.target.closest('.boot-enter')) return;
+    if (performance.now() - bootAt > 500) enter();
   });
+  // 键盘：焦点不在控件上时，回车 / 空格也能进
+  boot.addEventListener('keydown', e => {
+    if (e.key !== 'Enter' && e.key !== ' ') return;
+    if (e.target.closest('.boot-enter')) return;
+    e.preventDefault();
+    if (state === 'boot' && performance.now() - bootAt > 400) enter();
+  });
+  // 「进入」控件：按下立刻缩小 + 放光圈，松开（或回车 / 空格）才真的进
+  const enterBtn = boot.querySelector('.boot-enter');
+  if (enterBtn) {
+    const press = on => enterBtn.classList.toggle('pressing', on);
+    enterBtn.addEventListener('pointerdown', e => { e.stopPropagation(); press(true); });
+    ['pointerup', 'pointercancel', 'pointerleave'].forEach(t => enterBtn.addEventListener(t, () => press(false)));
+    enterBtn.addEventListener('click', e => { e.stopPropagation(); press(false); enter(); });
+    enterBtn.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') press(true); });
+    enterBtn.addEventListener('keyup', e => { if (e.key === 'Enter' || e.key === ' ') press(false); });
+  }
 
 /* —— 锁屏密码（js/passcode.js）——
      开了密码时，所有解锁入口（上滑、轻点、回车、通知、XS.lock.unlock）都先到这里输密码；
