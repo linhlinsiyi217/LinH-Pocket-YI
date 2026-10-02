@@ -26,32 +26,24 @@
   pages.api = () => {
     const a = XS.settings.get('api');
     const p = page('聊天 API', `
-      <div class="group-block"><div class="group-label">接口（OpenAI 兼容格式）</div><div class="group">
+      <div class="group-block"><div class="group">
         ${inline('地址', 'baseUrl', a.baseUrl, { type: 'url', ph: 'https://api.example.com/v1' })}
         ${inline('密钥', 'apiKey', a.apiKey, { type: 'password', ph: 'sk-...' })}
         ${inline('模型', 'model', a.model, { ph: '例如 gpt-4o-mini' })}
-      </div><div class="group-foot">自动保存。密钥以明文保存在这台设备的浏览器里，只会发送到你填写的地址；
-        不会硬编码进仓库，也不会出现在导出和错误提示里。</div></div>
-      <div class="group-block"><div class="group-label">角色回复方式</div><div class="group">
+      </div></div>
+      <div class="group-block"><div class="group-label">回复方式</div><div class="group">
         ${seg('回复方式', 'replyMode', [['manual', '手动'], ['auto', '自动']])}
-      </div><div class="group-foot">手动：发消息不会触发 AI，会话里点「让 AI 回复」才请求一次，
-        避免误触和重复扣费。自动：发出消息就请求一次。真人联系人两种情况都不会走 AI。</div></div>
+      </div></div>
       <div class="group-block"><div class="group-label">可选参数</div><div class="group">
-        ${inline('温度', 'temperature', a.temperature, { ph: '留空用服务商默认，0~2' })}
+        ${inline('温度', 'temperature', a.temperature, { ph: '0~2，留空用默认' })}
         ${inline('历史条数', 'maxHistory', a.maxHistory, { ph: '留空用默认 20' })}
         ${inline('超时秒数', 'timeout', a.timeout, { ph: '默认 60' })}
-      </div><div class="group-foot">只在当前接口确实支持时才生效；留空即用服务商默认值，不做假效果。</div></div>
-      <div class="group-block"><div class="group-label">分段</div><div class="group">
-        ${inline('分段标记', 'replySplit', a.replySplit, { ph: '留空 = 整条一条气泡' })}
-      </div><div class="group-foot">默认一条气泡。想让角色连发几条时，在这里填一个标记（例如三个短横线），
-        模型用它分段才会拆，最多三条；没填时就算回复里有换行也原样保留成一条。</div></div>
+      </div></div>
       <div class="group-block"><div class="group">
         ${XS.sui.row({ id: 'test', title: '测试连接', cls: 'link center' })}
         ${XS.sui.row({ id: 'testsys', title: '检测系统指令', cls: 'link center' })}
-      </div><div class="group-foot">AI 角色的行为指令是按 system 消息发的。有些中转会丢掉 system，
-        角色就会变得不像本人。让人设指令要求只回两个字，模型照做才算通。
-        你自己加的补充规则（角色卡里的说话习惯、关系阶段、禁忌）会跟在角色卡后面，
-        优先于通用建议，但不会取代角色卡本身。</div></div>
+        ${XS.sui.row({ id: 'raw', title: '查看上一条回复原文', value: XS.chat.lastRaw() ? '有' : '暂无', chev: true })}
+      </div></div>
       <div class="set-status" role="status" aria-live="polite"></div>`);
     const st = p.body.querySelector('.set-status');
     const show = (cls, icon, text) => { st.className = 'set-status ' + cls; st.innerHTML = (icon ? XS.icon(icon) : '') + `<span>${esc(text)}</span>`; };
@@ -65,13 +57,19 @@
       catch (e) { show('err', 'alert', XS.api.configured() ? e.message : '请先填写上面的地址和模型'); }
       testing = false;
     });
+    // 用来对照「模型原始输出」和「最终气泡」：旁白是从哪一步出现的，一眼能看出来
+    p.body.querySelector('[data-id="raw"]').addEventListener('click', () => {
+      const raw = XS.chat.lastRaw();
+      const box = XS.ui.h('<div><textarea class="ap-css-text" rows="12" readonly>' + esc(raw || '还没有发过 AI 请求') + '</textarea></div>');
+      XS.ui.sheet({ title: '上一条回复原文', content: box, doneText: '完成' });
+    });
     p.body.querySelector('[data-id="testsys"]').addEventListener('click', async () => {
       if (testing) return;
       testing = true; show('busy', '', '正在检测系统指令…');
       try {
         const r = await XS.api.testSystem();
         if (r.ok) show('ok', 'check', '接口会把 system 指令传给模型，角色的行为指令能生效');
-        else show('err', 'alert', '这个接口没有照 system 指令做（它回了「' + r.reply.slice(0, 20) + '」）。角色的人设和行为指令可能被中转丢掉，建议换个接口。');
+        else show('err', 'alert', '这个接口没有照 system 指令做（它回了「' + r.reply.slice(0, 20) + '」），角色的人设可能被中转丢掉，建议换个接口。');
       } catch (e) { show('err', 'alert', XS.api.configured() ? e.message : '请先填写上面的地址和模型'); }
       testing = false;
     });
@@ -345,8 +343,7 @@
   };
 
   /* —— AI 服务：语音 与 图片生成 ——
-     只做配置、保存和连通测试；没有接入聊天/相册入口的能力会明确写「尚未接入」，
-     绝不用模拟结果冒充成功。密钥与聊天 API 分开存，互不覆盖。 */
+     只做连接配置的保存与状态说明；没有接进聊天入口的能力写「尚未接入」，不用示例结果冒充。 */
   const cfgField = (label, path, value, opts) => {
     const o = opts || {};
     return `<div class="field-inline"><label>${esc(label)}</label>`
@@ -357,27 +354,25 @@
     const k = e.target.dataset.set;
     if (k) XS.settings.set(k, e.target.value.trim());
   });
+
   pages.voice = () => {
     const v = XS.settings.get('voice');
     const p = page('语音', `
-      <div class="group-block"><div class="group-foot">这里只保存配置。<b>语音还没有接进聊天</b>——
-        输入框里暂时没有录音和朗读按钮，标了「尚未接入」的不会假装能用。</div></div>
-      <div class="group-block"><div class="group-label">语音转文字（STT）</div><div class="group">
+      <div class="group-block"><div class="group-label">语音转文字</div><div class="group">
         ${cfgField('地址', 'voice.stt.baseUrl', v.stt.baseUrl, { type: 'url', ph: 'https://api.example.com/v1' })}
-        ${cfgField('密钥', 'voice.stt.apiKey', v.stt.apiKey, { type: 'password', ph: '和聊天 API 分开填' })}
+        ${cfgField('密钥', 'voice.stt.apiKey', v.stt.apiKey, { type: 'password', ph: '' })}
         ${cfgField('模型', 'voice.stt.model', v.stt.model, { ph: '例如 whisper-1' })}
-      </div><div class="group-foot">填入后可以点下面的测试确认地址和密钥能不能连上；测试只发一次很短的请求。</div></div>
-      <div class="group-block"><div class="group-label">文字转语音（TTS）</div><div class="group">
+      </div></div>
+      <div class="group-block"><div class="group-label">文字转语音</div><div class="group">
         ${cfgField('地址', 'voice.tts.baseUrl', v.tts.baseUrl, { type: 'url', ph: 'https://api.example.com/v1' })}
-        ${cfgField('密钥', 'voice.tts.apiKey', v.tts.apiKey, { type: 'password', ph: '和聊天 API 分开填' })}
+        ${cfgField('密钥', 'voice.tts.apiKey', v.tts.apiKey, { type: 'password', ph: '' })}
         ${cfgField('模型', 'voice.tts.model', v.tts.model, { ph: '例如 tts-1' })}
-        ${cfgField('音色', 'voice.tts.voice', v.tts.voice, { ph: '例如 alloy，留空用默认' })}
+        ${cfgField('音色', 'voice.tts.voice', v.tts.voice, { ph: '留空用默认' })}
       </div></div>
       <div class="group-block"><div class="group-label">选项</div><div class="group">
-        ${cfgField('语言', 'voice.lang', v.lang, { ph: '例如 zh-CN' })}
         ${XS.sui.row({ id: 'autoplay', title: '收到语音时自动播放', sw: XS.settings.get('voice.autoplay') })}
-      </div><div class="group-foot">默认不自动播放、不在后台录音；要录音时会先向系统申请麦克风权限。</div></div>
-      <div class="group-block"><div class="group-foot">当前状态：配置已保存，<b>尚未接入聊天语音</b>。</div></div>`);
+      </div></div>
+      <div class="group-block"><div class="group-foot">尚未接入聊天语音</div></div>`);
     bindCfg(p);
     p.body.querySelector('[data-id="autoplay"]').addEventListener('click', function(){
       const sw = this.querySelector('.switch');
@@ -391,24 +386,21 @@
   pages.image = () => {
     const g = XS.settings.get('image');
     const p = page('图片生成', `
-      <div class="group-block"><div class="group-foot">这里只保存配置。生图接口还没接进聊天和相册，
-        所以配置能存下来，但暂时没有地方可以发一张图出去。</div></div>
-      <div class="group-block"><div class="group-label">接口</div><div class="group">
+      <div class="group-block"><div class="group">
         ${cfgField('地址', 'image.baseUrl', g.baseUrl, { type: 'url', ph: 'https://api.example.com/v1' })}
-        ${cfgField('密钥', 'image.apiKey', g.apiKey, { type: 'password', ph: '和聊天 API 分开填' })}
+        ${cfgField('密钥', 'image.apiKey', g.apiKey, { type: 'password', ph: '' })}
         ${cfgField('模型', 'image.model', g.model, { ph: '例如 dall-e-3' })}
         ${cfgField('尺寸', 'image.size', g.size, { ph: '例如 1024x1024' })}
         ${cfgField('数量', 'image.count', g.count, { ph: '1' })}
-      </div><div class="group-foot">高级项只在服务商支持时才生效；填了不支持的项不会报错，也不会假装生效。</div></div>
-      <div class="group-block"><div class="group-label">高级（可选）</div><div class="group">
-        ${cfgField('风格', 'image.style', g.style, { ph: '例如 vivid' })}
-        ${cfgField('反向词', 'image.negative', g.negative, { ph: '不希望出现的内容' })}
-        ${cfgField('steps', 'image.steps', g.steps, { ph: '留空用服务商默认' })}
-        ${cfgField('CFG', 'image.cfg', g.cfg, { ph: '留空用服务商默认' })}
-        ${cfgField('seed', 'image.seed', g.seed, { ph: '留空随机' })}
       </div></div>
-      <div class="group-block"><div class="group-foot">当前状态：配置可以保存，<b>生成与发送入口尚未接入</b>；
-        不会用示例图片冒充生成结果。</div></div>`);
+      <div class="group-block"><div class="group-label">高级（服务商支持时生效）</div><div class="group">
+        ${cfgField('风格', 'image.style', g.style, { ph: '' })}
+        ${cfgField('反向词', 'image.negative', g.negative, { ph: '' })}
+        ${cfgField('steps', 'image.steps', g.steps, { ph: '' })}
+        ${cfgField('CFG', 'image.cfg', g.cfg, { ph: '' })}
+        ${cfgField('seed', 'image.seed', g.seed, { ph: '' })}
+      </div></div>
+      <div class="group-block"><div class="group-foot">尚未接入生成与发送入口</div></div>`);
     bindCfg(p);
     return p.view;
   };

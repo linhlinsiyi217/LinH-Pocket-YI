@@ -19,6 +19,9 @@
     msgs: id => XS.store.get('msgs.' + id, []),
     saveMsgs(id, list){ XS.store.set('msgs.' + id, list); XS.emit('chat:change', id); },
     pending: {},   // 正在等回复的联系人
+    // 上一条模型原始回复：只放内存，刷新即清，用来对照「模型原文 ↔ 最终气泡」
+    lastRaw: () => lastRaw,
+    setLastRaw(v){ lastRaw = String(v == null ? '' : v); },
     // 未读：对方最后一条消息晚于「最后已读时间」就算未读；打开会话时清零
     unread: id => data.msgs(id).filter(m => m.role === 'other' && m.ts > (XS.store.get('read.' + id, 0))).length,
     markRead(id){ XS.store.set('read.' + id, Date.now()); XS.emit('chat:change', id); },
@@ -41,6 +44,7 @@
   // 显示名：有备注就用备注，没有才用名字
   data.name = c => ((c && (c.remark || c.name)) || '').trim();
 
+  let lastRaw = '';
   const initial = name => esc((name || '?').trim().slice(0, 1).toUpperCase());
   // 头像：有上传的图片用图片，否则用名字首字
   data.avatar = (c, cls='') => `<span class="avatar ${cls}" aria-hidden="true">${c && c.avatar ? `<img src="${esc(c.avatar)}" alt="" draggable="false">` : initial(c.name)}</span>`;

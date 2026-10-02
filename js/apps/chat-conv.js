@@ -4,67 +4,33 @@
   const esc = XS.esc, data = XS.chat;
   const GAP = 5 * 60 * 1000; // 相隔 5 分钟显示时间
 
-  // 动作描写：*……* 或整行（……）显示为灰色斜体
-  // 连续空行收成一个：长文里不会出现巨大段间距（只动换行，不动用户自己写的括号文字）
-  const tidy = t => String(t == null ? '' : t).replace(/[ 	]+\n/g, '\n').replace(/\n{3,}/g, '\n\n');
-  const fmt = text => esc(tidy(text)).split('\n').map(line =>
-    /^\s*（[^（）]*）\s*$/.test(line) ? `<span class="act">${line}</span>` : line.replace(/\*([^*\n]+)\*/g, '<span class="act">$1</span>')).join('\n');
-
-  // 使用 lifelike-core.js 组装完整提示词：行为指令 + 角色卡 + 用户资料 + 世界书 + 记忆 + 最近对话
-  function buildPrompt(c, msgs, userInput){
+  // 只做转义和空行收敛：不删除任何文字，也不再把括号内容画成「舞台动作」样式。
+  // 角色不该发旁白；若模型仍然发了，界面也不替它装得像是有意为之。
+  const tidy = t => String(t == null ? '' : t).replace(/[ \t]+\n/g, '\n').replace(/\n{3,}/g, '\n\n');
+  const fmt = text => esc(tidy(text));
+  // 活人感 v2：只在 AI 角色的请求链路上组装 system + 最近历史 + 当前用户消息
+  function buildPrompt(c, msgs, userMsg){
     const me = XS.profile.get();
-
-    // 角色卡：名字、人设、说话习惯、关系阶段、禁忌等，按字段交给 lifelike 组装
-    const characterProfile = {
-      name: c.name, persona: c.persona, speaking: c.speaking,
-      relation: c.relation, taboos: c.taboos,
-      gender: c.gender, birthday: c.birthday, hometown: c.hometown
-    };
-
-    // 用户资料：只送用户自己在「我」里填过的那一份，不猜
-    const userProfile = me.name ? `用户名字：${me.name}${me.persona ? '\n用户设定：' + me.persona : ''}` : '';
-
-    // 构建历史消息（转换为 lifelike 需要的格式）
+    // 角色卡按仓库字段映射到 v2 需要的形状（说话习惯 → speechStyle）
+    const character = { id: c.id, name: c.name, persona: c.persona, speechStyle: c.speaking };
+    const relationship = [c.relation, c.taboos ? '禁忌：' + c.taboos : ''].filter(Boolean).join('；');
+    const userProfile = me.name ? ('名字：' + me.name + (me.persona ? '；设定：' + me.persona : '')) : '';
+    const maxHist = Math.min(60, Math.max(4, Number(XS.settings.get('api.maxHistory')) || 20));
     const history = msgs
       .filter(m => m.status !== 'failed')
-      .slice(-30)
-      .map(m => ({
-        role: m.role === 'self' ? 'user' : 'assistant',
-        content: m.text
-      }));
-
-    // 时间感知层：检查对话间隔
-    let activationText = '';
-    const lastMsg = msgs.length > 0 ? msgs[msgs.length - 1] : null;
-    if (lastMsg && lastMsg.ts) {
-      const gap = Date.now() - lastMsg.ts;
-      const hours = gap / (1000 * 60 * 60);
-      if (hours > 12) {
-        activationText = `距离上次对话已经过了${hours > 24 ? Math.floor(hours / 24) + '天多' : Math.floor(hours) + '小时多'}，可以自然地提及时间流逝。`;
-      }
-    }
-
-    // 调用 lifelike 核心模块构建完整提示词
-    const ctx = XS.lifelike.buildPromptContext({
-      characterProfile,
+      .slice(-maxHist)
+      .map(m => ({ id: m.id, role: m.role === 'self' ? 'user' : 'assistant', content: m.text }));
+    return XS.humanlike.buildHumanlikeMessages({
+      character,
       userProfile,
-      worldbookEntries: data.worldbook(),   // 世界书：按本轮话题挑相关的少量条目
-      activePresets: [],                     // 预设功能暂未开放
-      calibrations: [],                      // 角色纠错（C4）暂未开放
-      rollingSummary: '',                    // 摘要功能暂未开放
-      relevantMemories: data.memories(c.id), // 长期记忆：没有就传空，不臆造共同经历
+      relationship,
+      selectedWorldbook: data.worldbook(),
+      selectedMemories: data.memories(c.id),
       history,
-      userInput,
-      now: new Date(),
-      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-      activationText,
-      maxHistoryMessages: Math.min(60, Math.max(4, Number(XS.settings.get('api.maxHistory')) || 20)),
-      styleInFirstUserMessage: false  // 使用 system 字段方式
+      latestUserMessage: { id: userMsg.id, content: userMsg.text },
+      now: new Date()
     });
-
-    return ctx;
   }
-
   // 真正发请求：成功则追加对方消息；失败把这条标记为失败
   async function request(cid, msgId){
     const c = data.contact(cid);
@@ -89,28 +55,18 @@
       return;
     }
 
-    const ctx = buildPrompt(c, allMsgs.filter(m => m.id !== msgId), userMsg.text);
+    const apiMessages = buildPrompt(c, allMsgs.filter(m => m.id !== msgId), userMsg);
 
     try {
-      // 使用 lifelike 模块的校验和重试机制
-      const reply = await XS.lifelike.requestWithOneRetry(
-        async (request) => {
-          // 将 ctx.system 和 ctx.messages 转换为现有 API 格式
-          const apiMessages = [
-            { role: 'system', content: request.system },
-            ...request.messages
-          ];
-          return await XS.api.chat(apiMessages);
-        },
-        ctx
-      );
+      const reply = await XS.api.chat(apiMessages);
+      data.setLastRaw(reply);   // 留一份原文，便于对照排查
 
       delete data.pending[cid];
       const list = mark('ok');
       if (list && data.contact(cid)) {
-        // 需要连发几条时用单独一行 --- 明确分隔；只有 2~3 段才拆，否则原样当一条。
-        // 一次全部落库，不做定时逐条刷屏，旧回复不会在新话题里继续冒出来。
-        const parts = XS.lifelike.splitBubbles(reply, XS.settings.get('api.replySplit'));
+        // 逐条气泡：模型按 JSON 返回 messages 数组时一条一个气泡；
+        // 没按格式返回就按自然段与句末标点兜底拆分，一个字都不丢，绝不堆成一个大气泡。
+        const parts = XS.humanlike.parseCharacterReply(reply);
         const base = Date.now();
         parts.forEach((part, i) => list.push({ id: XS.uid('m'), role: 'other', text: part, ts: base + i }));
         data.saveMsgs(cid, list);

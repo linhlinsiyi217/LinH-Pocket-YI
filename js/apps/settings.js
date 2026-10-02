@@ -44,7 +44,6 @@
   const apiState = () => XS.api.configured() ? '已配置' : '未配置';
 const voiceState = () => (XS.settings.get('voice.stt.baseUrl') || XS.settings.get('voice.tts.baseUrl')) ? '已配置' : '未配置';
 const imageState = () => XS.settings.get('image.baseUrl') ? '已配置' : '未配置';
-const wbState = () => { const n = (XS.chat.worldbook ? XS.chat.worldbook() : []).length; return n ? n + ' 条' : '暂无'; };
 
   function mount(){
     const p = XS.nav.page({ title: '设置', large: true, grouped: true, back: false, cls: 'set-root' });
@@ -64,9 +63,6 @@ const wbState = () => { const n = (XS.chat.worldbook ? XS.chat.worldbook() : [])
           { id: 'aivoice', icon: 'wave', title: '语音', sub: '语音转文字与文字转语音', value: voiceState(), muted: true, chev: true },
           { id: 'aiimage', icon: 'image', title: '图片生成', sub: '生图接口', value: imageState(), muted: true, chev: true }
         ], { label: 'AI 服务', foot: '三类配置分开保存、互不影响；没有接入发送入口的会写清楚。' })}
-        ${group([
-          { id: 'worldbook', icon: 'library', title: '世界书', sub: 'AI 按角色和话题参考的设定条目', value: wbState(), chev: true }
-        ])}
         ${group([
           { id: 'general', icon: 'gear', title: '通用', value: '未开放', muted: true, chev: true },
           { id: 'display', icon: 'sun', title: '显示与亮度', chev: true },
@@ -94,7 +90,6 @@ const wbState = () => { const n = (XS.chat.worldbook ? XS.chat.worldbook() : [])
       const id = b.dataset.id;
       if (names[id]) return soon(names[id]);
       if (id === 'changelog') return XS.nav.push(XS.changelog.settingsPage());
-      if (id === 'worldbook') return XS.nav.push(XS.chat.openWorldbook());
       const page = XS.settingsPages[routes[id] || id];
       if (page) XS.nav.push(page());
     });
