@@ -12,9 +12,8 @@
     root.dataset.pblur = s.pblur ? 'on' : 'off';
     root.dataset.motion = s.motion === 'reduce' || (s.motion === 'system' && mqReduce.matches) ? 'reduce' : 'full';
     root.style.setProperty('--font-scale', s.textScale);
-    // 高级自定义（预留）：只有设置了才覆盖默认
+    // 壁纸已交给「外观与插件」管理，这里不再动 --wallpaper / --home-wall
     const c = s.custom || {};
-    ['--wallpaper', '--home-wall'].forEach(v => c.wallpaper ? root.style.setProperty(v, c.wallpaper) : root.style.removeProperty(v));
     c.font ? root.style.setProperty('--font', c.font) : root.style.removeProperty('--font');
     const meta = document.querySelector('meta[name="theme-color"]');
     // 和桌面壁纸顶部同色，全屏 / 安装后系统状态栏不会出现一条色差

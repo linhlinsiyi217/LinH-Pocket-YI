@@ -95,9 +95,14 @@
 .seg-row .row-title{margin-bottom:8px;font-size:var(--fs-body)}
 
 /* —— 应用内悬浮底部 Tab：干净的白色底托 + 极淡描边；当前项是紧凑的黑色选中块（白字） —— */
-.tabbar{position:absolute;left:16px;right:16px;bottom:calc(var(--safe-bottom) + 26px);height:var(--tab-h);z-index:20;border-radius:calc(var(--tab-h) / 2);
-  padding:6px;display:flex;background:var(--c-surface);
+.tabbar{position:absolute;left:16px;right:16px;bottom:calc(var(--safe-bottom) + 26px);height:var(--tabbar-h,var(--tab-h));z-index:20;border-radius:var(--tabbar-radius,calc(var(--tab-h) / 2));
+  padding:6px;display:flex;background:var(--tabbar-bg,var(--c-surface));opacity:var(--tabbar-alpha,1);
   box-shadow:0 4px 16px rgba(0,0,0,.06),inset 0 0 0 .5px var(--c-border);touch-action:none;user-select:none;-webkit-user-select:none;contain:layout paint}
+/* 底部导航第二种内置样式：极简贴底——通到底、直角、只留一条上边线 */
+[data-tab-style="flat"] .tabbar{left:0;right:0;bottom:0;border-radius:0;padding:6px 6px calc(var(--safe-bottom) + 6px);
+  box-shadow:none;border-top:.5px solid var(--c-separator)}
+[data-tab-style="flat"] .tabbar .tab{border-radius:16px}
+[data-tab-style="flat"] .tabbar .pill{border-radius:16px}
 .tabbar .pill{background:var(--c-primary);box-shadow:none}
 .tabbar .tab{position:relative;z-index:1;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:var(--c-text-secondary);
   border-radius:26px;transition:color var(--dur-fast)}

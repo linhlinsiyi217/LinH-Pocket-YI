@@ -73,7 +73,7 @@ svg{display:block;flex:none}
   padding-top:calc(var(--status-h) + var(--nav-h));padding-bottom:calc(var(--safe-bottom) + 40px)}
 .scroll::-webkit-scrollbar{display:none}
 .scroll{scrollbar-width:none}
-.view.has-tabbar .scroll{padding-bottom:calc(var(--tab-h) + var(--safe-bottom) + 56px)}
+.view.has-tabbar .scroll{padding-bottom:calc(var(--tabbar-h,var(--tab-h)) + var(--safe-bottom) + 56px)}
 
 /* —— 渐进模糊：只用于底部悬浮区域。3 层叠加，照顾安卓性能 —— */
 .pblur{position:absolute;left:0;right:0;bottom:0;height:var(--pblur-h,140px);pointer-events:none;z-index:15}

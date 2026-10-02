@@ -3,7 +3,8 @@
    气泡：对方白底细边框，自己很浅的灰，黑色文字
    ============================================================ */
 /* 头像：和桌面 / Dock 图标同一套圆角比例；字、图标都在容器正中并随容器缩放 */
-.avatar{flex:none;width:var(--av,48px);height:var(--av,48px);border-radius:calc(var(--av,48px) * var(--app-radius-k));background:#E5E5EA;color:#636366;
+.avatar{flex:none;width:var(--av,48px);height:var(--av,48px);border-radius:var(--av-radius,calc(var(--av,48px) * var(--app-radius-k)));background:#E5E5EA;color:#636366;
+  box-shadow:inset 0 0 0 var(--av-border,0) var(--av-border-color,transparent);
   display:flex;align-items:center;justify-content:center;overflow:hidden;line-height:1;text-align:center;
   font-size:calc(var(--av,48px) * .42);font-weight:500;user-select:none}
 .avatar svg{width:calc(var(--av,48px) * .5);height:calc(var(--av,48px) * .5)}
@@ -40,12 +41,26 @@
 .msg .avatar{--av:32px}
 .msg .av-space{width:32px;flex:none}
 .msg.self{flex-direction:row-reverse}
-.bubble{max-width:72%;padding:9px 13px;border-radius:19px;font-size:1rem;line-height:1.45;color:var(--c-bubble-text);white-space:pre-wrap;word-break:break-word;
+.bubble{position:relative;max-width:72%;padding:9px 13px;border-radius:19px;font-size:1rem;line-height:1.45;color:var(--c-bubble-text);white-space:pre-wrap;word-break:break-word;
   user-select:text;-webkit-user-select:text}
-.msg.other .bubble{background:var(--c-bubble-other);box-shadow:inset 0 0 0 .5px var(--c-bubble-other-border),0 1px 2px rgba(0,0,0,.03)}
-.msg.self .bubble{background:var(--c-bubble-self)}
-.msg.other.last .bubble{border-bottom-left-radius:6px}
-.msg.self.last .bubble{border-bottom-right-radius:6px}
+/* 左右两侧各自成段：颜色、圆角、内边距、描边（内圈阴影，不改盒子尺寸）、阴影、图片九宫格 */
+.msg.other .bubble{background:var(--bb-other-bg,var(--c-bubble-other));color:var(--bb-other-text,var(--c-bubble-text));
+  border-radius:var(--bb-other-radius,19px);padding:var(--bb-other-pad,9px 13px);
+  border:0 solid transparent;border-width:var(--bb-other-bw,0);border-image:var(--bb-other-img,none) 33% fill round;
+  box-shadow:var(--bb-other-ring,inset 0 0 0 .5px var(--c-bubble-other-border)),var(--bb-other-shadow,0 1px 2px rgba(0,0,0,.03))}
+.msg.self .bubble{background:var(--bb-self-bg,var(--c-bubble-self));color:var(--bb-self-text,var(--c-bubble-text));
+  border-radius:var(--bb-self-radius,19px);padding:var(--bb-self-pad,9px 13px);
+  border:0 solid transparent;border-width:var(--bb-self-bw,0);border-image:var(--bb-self-img,none) 33% fill round;
+  box-shadow:var(--bb-self-ring,0 0 0 rgba(0,0,0,0)),var(--bb-self-shadow,0 0 0 rgba(0,0,0,0))}
+.msg.other.last .bubble{border-radius:var(--bb-other-radius-last,var(--bb-other-radius,19px 19px 19px 6px))}
+.msg.self.last .bubble{border-radius:var(--bb-self-radius-last,var(--bb-self-radius,19px 19px 6px 19px))}
+/* 尾巴：默认关；开了就在外侧补一个小三角，对应的下角变直角 */
+[data-bb-tail-other="on"] .msg.other.last .bubble{border-bottom-left-radius:0}
+[data-bb-tail-other="on"] .msg.other.last .bubble::after{content:"";position:absolute;left:-5px;bottom:0;width:6px;height:8px;
+  background:var(--bb-other-bg,var(--c-bubble-other));clip-path:polygon(100% 0,100% 100%,0 100%)}
+[data-bb-tail-self="on"] .msg.self.last .bubble{border-bottom-right-radius:0}
+[data-bb-tail-self="on"] .msg.self.last .bubble::after{content:"";position:absolute;right:-5px;bottom:0;width:6px;height:8px;
+  background:var(--bb-self-bg,var(--c-bubble-self));clip-path:polygon(0 0,100% 100%,0 100%)}
 .bubble .act{color:var(--c-text-secondary);font-style:italic}
 .msg.sending .bubble{opacity:.6}
 .msg-state{display:flex;justify-content:flex-end;padding:4px 16px 0;font-size:.75rem;color:var(--c-text-secondary)}
@@ -61,13 +76,15 @@
 
 /* 输入框：实心白色胶囊 + 极淡描边，和底部 Tab 同一套 */
 .composer{position:absolute;left:12px;right:12px;bottom:calc(var(--safe-bottom) + 28px);z-index:20;display:flex;align-items:flex-end;gap:8px;
-  padding:5px 5px 5px 16px;border-radius:24px;background:var(--c-surface);
+  padding:5px 5px 5px 16px;border-radius:var(--composer-radius,24px);background:var(--composer-bg,var(--c-surface));
   box-shadow:0 4px 16px rgba(0,0,0,.06),inset 0 0 0 .5px var(--c-border)}
 .composer textarea{flex:1;min-width:0;border:0;outline:none;background:transparent;resize:none;font-size:1rem;line-height:1.4;padding:8px 0;max-height:120px;color:var(--c-text)}
 .composer textarea::placeholder{color:var(--c-text-secondary)}
 .composer .send{width:38px;height:38px;border-radius:50%;background:var(--c-primary);color:var(--c-on-primary);display:flex;align-items:center;justify-content:center;flex:none}
 .composer .send svg{width:20px;height:20px;stroke-width:2}
 .composer .send:disabled{opacity:.25}
+.conv{background:var(--chat-bg,var(--c-bg));background-size:cover;background-position:center;background-repeat:no-repeat}
+.conv .navbar{background:var(--chat-nav,var(--c-bg))}
 .conv .pblur{--pblur-h:120px}
 
 /* —— 聊天首页四栏 / 联系人 / 资料页 —— */

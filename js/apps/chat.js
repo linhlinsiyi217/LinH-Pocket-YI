@@ -170,7 +170,7 @@
           <div class="field-inline"><label for="me-name">名字</label><input id="me-name" name="name" value="${esc(pr.name)}" placeholder="对方怎么称呼你"></div>
           <div class="field-inline top"><label for="me-persona">人设</label><textarea id="me-persona" name="persona" placeholder="可不填">${esc(pr.persona)}</textarea></div>
         </div><div class="group-foot">自动保存，和「设置」里的资料是同一份。</div></div>
-        <div class="group-block"><div class="group">${XS.sui.row({ id: 'appearance', icon: 'sun', title: '聊天外观', value: '主题 · 玻璃 · 字号', chev: true })}
+        <div class="group-block"><div class="group">${XS.sui.row({ id: 'appearance', icon: 'sun', title: '外观与插件', value: '主题 · 气泡 · 背景', chev: true })}
           ${XS.sui.row({ id: 'api', icon: 'plug', title: 'API 连接', value: ok ? '已配置' : '未配置', chev: true })}</div>
         <div class="group-foot">${XS.settings.get('flightMode') ? '飞行模式已开启，AI 暂时不会回复。' : '聊天回复来自你在设置里填写的 AI 接口。'}</div></div></div>`;
     };
@@ -196,7 +196,7 @@
       else if (t.dataset.conv) openConv(data.contact(t.dataset.conv));
       else if (t.dataset.c) openProfile(data.contact(t.dataset.c));
       else if (t.dataset.id === 'api') XS.nav.push(XS.settingsPages.api());
-      else if (t.dataset.id === 'appearance') XS.nav.push(XS.settingsPages.display());
+      else if (t.dataset.id === 'appearance') XS.nav.push(XS.appearancePages.open());
     });
     p.body.addEventListener('input', e => { if (e.target.name) XS.profile.set({ [e.target.name]: e.target.value }); });
     const off = XS.on('chat:change', () => { if (!v.isConnected) return off(); if (tab !== 2 && tab !== 3) render(); });

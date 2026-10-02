@@ -1,0 +1,91 @@
+/* 外观与插件：入口页、各分组、实时预览、高级 CSS 编辑器 */
+
+/* —— 通用行：左边标签，右边控件 —— */
+.ap-page .ap-row{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:48px;padding:8px 16px;position:relative}
+.ap-page .group>.ap-row+.ap-row::before{content:"";position:absolute;top:0;left:16px;right:0;height:.5px;background:var(--c-separator)}
+.ap-page .ap-label{flex:none;font-size:var(--fs-body);color:var(--c-text)}
+.ap-page .ap-row .segmented{flex:none;max-width:64%}
+.ap-page .ap-row .segmented .seg{padding:0 10px}
+.ap-page .ap-swrow{cursor:pointer}
+
+.ap-input{flex:1;min-width:0;height:34px;padding:0 10px;border:0;outline:none;border-radius:var(--r-sm);
+  background:var(--c-fill);color:var(--c-text);font-size:var(--fs-sub)}
+.ap-input::placeholder{color:var(--c-text-tertiary)}
+
+/* 颜色：色块 + 可手填的色值 + 清除 */
+.ap-color{display:flex;align-items:center;gap:8px;flex:none;max-width:66%}
+.ap-color input[type=color]{width:34px;height:34px;padding:0;border:0;border-radius:9px;background:transparent;flex:none;
+  box-shadow:inset 0 0 0 .5px var(--c-border);overflow:hidden}
+.ap-color input[type=color]::-webkit-color-swatch-wrapper{padding:2px}
+.ap-color input[type=color]::-webkit-color-swatch{border:0;border-radius:7px}
+.ap-hex{width:104px;text-align:center}
+.ap-mini{width:26px;height:26px;flex:none;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;
+  color:var(--c-text-secondary);background:var(--c-fill)}
+.ap-mini svg{width:12px;height:12px}
+
+/* 范围值 */
+.ap-range{display:flex;align-items:center;gap:10px;flex:none;max-width:62%}
+.ap-range input[type=range]{width:130px;accent-color:var(--c-primary)}
+.ap-range b{min-width:44px;text-align:right;font-size:var(--fs-sub);font-weight:500;color:var(--c-text-secondary)}
+
+/* 图片行 */
+.ap-imgctl{display:flex;align-items:center;gap:8px;flex:none}
+.ap-thumb{width:44px;height:44px;flex:none;border-radius:10px;background:var(--c-fill) center/cover no-repeat;
+  box-shadow:inset 0 0 0 .5px var(--c-border)}
+
+/* 方案 */
+.ap-preset{width:100%}
+.ap-preset[aria-current="true"] .row-title{font-weight:600}
+.ap-now{flex:none;display:inline-flex;align-items:center;gap:4px;font-size:var(--fs-sub);color:var(--c-text-secondary)}
+.ap-now svg{width:14px;height:14px}
+
+/* ============================================================
+   实时预览：用真实的 .msg / .bubble 结构，所以变量和自定义 CSS 都能看到
+   ============================================================ */
+.ap-prev{margin:0 16px 18px;border-radius:var(--r-lg);overflow:hidden;background:var(--c-surface-2)}
+[data-theme="light"] .ap-prev{background:#F6F6F8}
+.ap-prev-head{display:flex;align-items:baseline;justify-content:space-between;gap:8px;padding:10px 14px 6px}
+.ap-prev-head>span:first-child{font-size:var(--fs-sub);font-weight:600;color:var(--c-text)}
+.ap-prev-tip{font-size:var(--fs-caption);color:var(--c-text-secondary)}
+.ap-scope{position:relative}
+.ap-chat{position:relative;padding:4px 0 14px;min-height:150px;
+  background:var(--chat-bg,var(--c-bg));background-size:cover;background-position:center;background-repeat:no-repeat}
+.ap-chat .msg{padding:0 10px}
+.ap-chat .bubble{font-size:var(--fs-body)}
+.ap-chat .msg-time{margin:8px 0 4px}
+.ap-quote{display:block;font-size:.8em;line-height:1.35;color:var(--c-text-secondary);
+  border-left:2px solid var(--c-text-tertiary);padding-left:6px;margin-bottom:4px}
+.ap-chat .msg-state{padding:4px 12px 0}
+.ap-fail{display:inline-flex;align-items:center;gap:4px;font-size:var(--fs-caption);color:var(--c-red)}
+.ap-fail svg{width:12px;height:12px}
+
+/* 预览里的迷你底栏：只示意样式，不参与真实交互 */
+.ap-tabbar{display:flex;align-items:center;justify-content:space-around;height:var(--tabbar-h,var(--tab-h));
+  border-radius:var(--tabbar-radius,calc(var(--tab-h) / 2));background:var(--tabbar-bg,var(--c-surface));opacity:var(--tabbar-alpha,1);
+  box-shadow:0 4px 16px rgba(0,0,0,.06),inset 0 0 0 .5px var(--c-border);margin:8px 12px 12px}
+.ap-tabbar>span{font-size:var(--fs-caption);color:var(--c-text-secondary);padding:6px 10px;border-radius:14px}
+.ap-tabbar>span.on{color:var(--c-on-primary);background:var(--c-primary);font-weight:600}
+[data-tab-style="flat"] .ap-tabbar{border-radius:0;margin:8px 0 0;box-shadow:none;border-top:.5px solid var(--c-separator)}
+[data-tab-style="flat"] .ap-tabbar>span{border-radius:12px}
+
+/* ============================================================
+   高级 CSS 编辑器
+   ============================================================ */
+.ap-css-box{padding:10px 16px 14px}
+.ap-css-tip{margin:0 0 8px;font-size:var(--fs-caption);color:var(--c-text-secondary);line-height:1.5}
+.ap-css-text{display:block;width:100%;box-sizing:border-box;padding:10px 12px;border:0;outline:none;resize:vertical;
+  border-radius:var(--r-sm);background:var(--c-fill);color:var(--c-text);
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.8125rem;line-height:1.55;
+  -webkit-text-size-adjust:100%}
+.ap-css-msg{margin:6px 0 0;font-size:var(--fs-caption);color:var(--c-text-secondary);min-height:16px}
+.ap-css-msg.bad{color:var(--c-red)}
+.ap-css-acts{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}
+.ap-css-acts .btn{flex:none}
+
+/* 导出 / 导入 */
+.ap-io{padding:2px 0}
+.ap-io-tip{margin:0 0 10px;font-size:var(--fs-sub);color:var(--c-text-secondary);line-height:1.55}
+.ap-io-text{display:block;width:100%;box-sizing:border-box;padding:10px 12px;border:0;outline:none;resize:vertical;
+  border-radius:var(--r-sm);background:var(--c-fill);color:var(--c-text);
+  font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.75rem;line-height:1.5;word-break:break-all}
+.ap-io-copy{width:100%;margin-top:10px}
