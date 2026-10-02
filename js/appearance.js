@@ -17,8 +17,8 @@
     '--home-wall', '--wallpaper', '--chat-bg', '--chat-nav',
     '--bb-other-bg', '--bb-other-img', '--bb-other-text', '--bb-other-ring', '--bb-other-shadow', '--bb-other-radius', '--bb-other-pad', '--bb-other-bw',
     '--bb-self-bg', '--bb-self-img', '--bb-self-text', '--bb-self-ring', '--bb-self-shadow', '--bb-self-radius', '--bb-self-pad', '--bb-self-bw',
-    '--av-border', '--av-border-color', '--av-radius',
-    '--composer-bg', '--composer-radius',
+    '--av-border', '--av-border-color', '--av-radius', '--av-size',
+    '--composer-bg', '--composer-radius', '--composer-shadow', '--conv-nav-bg', '--conv-nav-text', '--conv-nav-h',
     '--tabbar-h', '--tabbar-radius', '--tabbar-alpha', '--tabbar-bg'
   ];
 
@@ -29,10 +29,11 @@
     bubble:  { on:false,
       other: { bg:'', img:'', text:'', radius:'', border:'', borderColor:'', shadow:'', pad:'', tail:false },
       self:  { bg:'', img:'', text:'', radius:'', border:'', borderColor:'', shadow:'', pad:'', tail:false } },
-    avatar:  { on:false, border:'', borderColor:'', shape:'' },
-    composer:{ on:false, bg:'', radius:'' },
+    avatar:  { on:false, border:'', borderColor:'', shape:'', radius:'', mode:'', size:'' },
+    composer:{ on:false, bg:'', radius:'', shadow:'' },
+    header:  { on:false, bg:'', text:'', h:'' },
     tabbar:  { on:false, style:'', h:'', radius:'', alpha:'', bg:'' },
-    css:     { on:false, global:'', chat:'', left:'', right:'' }
+    css:     { on:false, global:'', chat:'', left:'', right:'', srcOn:false, srcMode:'avatar', srcCode:'' }
   });
   const clone = o => JSON.parse(JSON.stringify(o));
   const isObj = v => v && typeof v === 'object' && !Array.isArray(v);
@@ -133,6 +134,8 @@
 
   // 整段塞进 .screen（CSS 嵌套），作用域就只在手机内部；不支持嵌套的浏览器整段不生效
   const scoped = css => `@supports (selector(&)){.screen:not(.xs-safe){${css}}}`;
+  // 聊天界面源码：只作用在对话页 .conv 里，不碰全局和设置页
+  const scopedChat = css => `@supports (selector(&)){.screen:not(.xs-safe) .conv{${css}}}`;
 
   const put = (v, value) => { if (value) root.style.setProperty(v, value); };
 
@@ -186,9 +189,25 @@
     if (d.avatar.on){
       if (d.avatar.border) put('--av-border', d.avatar.border + 'px');
       put('--av-border-color', d.avatar.borderColor);
-      if (d.avatar.shape !== '') put('--av-radius', d.avatar.shape);
+      // 圆角滑块优先；没设滑块才用形状预设
+      if (d.avatar.radius !== '') put('--av-radius', d.avatar.radius + '%');
+      else if (d.avatar.shape !== '') put('--av-radius', d.avatar.shape);
+      put('--av-size', d.avatar.size ? d.avatar.size + 'px' : '');
+      if (d.avatar.mode) root.dataset.avMode = d.avatar.mode; else delete root.dataset.avMode;
+    } else {
+      delete root.dataset.avMode;
     }
-    if (d.composer.on){ put('--composer-bg', d.composer.bg); put('--composer-radius', d.composer.radius ? d.composer.radius + 'px' : ''); }
+    if (d.composer.on){
+      put('--composer-bg', d.composer.bg);
+      put('--composer-radius', d.composer.radius ? d.composer.radius + 'px' : '');
+      put('--composer-shadow', d.composer.shadow);
+    }
+    // 顶栏：只有对话页的顶栏，不影响其他页面的标题栏
+    if (d.header.on){
+      put('--conv-nav-bg', d.header.bg);
+      put('--conv-nav-text', d.header.text);
+      put('--conv-nav-h', d.header.h ? d.header.h + 'px' : '');
+    }
     if (d.tabbar.on){
       if (d.tabbar.style) root.dataset.tabStyle = d.tabbar.style;
       put('--tabbar-h', d.tabbar.h ? d.tabbar.h + 'px' : '');
@@ -204,7 +223,7 @@
     if (!el){ el = document.createElement('style'); el.id = STYLE_ID; document.head.appendChild(el); }
     let out = '';
     blocks = [];
-    ['global','chat','left','right'].forEach(k => { cssBroken[k] = false; });
+    ['global','chat','left','right','src'].forEach(k => { cssBroken[k] = false; });
     if (d.css.on && !safeParam()){
       let bad = false;
       ['global','chat','left','right'].forEach(k => {
@@ -215,6 +234,12 @@
         out += scoped(src);
       });
       if (bad) XS.ui.toast('有一段自定义 CSS 括号不配平，已跳过那一段');
+    }
+    // 聊天界面源码：独立开关，作用域只到 .conv；出错自动跳过，不影响别的样式
+    if (d.css.srcOn && !safeParam() && String(d.css.srcCode || '').trim()){
+      const src = d.css.srcCode;
+      if (cssSafe(src)){ blocks.push(src); out += scopedChat(src); }
+      else cssBroken.src = true;
     }
     el.textContent = out;
     syncVideos();

@@ -301,7 +301,8 @@
       ['chatbg', '聊天背景', 'image', '对话页的视频、图片或纯色'],
       ['avatar', '头像与图标', 'person', '头像形状与描边'],
       ['tabbar', '底部导航', 'grid', '两种内置样式、高度、圆角、透明度'],
-      ['css', '高级 CSS', 'code', '按分段写自定义样式']
+      ['css', '高级 CSS', 'code', '按分段写自定义样式'],
+      ['chatSource', '聊天界面源码', 'files', '可复制、可粘贴的聊天页 CSS 模板']
     ];
     p.body.innerHTML = `
       <div data-presets>${presetsBlock()}</div>
@@ -337,7 +338,7 @@
     p.view.addEventListener('click', e => {
       const b = e.target.closest('[data-id]'); if (!b) return;
       const id = b.dataset.id;
-      const open = { theme: pages.theme, bubble: pages.bubble, chatbg: pages.chatbg, avatar: pages.avatar, tabbar: pages.tabbar, css: pages.css }[id];
+      const open = { theme: pages.theme, bubble: pages.bubble, chatbg: pages.chatbg, avatar: pages.avatar, tabbar: pages.tabbar, css: pages.css, chatSource: pages.chatSource }[id];
       if (open) { XS.nav.push(open()); return; }
       if (id === 'export') exportSheet();
       else if (id === 'import') importSheet(() => sync());
@@ -455,11 +456,31 @@
           ${imgRow('背景图', 'chat.media', 1.0)}
           ${colorRow('背景色', 'chat.color', '#FFFFFF')}
         </div><div class="group-foot">优先级：视频 &gt; 图片 &gt; 纯色。视频按地址引用，不转成数据存进本地。
-          图和视频都铺满对话区并裁切，不会被拉变形；开启「减少动态效果」时视频只停在第一帧。</div></div>`;
+          图和视频都铺满对话区并裁切，不会被拉变形；开启「减少动态效果」时视频只停在第一帧。</div></div>
+        <div class="group-block"><div class="group-label">输入栏</div><div class="group">
+          ${swRow('启用输入栏美化', 'composer.on')}
+          ${colorRow('背景色', 'composer.bg', '#FFFFFF')}
+          ${rangeRow('圆角', 'composer.radius', 0, 30, 1, 'px')}
+          ${segRow('阴影', 'composer.shadow', [['', '默认'], ['0 0 0 rgba(0,0,0,0)', '无'], ['0 4px 16px rgba(0,0,0,.06),inset 0 0 0 .5px rgba(0,0,0,.09)', '轻'], ['0 8px 28px rgba(0,0,0,.14)', '中']])}
+        </div><div class="group-foot">只改画法不改行为：发送键、输入框和「让 AI 回复」都在原位。</div></div>
+        <div class="group-block"><div class="group-label">顶栏（只影响对话页）</div><div class="group">
+          ${swRow('启用顶栏美化', 'header.on')}
+          ${colorRow('背景色', 'header.bg', '#FFFFFF')}
+          ${colorRow('文字颜色', 'header.text', '#000000')}
+          ${rangeRow('高度', 'header.h', 36, 60, 2, 'px')}
+        </div><div class="group-foot">只作用于聊天对话页的标题栏，其他页面的标题栏不受影响。</div></div>`;
       const refresh = withPreview(p);
       bindSw(p.body, 'chat.on', refresh);
       bindText(p.body, 'chat.video', refresh);
       bindColor(p.body, 'chat.color', '#FFFFFF', refresh);
+      bindSw(p.body, 'composer.on', refresh);
+      bindColor(p.body, 'composer.bg', '#FFFFFF', refresh);
+      bindRange(p.body, 'composer.radius', 'px', refresh);
+      bindSeg(p.body, 'composer.shadow', refresh);
+      bindSw(p.body, 'header.on', refresh);
+      bindColor(p.body, 'header.bg', '#FFFFFF', refresh);
+      bindColor(p.body, 'header.text', '#000000', refresh);
+      bindRange(p.body, 'header.h', 'px', refresh);
       bindImg(p.body, 'chat.media', 1.0, render);
       return refresh;
     };
@@ -475,12 +496,20 @@
       <div class="group-block"><div class="group">${swRow('启用头像自定义', 'avatar.on')}</div></div>
       <div class="group-block"><div class="group">
         ${segRow('形状', 'avatar.shape', [['', '默认'], ['50%', '圆形'], ['14px', '圆角方形'], ['6px', '方形']])}
+        ${rangeRow('圆角', 'avatar.radius', 0, 50, 1, '%')}
+        ${rangeRow('大小', 'avatar.size', 26, 44, 2, 'px')}
         ${rangeRow('描边粗细', 'avatar.border', 0, 4, 0.5, 'px')}
         ${colorRow('描边颜色', 'avatar.borderColor', '#000000')}
-      </div><div class="group-foot">只作用于聊天里的头像。应用图标不做任何滤镜处理，保持原来的样子。</div></div>`;
+      </div><div class="group-foot">只作用于聊天里的头像；圆角滑块比形状预设优先，拉回默认就用预设。应用图标不做任何滤镜处理。</div></div>
+      <div class="group-block"><div class="group-label">出现方式</div><div class="group">
+        ${segRow('出现方式', 'avatar.mode', [['', '默认'], ['each', '每条都显示'], ['none', '都不显示']])}
+      </div><div class="group-foot">默认：同一发送者连续几条只在第一条显示头像，后面留出空位，气泡不会左右跳。</div></div>`;
     const refresh = withPreview(p);
     bindSw(p.body, 'avatar.on', refresh);
     bindSeg(p.body, 'avatar.shape', refresh);
+    bindSeg(p.body, 'avatar.mode', refresh);
+    bindRange(p.body, 'avatar.radius', '%', refresh);
+    bindRange(p.body, 'avatar.size', 'px', refresh);
     bindRange(p.body, 'avatar.border', 'px', refresh);
     bindColor(p.body, 'avatar.borderColor', '#000000', refresh);
     const off = A.on(() => { if (!p.view.isConnected) return off(); refresh(); });
@@ -605,6 +634,8 @@
 
   /* 打开外观页期间停用高级 CSS，保证这个入口永远点得进来 */
   XS.appearancePages = pages;
+  // 供 chat-source.js 复用同一套控件与预览
+  XS.appearancePages.ui = { page, segRow, swRow, bindSeg, bindSw, previewHtml, mountPreview, withPreview, esc, A };
   XS.appearancePages.open = () => {
     const v = pages.root();
     A.safe(true);

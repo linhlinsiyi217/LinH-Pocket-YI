@@ -38,8 +38,8 @@
 .msg-notice button{color:var(--c-blue);font-size:inherit;padding:0 2px}
 .msg{display:flex;align-items:flex-end;gap:8px;padding:0 14px;margin-top:2px}
 .msg.first{margin-top:8px}
-.msg .avatar{--av:32px}
-.msg .av-space{width:32px;flex:none}
+.msg .avatar{--av:var(--av-size,32px)}
+.msg .av-space{width:var(--av-size,32px);flex:none}
 .msg.self{flex-direction:row-reverse}
 .bubble{position:relative;max-width:72%;padding:8px 12px;border-radius:19px;font-size:1rem;line-height:1.42;color:var(--c-bubble-text);white-space:pre-wrap;word-break:break-word;
   user-select:text;-webkit-user-select:text}
@@ -77,14 +77,16 @@
 /* 输入框：实心白色胶囊 + 极淡描边，和底部 Tab 同一套 */
 .composer{position:absolute;left:12px;right:12px;bottom:calc(var(--safe-bottom) + 28px);z-index:20;display:flex;align-items:flex-end;gap:8px;
   padding:5px 5px 5px 16px;border-radius:var(--composer-radius,24px);background:var(--composer-bg,var(--c-surface));
-  box-shadow:0 4px 16px rgba(0,0,0,.06),inset 0 0 0 .5px var(--c-border)}
+  box-shadow:var(--composer-shadow,0 4px 16px rgba(0,0,0,.06),inset 0 0 0 .5px var(--c-border))}
 .composer textarea{flex:1;min-width:0;border:0;outline:none;background:transparent;resize:none;font-size:1rem;line-height:1.4;padding:8px 0;max-height:120px;color:var(--c-text)}
 .composer textarea::placeholder{color:var(--c-text-secondary)}
 .composer .send{width:38px;height:38px;border-radius:50%;background:var(--c-primary);color:var(--c-on-primary);display:flex;align-items:center;justify-content:center;flex:none}
 .composer .send svg{width:20px;height:20px;stroke-width:2}
 .composer .send:disabled{opacity:.25}
 .conv{background:var(--chat-bg,var(--c-bg));background-size:cover;background-position:center;background-repeat:no-repeat}
-.conv .navbar{background:var(--chat-nav,var(--c-bg))}
+.conv .navbar{background:var(--conv-nav-bg,var(--chat-nav,var(--c-bg)));color:var(--conv-nav-text,var(--c-text))}
+.conv .navbar .nav-title,.conv .navbar .nav-btn{color:var(--conv-nav-text,var(--c-text))}
+.conv .navbar-inner{height:var(--conv-nav-h,var(--nav-h))}
 .conv .pblur{--pblur-h:120px}
 
 /* —— 聊天首页四栏 / 联系人 / 资料页 —— */
@@ -173,3 +175,11 @@
 .wb-row .switch{margin-top:2px}
 .wb-row .ap-mini{margin-top:2px}
 .wb-form .field{display:block;margin-bottom:12px}
+
+/* 手动「让 AI 回复」：和发送键同一排，尺寸小一档，不抢发送键的视觉重点 */
+.composer .ask{width:34px;height:34px;flex:none;margin-bottom:2px;border-radius:50%;
+  display:inline-flex;align-items:center;justify-content:center;
+  background:var(--c-fill);color:var(--c-text-secondary);transition:opacity var(--dur-fast)}
+.composer .ask svg{width:17px;height:17px;stroke-width:1.8}
+.composer .ask:disabled{opacity:.35}
+.composer .ask[hidden]{display:none}

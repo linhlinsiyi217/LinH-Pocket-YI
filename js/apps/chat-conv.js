@@ -153,11 +153,14 @@
       <div class="composer">
         <div class="q-bar" hidden><span class="q-bar-text"></span><button class="q-bar-x" data-a="unquote" aria-label="取消引用">${XS.icon('close')}</button></div>
         <textarea rows="1" placeholder="发消息" aria-label="输入消息" enterkeyhint="send"></textarea>
+        <button class="ask tap" data-a="ask" aria-label="让 AI 回复" hidden>${XS.icon('refresh')}</button>
         <button class="send tap" aria-label="发送" disabled>${XS.icon('send')}</button></div>`);
-    const ta = v.querySelector('textarea'), sendBtn = v.querySelector('.send');
+    const ta = v.querySelector('textarea'), sendBtn = v.querySelector('.send'), askBtn = v.querySelector('.ask');
     const qBar = v.querySelector('.q-bar'), qBarText = v.querySelector('.q-bar-text');
     const searchBox = v.querySelector('.conv-search'), searchInput = searchBox.querySelector('input'), csCount = v.querySelector('[data-cs-count]');
     let cont = c;
+    const prof = XS.profile.get();
+    const meAv = { name: prof.name || '我', avatar: prof.avatar || null };   // 自己那侧的头像
     let quoting = null;      // 正在引用的那条消息
     let query = '';          // 会话内搜索关键词
     let hitIndex = 0;
@@ -179,8 +182,12 @@
         const first = !prev || prev.role !== m.role || m.ts - prev.ts > GAP;
         const last = !next || next.role !== m.role || next.ts - m.ts > GAP || m.status === 'failed';
         const other = m.role === 'other';
-        html += `<div class="msg ${other ? 'other' : 'self'}${first ? ' first' : ''}${last ? ' last' : ''}${m.status === 'sending' ? ' sending' : ''}" data-mid="${esc(m.id)}">
-          ${other ? (last ? data.avatar(cont) : '<span class="av-space"></span>') : ''}<div class="bubble">${quoteOf(m, list)}${fmt(m.text)}</div></div>`;
+        // 头像出现方式：each 每条都显示 / group 连续消息只在第一条显示（其余留占位，气泡不左右跳） / none 都不显示
+        const avMode = document.documentElement.dataset.avMode || 'group';
+        const showAv = avMode === 'each' || (avMode === 'group' && first);
+        const slot = avMode === 'none' ? '' : (showAv ? data.avatar(other ? cont : meAv) : '<span class="av-space"></span>');
+        html += `<div class="msg ${other ? 'other' : 'self'}${first ? ' first' : ''}${last ? ' last' : ''}${m.status === 'sending' ? ' sending' : ''}" data-mid="${esc(m.id)}" data-side="${other ? 'other' : 'self'}" data-first="${first}" data-last="${last}">
+          ${slot}<div class="bubble">${quoteOf(m, list)}${fmt(m.text)}</div></div>`;
         if (m.status === 'failed') {
           const cfg = m.error && (m.error.kind === 'config' || m.error.kind === 'flight');
           html += `<div class="msg-state err"><button data-retry="${m.id}">${XS.icon('alert')}<span>发送失败 · ${esc(m.error ? m.error.message : '')}${cfg ? '' : ' · 点此重试'}</span></button></div>`;
@@ -218,7 +225,13 @@
       p.scroll.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
     }
     const toBottom = () => { p.scroll.scrollTop = p.scroll.scrollHeight; };
-    const sync = () => { sendBtn.disabled = !ta.value.trim() || !!data.pending[cid]; };
+    // 「让 AI 回复」只对 AI 角色显示；手动模式下才出现，自动模式不需要它
+    const showAsk = () => cont.type === 'ai' && cont.aiEnabled !== false && XS.settings.get('replyMode') !== 'auto';
+    const sync = () => {
+      sendBtn.disabled = !ta.value.trim() || !!data.pending[cid];
+      askBtn.hidden = !showAsk();
+      askBtn.disabled = !!data.pending[cid];
+    };
     const grow = () => { ta.style.height = 'auto'; ta.style.height = Math.min(ta.scrollHeight, 120) + 'px'; };
 
     // 引用条：显示要引用的那句话，可以取消
@@ -237,7 +250,23 @@
       const list = data.msgs(cid); list.push(m); data.saveMsgs(cid, list);
       ta.value = ''; grow(); setQuote(null);
       pendingFollow = true;   // 自己发的消息一定要滚到眼前
-      request(cid, m.id);
+      if (XS.settings.get('replyMode') === 'auto'){
+        request(cid, m.id);
+      } else {
+        // 手动模式：消息本身已经发出，标成已发送，等用户点「让 AI 回复」
+        const l2 = data.msgs(cid), mm = l2.find(x => x.id === m.id);
+        if (mm){ mm.status = 'ok'; data.saveMsgs(cid, l2); }
+      }
+    }
+
+    // 手动「让 AI 回复」：对最后一条自己发的消息请求一次，不重复触发
+    function ask(){
+      if (data.pending[cid]) return;
+      const last = data.msgs(cid).filter(x => x.role === 'self' && x.status !== 'failed').pop();
+      if (!last){ XS.ui.toast('先发一条消息，再让角色回复'); return; }
+      if (!XS.api.configured()){ XS.ui.toast('还没有配置 AI 接口，去「设置 › AI 服务 › 聊天 API」填写'); return; }
+      pendingFollow = true;
+      request(cid, last.id);
     }
 
     ta.addEventListener('input', () => { grow(); sync(); });
@@ -315,6 +344,7 @@
         searchInput.value = ''; query = ''; hitIndex = 0; applySearch(); return;
       }
       if (a.dataset.a === 'unquote'){ setQuote(null); return; }
+      if (a.dataset.a === 'ask') return ask();
       if (a.dataset.a === 'goset') XS.nav.push(XS.settingsPages.api());
       if (a.dataset.a === 'more') XS.ui.menu(a, [
         { label: '角色记忆', icon: 'note', onClick: () => XS.nav.push(data.openMemories(cid)) },

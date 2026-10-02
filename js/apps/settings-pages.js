@@ -25,21 +25,34 @@
 
   pages.api = () => {
     const a = XS.settings.get('api');
-    const p = page('API 连接', `
+    const p = page('聊天 API', `
       <div class="group-block"><div class="group-label">接口（OpenAI 兼容格式）</div><div class="group">
         ${inline('地址', 'baseUrl', a.baseUrl, { type: 'url', ph: 'https://api.example.com/v1' })}
         ${inline('密钥', 'apiKey', a.apiKey, { type: 'password', ph: 'sk-...' })}
         ${inline('模型', 'model', a.model, { ph: '例如 gpt-4o-mini' })}
-      </div><div class="group-foot">自动保存。密钥以明文保存在这台设备的浏览器里，只会发送到你填写的地址。</div></div>
+      </div><div class="group-foot">自动保存。密钥以明文保存在这台设备的浏览器里，只会发送到你填写的地址；
+        不会硬编码进仓库，也不会出现在导出和错误提示里。</div></div>
+      <div class="group-block"><div class="group-label">角色回复方式</div><div class="group">
+        ${seg('回复方式', 'replyMode', [['manual', '手动'], ['auto', '自动']])}
+      </div><div class="group-foot">手动：发消息不会触发 AI，会话里点「让 AI 回复」才请求一次，
+        避免误触和重复扣费。自动：发出消息就请求一次。真人联系人两种情况都不会走 AI。</div></div>
+      <div class="group-block"><div class="group-label">可选参数</div><div class="group">
+        ${inline('温度', 'temperature', a.temperature, { ph: '留空用服务商默认，0~2' })}
+        ${inline('历史条数', 'maxHistory', a.maxHistory, { ph: '留空用默认 20' })}
+        ${inline('超时秒数', 'timeout', a.timeout, { ph: '默认 60' })}
+      </div><div class="group-foot">只在当前接口确实支持时才生效；留空即用服务商默认值，不做假效果。</div></div>
       <div class="group-block"><div class="group">
         ${XS.sui.row({ id: 'test', title: '测试连接', cls: 'link center' })}
         ${XS.sui.row({ id: 'testsys', title: '检测系统指令', cls: 'link center' })}
       </div><div class="group-foot">AI 角色的行为指令是按 system 消息发的。有些中转会丢掉 system，
-        角色就会变得不像本人。这里点一下能测出来：让人设指令要求只回两个字，模型照做才算通。</div></div>
+        角色就会变得不像本人。让人设指令要求只回两个字，模型照做才算通。
+        你自己加的补充规则（角色卡里的说话习惯、关系阶段、禁忌）会跟在角色卡后面，
+        优先于通用建议，但不会取代角色卡本身。</div></div>
       <div class="set-status" role="status" aria-live="polite"></div>`);
     const st = p.body.querySelector('.set-status');
     const show = (cls, icon, text) => { st.className = 'set-status ' + cls; st.innerHTML = (icon ? XS.icon(icon) : '') + `<span>${esc(text)}</span>`; };
     p.body.addEventListener('input', e => { XS.settings.set('api.' + e.target.name, e.target.value.trim()); st.innerHTML = ''; });
+    bindSeg(p.body, 'replyMode');
     let testing = false;
     p.body.querySelector('[data-id="test"]').addEventListener('click', async () => {
       if (testing) return;
